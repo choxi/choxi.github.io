@@ -1,5 +1,46 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: Helvetica Neue, Helvetica;
   color: #333;
-  padding: 20px
+}
+
+.layout-sidebar {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  width: 100%;
+}
+
+.layout-sidebar--sidebar {
+  border-right: 1px solid #CCC;
+}
+
+.layout-absolute {
+  position: relative;
+}
+
+.layout-absolute--bottom {
+  position: absolute;
+  bottom: 0px;
+}
+
+.pad {
+  padding: 1em;
+}
+
+.pad-ew-l {
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+.spc-s {
+  margin-bottom: 1em;
+}
+
+.text-center {
+  text-align: center;
 }
