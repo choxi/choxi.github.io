@@ -11,12 +11,13 @@ body {
 .layout-sidebar {
   display: flex;
   align-items: stretch;
-  height: 100%;
-  width: 100%;
+  min-height: 100%;
+  min-width: 100%;
 }
 
 .layout-sidebar--sidebar {
   border-right: 1px solid #CCC;
+  flex: 0 0 250px;
 }
 
 .layout-absolute {
@@ -30,6 +31,10 @@ body {
 
 .pad {
   padding: 1em;
+}
+
+.pad-l {
+  padding: 2em;
 }
 
 .pad-ew-l {
