@@ -49,3 +49,19 @@ body {
 .text-center {
   text-align: center;
 }
+
+
+/* Default styles for a blog post */
+.post {
+  color: #333;
+}
+
+.post img {
+  display: block;
+  margin: 0 auto;
+}
+
+.post p {
+ line-height: 150%;
+ font-size: 16px;
+}
