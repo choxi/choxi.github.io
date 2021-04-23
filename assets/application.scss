@@ -1,3 +1,8 @@
+$color-primary: #2980b9;
+$color-text: #444;
+
+$spc-sm: 0.5em;
+
 html, body {
   margin: 0;
   padding: 0;
@@ -5,7 +10,25 @@ html, body {
 
 body {
   font-family: Helvetica Neue, Helvetica;
-  color: #333;
+  color: $color-text;
+}
+
+a {
+  text-decoration: none;
+  color: $color-primary;
+}
+
+a.reset {
+  color: $color-text;
+}
+
+ul {
+  padding-left: 0;
+  list-style: none;
+
+  li {
+    margin: $spc-sm 0;
+  }
 }
 
 .layout-sidebar {
@@ -16,9 +39,8 @@ body {
 }
 
 .layout-sidebar--sidebar {
-  height: 100%;
   border-right: 1px solid #CCC;
-  width: 250px;
+  flex: 0 0 250px;
 }
 
 .layout-absolute {
@@ -47,16 +69,24 @@ body {
   margin-bottom: 1em;
 }
 
+.spc-s-sm {
+  margin-bottom: 0.5em;
+}
+
+.spc-s-tiny {
+  margin-bottom: 0.25em;
+}
+
+.spc-n-zero {
+  margin-top: 0;
+}
+
 .text-center {
   text-align: center;
 }
 
 
 /* Default styles for a blog post */
-.post {
-  color: #333;
-}
-
 .post img {
   display: block;
   margin: 0 auto;

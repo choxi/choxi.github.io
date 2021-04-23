@@ -2,15 +2,23 @@ import React from "react"
 
 export default function Sidebar() {
   return (
-    <div className="layout-sidebar--sidebar pad pad-ew-l layout-absolute">
-      <a href="/index.html">
+    <div className="layout-sidebar--sidebar pad pad-ew-l">
+      <a href="/index.html" className="reset">
         <h1> roshan choxi </h1>
       </a>
+      <ul>
+        <li><a href="https://twitter.com/choxi" target="_blank">Twitter</a></li>
+        <li><a href="https://github.com/choxi" target="_blank">GitHub</a></li>
+      </ul>
+
       <h3>Posts</h3>
-      <a href="/posts/gesture-detection-using-tensorflowjs.html">Gesture Detection Using Tensorflowjs</a>
-      <div className="layout-absolute--bottom spc-s text-center">
-        Follow me on <a href="https://twitter.com/choxi" target="_blank">Twitter</a>
-      </div>
+      <ul>
+        <li>
+          <a href="/posts/gesture-detection-using-tensorflowjs.html">
+            Gesture Detection Using Tensorflow.js
+          </a>
+        </li>
+      </ul>
     </div>
   )
 }
