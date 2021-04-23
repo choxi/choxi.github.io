@@ -16,8 +16,9 @@ body {
 }
 
 .layout-sidebar--sidebar {
+  height: 100%;
   border-right: 1px solid #CCC;
-  flex: 0 0 250px;
+  width: 250px;
 }
 
 .layout-absolute {
