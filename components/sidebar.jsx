@@ -6,6 +6,10 @@ export default function Sidebar() {
       <a href="/index.html" className="reset">
         <h1> roshan choxi </h1>
       </a>
+      <p>
+        Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science,
+        technology, and design.
+      </p>
       <ul>
         <li><a href="https://twitter.com/choxi" target="_blank">Twitter</a></li>
         <li><a href="https://github.com/choxi" target="_blank">GitHub</a></li>
