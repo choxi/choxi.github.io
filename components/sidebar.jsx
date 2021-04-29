@@ -15,8 +15,18 @@ export default function Sidebar() {
         <li><a href="https://github.com/choxi" target="_blank">GitHub</a></li>
       </ul>
 
-      <h3>Posts</h3>
+      <h3 className="spc-n-l">Projects</h3>
       <ul>
+        <li><a href="https://pixel.gl">Pixel</a></li>
+      </ul>
+
+      <h3 className="spc-n-l">Posts</h3>
+      <ul>
+        <li>
+          <a href="/posts/city-landscape.html">
+            Procedurally Generated Landscapes
+          </a>
+        </li>
         <li>
           <a href="/posts/gesture-detection-using-tensorflowjs.html">
             Gesture Detection Using Tensorflow.js
