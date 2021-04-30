@@ -6,7 +6,7 @@ import CL from "../js/city-landscape"
 export default class CityLandscape extends React.Component {
   componentDidMount() {
     const width = parseInt(this.props.width)
-    const height = parseInt(this.props.height)
+    const height = width * 0.6
     new p5(p => new CL(width, height, p), "canvas")
   }
 

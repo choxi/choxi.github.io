@@ -43,6 +43,10 @@ ul {
   flex: 0 0 250px;
 }
 
+.layout-sidebar--content {
+  max-width: 860px;
+}
+
 .layout-absolute {
   position: relative;
 }
@@ -89,8 +93,13 @@ ul {
   text-align: center;
 }
 
-
 /* Default styles for a blog post */
+.post {
+  video, img, canvas {
+    max-width: 100%;
+  }
+}
+
 .post img {
   display: block;
   margin: 0 auto;

@@ -107,7 +107,7 @@ export default class CityLandscape {
       all.push(building)
     }
 
-    for(let i = 0; i < 5; i++) {
+    for(let i = 0; i < 10; i++) {
       let building = new Building()
       building.x = Utils.random(- width / 2, width / 2)
       building.height = Utils.random(height / 4, height * 0.75)
