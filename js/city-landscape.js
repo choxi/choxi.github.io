@@ -52,7 +52,7 @@ export default class CityLandscape {
       buildings.forEach(building => building.render(bufferC))
     }
 
-    p.draw = function() {
+    p.draw = () => {
       let speed = 2
       p.background(0)
 
@@ -98,10 +98,10 @@ export default class CityLandscape {
   generateBuildings(width, height) {
     let all = []
 
-    for(let i = 0; i < 100; i++) {
+    for(let i = 0; i < 40; i++) {
       let building = new Building()
       building.x = Utils.random(- width / 2, width / 2)
-      building.height = Utils.random(40, 300)
+      building.height = Utils.random(height / 8, height / 4)
       building.width = Utils.random(10, 100)
       building.y = - height / 2 // height / 2 - building.height
       all.push(building)
@@ -110,7 +110,7 @@ export default class CityLandscape {
     for(let i = 0; i < 5; i++) {
       let building = new Building()
       building.x = Utils.random(- width / 2, width / 2)
-      building.height = Utils.random(300, 600)
+      building.height = Utils.random(height / 4, height * 0.75)
       building.width = Utils.random(40, 100)
       building.y = - height / 2 // height / 2 - building.height
       all.push(building)
