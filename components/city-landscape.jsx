@@ -4,8 +4,13 @@ import Helmet from "react-helmet"
 import CL from "../js/city-landscape"
 
 export default class CityLandscape extends React.Component {
+  constructor(props) {
+    super(props)
+    this.canvasRef = React.createRef()
+  }
+
   componentDidMount() {
-    const width = parseInt(this.props.width)
+    const width = this.canvasRef.current.clientWidth
     const height = width * 0.6
     new p5(p => new CL(width, height, p), "canvas")
   }
@@ -13,7 +18,7 @@ export default class CityLandscape extends React.Component {
   render() {
     return <div id="city-landscape">
       <Helmet><title>City Landscape | choxi</title></Helmet>
-      <div id="canvas"> </div>
+      <div id="canvas" width="100%" ref={ this.canvasRef }> </div>
     </div>
   }
 }
