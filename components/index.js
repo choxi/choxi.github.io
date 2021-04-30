@@ -3,10 +3,14 @@ import ReactDOM from "react-dom"
 
 import Sidebar from "./sidebar"
 import PostLayout from "./post-layout"
+import CityLandscape from "./city-landscape"
+import P5Canvas from "./p5-canvas"
 
 const components = {
   "sidebar": Sidebar,
-  "post-layout": PostLayout
+  "post-layout": PostLayout,
+  "city-landscape": CityLandscape,
+  "p5-canvas": P5Canvas
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
