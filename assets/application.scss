@@ -110,11 +110,11 @@ ul {
  font-size: 16px;
 }
 
-// https://flaviocopes.com/css-breakpoints/
-// Pulled from tailwind defaults
+// What breakpoints should I use?
+// https://ricostacruz.com/til/css-media-query-breakpoints
 
 // mobile portrait
-@media (min-width: 640px) {
+@media (min-width: 576px) {
   .sm-show {
     display: block;
   }
@@ -122,18 +122,10 @@ ul {
   .sm-hide {
     display: none;
   }
-
-  .md-show {
-    display: none;
-  }
 }
 
 // tablet portrait, mobile landscape
 @media (min-width: 768px) {
-  .sm-show {
-    display: none;
-  }
-
   .md-show {
     display: block;
   }
@@ -144,11 +136,17 @@ ul {
 }
 
 // tablet landscape
-@media (min-width: 1024px) {
+@media (min-width: 992px) {
+  .lg-show {
+    display: block;
+  }
 
+  .lg-hide {
+    display: none;
+  }
 }
 
 // laptop
-@media (min-width: 1280px) {
+@media (min-width: 1200px) {
 
 }

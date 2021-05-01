@@ -4,7 +4,7 @@ import Sidebar from "./sidebar"
 export default function PostLayout(props) {
   return (
     <div className="layout-sidebar">
-      <div className="layout-sidebar--sidebar pad pad-ew-l sm-hide md-show">
+      <div className="layout-sidebar--sidebar pad pad-ew-l sm-hide lg-show">
         <Sidebar />
       </div>
 
