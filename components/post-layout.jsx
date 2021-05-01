@@ -4,9 +4,16 @@ import Sidebar from "./sidebar"
 export default function PostLayout(props) {
   return (
     <div className="layout-sidebar">
-      <Sidebar />
+      <div className="layout-sidebar--sidebar pad pad-ew-l sm-hide md-show">
+        <Sidebar />
+      </div>
 
-      <div className="layout-sidebar--content pad-l" dangerouslySetInnerHTML={{ __html: props.children }}>
+      <div className="layout-sidebar--content pad-l">
+        <div dangerouslySetInnerHTML={{ __html: props.children }}></div>
+        <div className="sm-show">
+          <hr />
+          <Sidebar />
+        </div>
       </div>
     </div>
   )

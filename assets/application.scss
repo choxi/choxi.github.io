@@ -109,3 +109,46 @@ ul {
  line-height: 150%;
  font-size: 16px;
 }
+
+// https://flaviocopes.com/css-breakpoints/
+// Pulled from tailwind defaults
+
+// mobile portrait
+@media (min-width: 640px) {
+  .sm-show {
+    display: block;
+  }
+
+  .sm-hide {
+    display: none;
+  }
+
+  .md-show {
+    display: none;
+  }
+}
+
+// tablet portrait, mobile landscape
+@media (min-width: 768px) {
+  .sm-show {
+    display: none;
+  }
+
+  .md-show {
+    display: block;
+  }
+
+  .md-hide {
+    display: none;
+  }
+}
+
+// tablet landscape
+@media (min-width: 1024px) {
+
+}
+
+// laptop
+@media (min-width: 1280px) {
+
+}

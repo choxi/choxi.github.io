@@ -2,7 +2,7 @@ import React from "react"
 
 export default function Sidebar() {
   return (
-    <div className="layout-sidebar--sidebar pad pad-ew-l">
+    <div>
       <a href="/index.html" className="reset">
         <h1> roshan choxi </h1>
       </a>
