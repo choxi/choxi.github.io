@@ -6,6 +6,8 @@ export default class P5Canvas extends React.Component {
   componentDidMount() {
     window.p5 = p5
 
+    // eval in context
+    // https://stackoverflow.com/questions/8403108/calling-eval-in-particular-context
     eval(`
       const app = new p5(p => {
         ${ this.props.children }
@@ -14,6 +16,12 @@ export default class P5Canvas extends React.Component {
   }
 
   render() {
-    return <div id="p5-canvas"></div>
+    const { width, height } = this.props
+    return <div id="p5-canvas" width={ width } height={ height }></div>
   }
+}
+
+P5Canvas.defaultProps = {
+  width: 100,
+  height: 100
 }
