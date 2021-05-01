@@ -11,9 +11,11 @@ export default class CityLandscape {
     var bufferB
     var bufferC
     var gradient
+    const speed = 1
+    const safari = this.isSafari()
 
     p.setup = () => {
-      p.frameRate(30)
+      p.frameRate(20)
       p.createCanvas(width, height, p.WEBGL)
       p.noStroke()
 
@@ -37,7 +39,7 @@ export default class CityLandscape {
       gradient.background(0)
       Utils.setGradient(gradient, - width / 2, - height / 2, width, height, gradient.color(25), gradient.color(0), 1)
 
-      for (var i = 0; i < 1000; i++) {
+      for (var i = 0; i < 500; i++) {
         let droplet = new Droplet(p)
         droplet.y = p.random(- height / 2, height / 2)
         droplet.x = p.random( - width / 2, width / 2)
@@ -53,20 +55,17 @@ export default class CityLandscape {
     }
 
     p.draw = () => {
-      let speed = 2
       p.background(0)
-
-      p.scale(1, -1)
-      p.image(gradient, - width / 2, - height / 2)
-      p.scale(1, -1)
 
       // Moon
       p.fill(255, 255, 255, 150)
       p.ellipse(width / 2 - 200 - totalT / 5, - height / 2 + 200 - totalT / 10, 200, 200, 40)
 
       // Current and next buildings screen
+      if (!safari) p.scale(1, -1)
       p.image(bufferA, -width / 2 - t * speed, - height / 2)
       p.image(bufferB, -width / 2 - t * speed + width, - height / 2)
+      if (!safari) p.scale(1, -1)
 
       droplets.forEach(droplet => {
         p.fill(droplet.color)
@@ -123,11 +122,23 @@ export default class CityLandscape {
   // screen while we're scrolling horizontally. This function adds buildings from the previous
   // screen to the next screen so that buildings overlapping boths screens appear in both.
   nextBuildings(buildings, width, height) {
-    let overlap = 100
-    let stitchBuildings = buildings.filter(b => { return b.x > (width / 2 - overlap) })
+    const overlap = width / 10
+    const stitchBuildings = buildings.filter(b => { return b.x > (width / 2 - overlap) })
     stitchBuildings.forEach(b => { b.x -= width })
-    let newBuildings = this.generateBuildings(width, height)
+    const newBuildings = this.generateBuildings(width, height)
     return [...stitchBuildings, ...newBuildings]
+  }
+
+  isSafari() {
+    const ua = navigator.userAgent.toLowerCase()
+
+    if (ua.indexOf('safari') != -1) {
+      if (ua.indexOf('chrome') > -1) {
+        return false
+      } else {
+        return true
+      }
+    }
   }
 }
 
