@@ -9,7 +9,7 @@ export default function PostLayout(props) {
       </div>
 
       <div className="layout-sidebar--content pad-l">
-        <div dangerouslySetInnerHTML={{ __html: props.children }}></div>
+        <div>{ props.children }</div>
         <div className="sm-show lg-hide">
           <hr />
           <Sidebar />
