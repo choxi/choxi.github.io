@@ -8,7 +8,7 @@ export default class P5Canvas extends React.Component {
 
     // eval in context
     // https://stackoverflow.com/questions/8403108/calling-eval-in-particular-context
-    eval(`
+    window.eval(`
       const app = new p5(p => {
         ${ this.props.children }
       }, "p5-canvas")
