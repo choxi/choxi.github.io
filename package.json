@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "server": "parcel index.html posts/*html",
-    "predeploy": "rm -rf dist && parcel build index.html posts/*html",
+    "server": "node totem.js serve",
+    "build": "node totem.js build",
+    "predeploy": "node totem.js build",
     "deploy": "gh-pages -d dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -8,16 +8,14 @@ const Renderer = require("./renderer")
 const builder = new Builder()
 const renderer = new Renderer()
 const app = express()
-const port = 1234
 
 const command = process.argv[2]
 
 if (command === "build") {
+  const port = 1111
   app.use(express.static("./dist"))
 
   const server = app.listen(port, () => {
-    console.log(`Listening on http://localhost:${port}`)
-
     builder.build(pages => {
       const promises = pages.map(page => {
         const url = `http://localhost:${ port }/${ page.name }.html`
@@ -30,6 +28,7 @@ if (command === "build") {
 }
 
 if (command === "serve") {
+  const port = 1234
   const watcher = chokidar.watch(".", {
     ignored: /dist|node_modules|.cache|.git/
   })
