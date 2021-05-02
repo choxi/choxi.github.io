@@ -25,12 +25,12 @@ export default function Sidebar() {
       <h3 className="spc-n-l">Posts</h3>
       <ul>
         <li>
-          <a href="/posts/city-landscape.html">
+          <a href="/procedural-landscapes.html">
             Procedurally Generated Landscapes
           </a>
         </li>
         <li>
-          <a href="/posts/gesture-detection-using-tensorflowjs.html">
+          <a href="/gesture-detection-using-tensorflowjs.html">
             Gesture Detection Using Tensorflow.js
           </a>
         </li>

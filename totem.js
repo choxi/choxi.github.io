@@ -48,6 +48,7 @@ class Totem {
       const body = fs.readFileSync(`./pages/${ path }`)
 
       return {
+        name: name,
         path: path,
         klass: klass,
         body: body
@@ -71,7 +72,6 @@ class Totem {
       `
     })
 
-
     const componentsEntrypoint = `
       import React from "react"
       import ReactDOM from "react-dom"
@@ -92,7 +92,7 @@ class Totem {
       fse.removeSync("./dist/_index.jsx")
 
       pageConfigs.forEach(page => {
-        fs.writeFileSync(`./dist/${ page.path }`, this.template(page.klass))
+        fs.writeFileSync(`./dist/${ page.name }.html`, this.template(page.klass))
       })
 
       fse.copySync("./assets", "./dist/assets")
