@@ -1,6 +1,8 @@
 import React from "react"
 import Sidebar from "./sidebar"
 
+import "./application.scss"
+
 export default function PostLayout(props) {
   return (
     <div className="layout-sidebar">
