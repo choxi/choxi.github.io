@@ -1,5 +1,5 @@
 <PostLayout>
-  <div class="post">
+  <div className="post">
     <h1>Gesture Detection Using Tensorflow.js</h1>
     <p>
       I started this project to create an end-to-end training tool for gesture recognition using deep learning.

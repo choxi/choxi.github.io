@@ -1,9 +1,9 @@
 <PostLayout>
-  <div class="post">
+  <div className="post">
     <h1>Procedurally Generated Landscapes</h1>
 
     <p>
-      I’ve recenty been investigating the generative art field and came across this <a href="https://github.com/LingDong-/shan-shui-inf">Procedurally Generated Chinese Landscape</a>.
+      I've recenty been investigating the generative art field and came across this <a href="https://github.com/LingDong-/shan-shui-inf">Procedurally Generated Chinese Landscape</a>.
     </p>
 
     <video src="/assets/chinese-landscape.mov#t=0.001" controls></video>

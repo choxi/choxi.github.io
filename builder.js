@@ -19,7 +19,7 @@ class Totem {
     `
   }
 
-  build() {
+  build(callback=() => {}) {
     console.log("Creating dist directory...")
     fs.rmdirSync("./dist", { recursive: true, force: true })
     fs.mkdirSync("./dist")
@@ -54,7 +54,6 @@ class Totem {
         body: body
       }
     })
-
     const pageComponents = pageConfigs.map(page => {
       return `
         class ${ page.klass } extends React.Component {
@@ -67,7 +66,14 @@ class Totem {
 
         document.addEventListener('DOMContentLoaded', (event) => {
           const container = document.getElementById("${ page.klass }")
-          if (container) ReactDOM.render(<${ page.klass } />, container)
+
+          if (container && container.children.length === 0) {
+            ReactDOM.render(<${ page.klass } />, container)
+          }
+
+          if (container && container.children.length > 0) {
+            ReactDOM.hydrate(<${ page.klass } />, container)
+          }
         })
       `
     })
@@ -98,6 +104,15 @@ class Totem {
       fse.copySync("./assets", "./dist/assets")
 
       console.log("Site generated")
+
+      const outputPages = pageConfigs.map(config => {
+        return {
+          name: config.name,
+          path: `./dist/${ config.name }.html`
+        }
+      })
+
+      callback(outputPages)
     })
   }
 }
