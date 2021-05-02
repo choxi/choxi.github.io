@@ -25,7 +25,8 @@ class Totem {
     fs.mkdirSync("./dist")
 
     console.log("Buildings components...")
-    const componentPaths = fs.readdirSync("./components").filter(path => path != "index.js")
+    const componentPaths = fs.readdirSync("./components")
+                             .filter(p => p.split(".")[1] === "jsx")
     const componentConfigs = componentPaths.map(path => {
       const tag = path.split(".")[0]
       const klass = pascalCase(tag)

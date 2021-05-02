@@ -40,7 +40,7 @@ if (command === "serve") {
     })
   })
 
-
+  builder.build()
   app.use(express.static("./dist"))
 
   app.listen(port, () => {

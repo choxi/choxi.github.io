@@ -1,7 +1,7 @@
 import React from "react"
 import p5 from "p5"
 import Helmet from "react-helmet"
-import CL from "../js/city-landscape"
+import CL from "./js/city-landscape"
 
 export default class CityLandscape extends React.Component {
   constructor(props) {
