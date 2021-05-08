@@ -12,11 +12,11 @@ export default function Sidebar() {
         Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science,
         technology, and design.
       </p>
+
       <ul>
         <li><a href="https://twitter.com/choxi" target="_blank">Twitter</a></li>
         <li><a href="https://github.com/choxi" target="_blank">GitHub</a></li>
         <li><a href="https://www.linkedin.com/in/choxi" target="_blank">LinkedIn</a></li>
-
       </ul>
 
       <h3 className="spc-n-l">Projects</h3>
