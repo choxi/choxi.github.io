@@ -21,16 +21,12 @@
     "url": "https://github.com/choxi/choxi.github.io/issues"
   },
   "homepage": "https://github.com/choxi/choxi.github.io#readme",
-  "dependencies": {
+  "devDependencies": {
+    "gh-pages": "^3.1.0",
+    "idiomjs": "file:../idiomjs",
     "p5": "^1.3.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",
     "react-inline-script": "^1.2.0",
     "victor": "^1.1.0"
-  },
-  "devDependencies": {
-    "gh-pages": "^3.1.0",
-    "idiomjs": "file:../idiomjs"
   }
 }
