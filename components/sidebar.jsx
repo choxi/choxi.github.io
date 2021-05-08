@@ -24,6 +24,7 @@ export default function Sidebar() {
 
       <h3 className="spc-n-l">Posts</h3>
       <ul>
+        <li><a href="/introducing-idiom.html">Introducing Totem</a></li>
         <li>
           <a href="/procedural-landscapes.html">
             Procedurally Generated Landscapes
