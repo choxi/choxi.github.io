@@ -8,7 +8,7 @@ import debuggingImg from "../images/gesture-detection-debugging.png"
 import debuggingImg2 from "../images/gesture-detection-debugging-2.png"
 import finalImg from "../images/gesture-detection-final.gif"
 
-export default function GestureDetection() {
+export default function Page() {
   return (
     <Layout>
       <div className="post">

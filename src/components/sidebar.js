@@ -26,9 +26,8 @@ export default function Sidebar() {
 
       <h3 className="spc-n-l">Posts</h3>
       <ul>
-        <li><a href="/idiom-static-site-generator.html">Idiom: A Simple Static Site Generator in React</a></li>
         <li>
-          <a href="/procedural-landscapes.html">
+          <a href="/procedural-landscapes">
             Procedurally Generated Landscapes
           </a>
         </li>

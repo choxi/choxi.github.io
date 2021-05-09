@@ -3,9 +3,14 @@ $color-text: #444;
 
 $spc-sm: 0.5em;
 
+#___gatsby, #gatsby-focus-wrapper {
+  height: 100%;
+}
+
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 body {
@@ -115,6 +120,16 @@ ul {
 // https://ricostacruz.com/til/css-media-query-breakpoints
 
 // mobile portrait
+@media (min-width: 0px) {
+  .zero-show {
+    display: block;
+  }
+
+  .zero-hide {
+    display: none;
+  }
+}
+
 @media (min-width: 576px) {
   .sm-show {
     display: block;
