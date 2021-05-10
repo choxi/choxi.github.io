@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <Layout>
       <div className="post">
-        <h1>Procedurally Generated Landscapes</h1>
+        <h1 className="spc-n-zero">Procedurally Generated Landscapes</h1>
 
         <p>
           I've recenty been investigating the generative art field and came across this <a href="https://github.com/LingDong-/shan-shui-inf">Procedurally Generated Chinese Landscape</a>.
