@@ -20,7 +20,7 @@ export default function PostLayout(props) {
         </script>
       </Helmet>
 
-      <div className="layout-sidebar--sidebar pad pad-ew-l sm-hide lg-show">
+      <div className="layout-sidebar--sidebar pad-l sm-hide lg-show">
         <Sidebar />
       </div>
 

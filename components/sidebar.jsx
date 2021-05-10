@@ -4,7 +4,7 @@ export default function Sidebar() {
   return (
     <div>
       <a href="/index.html" className="reset">
-        <h1> roshan choxi </h1>
+        <h1 className="spc-n-zero"> roshan choxi </h1>
       </a>
       <p>
         Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science,

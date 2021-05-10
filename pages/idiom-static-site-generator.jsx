@@ -6,7 +6,7 @@
   <div className="post">
     <h1 className="spc-n-zero">Idiom: A Simple Static Site Generator in React</h1>
     <p>
-      One of my favorite aspects of React is that it extends HTML and allows you to define your own elements. Using React (or Vue, Web Components, etc.) you can build your own markup language however you like and create rich, interactive web pages. I wanted to create my own markup for this personal site so that I could write posts like:
+      One of my favorite aspects of React is that it extends HTML and allows you to define your own elements to build up your own markup language. I wanted to do this for my personal site, so that I could write a post like this:
     </p>
 
     <Code lang="jsx">
@@ -35,8 +35,23 @@
     </ul>
 
     <p>
-      In contrast, Idiom uses the very fast <a>esbuild</a> to compile your JS and <a>jsdom</a> for prerendering. It uses sensible defaults and favors convention over configuration, allowing you to write your pages as a pure JSX expression without any <code>import</code> boilerplate by autoloading your components assuming certain naming conventions.
+      Idiom is like a slimmed down version of Gatsby. It runs faster by using <a>esbuild</a> to compile your JS and <a>jsdom</a> for prerendering. It uses sensible defaults and favors convention over configuration, allowing you to write your pages as a pure JSX expression by autoloading your components.
     </p>
+
+    <p>
+      An Idiom site looks like this:
+    </p>
+
+    <Code>
+      {`
+        my-site/
+          components/
+            layout.jsx
+            layout.scss
+          pages/
+            index.jsx
+      `}
+    </Code>
 
     <p>
       Idiom is still a work in progress, but if you'd like to try it out or send along any feedback check out the <Link href="https://github.com/choxi/idiomjs">GitHub repo</Link>.
