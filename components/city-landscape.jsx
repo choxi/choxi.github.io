@@ -17,7 +17,6 @@ export default class CityLandscape extends React.Component {
 
   render() {
     return <div id="city-landscape">
-      <Helmet><title>City Landscape | choxi</title></Helmet>
       <div id="canvas" width="100%" ref={ this.canvasRef }> </div>
     </div>
   }

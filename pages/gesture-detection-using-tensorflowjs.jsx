@@ -1,6 +1,10 @@
 <PostLayout>
+  <Helmet>
+    <title>choxi | Gesture Detection Using TensorflowJS </title>
+  </Helmet>
+
   <div className="post">
-    <h1>Gesture Detection Using Tensorflow.js</h1>
+    <h1 className="spc-n-zero">Gesture Detection Using Tensorflow.js</h1>
     <p>
       I started this project to create an end-to-end training tool for gesture recognition using deep learning.
       You can view the code <a href="https://github.com/choxi/rune">here</a> and try the demo
