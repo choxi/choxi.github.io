@@ -43260,7 +43260,16 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   function PostLayout(props) {
     return /* @__PURE__ */ import_react10.default.createElement("div", {
       className: "layout-sidebar"
-    }, /* @__PURE__ */ import_react10.default.createElement("div", {
+    }, /* @__PURE__ */ import_react10.default.createElement(Helmet_default, null, /* @__PURE__ */ import_react10.default.createElement("script", {
+      async: true,
+      src: "https://www.googletagmanager.com/gtag/js?id=UA-86991778-1"
+    }), /* @__PURE__ */ import_react10.default.createElement("script", null, `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'UA-86991778-1');
+          `)), /* @__PURE__ */ import_react10.default.createElement("div", {
       className: "layout-sidebar--sidebar pad pad-ew-l sm-hide lg-show"
     }, /* @__PURE__ */ import_react10.default.createElement(Sidebar, null)), /* @__PURE__ */ import_react10.default.createElement("div", {
       className: "layout-sidebar--content pad-l"
