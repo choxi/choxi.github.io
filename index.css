@@ -1,4 +1,20 @@
-/* ../../../../var/folders/vv/59_6rq_921j561ngk1c79y9h0000gn/T/tmp-77661-L7dEYaX1nnxZ/choxi.github.io/components/application.css */
+/* ../../../../var/folders/vv/59_6rq_921j561ngk1c79y9h0000gn/T/tmp-78215-7enwUMXN5A2P/choxi.github.io/components/application.css */
+.post video,
+.post img,
+.post canvas {
+  max-width: 100%;
+}
+.post img {
+  display: block;
+  margin: 0 auto;
+}
+.post p {
+  line-height: 150%;
+  font-size: 16px;
+}
+.post ul li {
+  margin: 0.5em 0;
+}
 html,
 body {
   margin: 0;
@@ -15,11 +31,11 @@ a {
 a.reset {
   color: #444;
 }
-ul {
+ul.no-format {
   padding-left: 0;
   list-style: none;
 }
-ul li {
+ul.no-format li {
   margin: 0.5em 0;
 }
 .layout-sidebar {
@@ -70,19 +86,6 @@ ul li {
 }
 .text-center {
   text-align: center;
-}
-.post video,
-.post img,
-.post canvas {
-  max-width: 100%;
-}
-.post img {
-  display: block;
-  margin: 0 auto;
-}
-.post p {
-  line-height: 150%;
-  font-size: 16px;
 }
 @media (min-width:576px) {
   .sm-show {
