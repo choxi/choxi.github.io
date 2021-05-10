@@ -1,17 +1,22 @@
 import React from "react"
 import p5 from "p5"
 
+// const isBrowser = typeof window !== "undefined"
+
 export default class P5Canvas extends React.Component {
   componentDidMount() {
-    window.p5 = p5
+    // https://www.gatsbyjs.com/docs/debugging-html-builds/
+    if (isBrowser) {
+      // window.p5 = p5
 
-    // eval in context
-    // https://stackoverflow.com/questions/8403108/calling-eval-in-particular-context
-    window.eval(`
-      const app = new p5(p => {
-        ${ this.props.children }
-      }, "p5-canvas")
-    `)
+      // // eval in context
+      // // https://stackoverflow.com/questions/8403108/calling-eval-in-particular-context
+      // window.eval(`
+      //   const app = new p5(p => {
+      //     ${ this.props.children }
+      //   }, "p5-canvas")
+      // `)
+    }
   }
 
   render() {

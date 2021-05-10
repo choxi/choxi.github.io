@@ -99,8 +99,16 @@ export default class Utils {
   }
 
   static toGPUCoordinate(x, y) {
-    let height = window.innerHeight
-    let width = window.innerWidth
+    // const isBrowser = typeof window !== "undefined"
+    // if (!isBrowser) {
+    //   return
+    // }
+
+    // let height = window.innerHeight
+    // let width = window.innerWidth
+
+    let height = 0
+    let width = 0
 
     let centeredX = x - width / 2
     let centeredY = y - height / 2
