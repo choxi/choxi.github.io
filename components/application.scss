@@ -1,3 +1,5 @@
+@import "post";
+
 $color-primary: #2980b9;
 $color-text: #444;
 
@@ -22,7 +24,7 @@ a.reset {
   color: $color-text;
 }
 
-ul {
+ul.no-format {
   padding-left: 0;
   list-style: none;
 
@@ -92,23 +94,6 @@ ul {
 
 .text-center {
   text-align: center;
-}
-
-/* Default styles for a blog post */
-.post {
-  video, img, canvas {
-    max-width: 100%;
-  }
-}
-
-.post img {
-  display: block;
-  margin: 0 auto;
-}
-
-.post p {
- line-height: 150%;
- font-size: 16px;
 }
 
 // What breakpoints should I use?
