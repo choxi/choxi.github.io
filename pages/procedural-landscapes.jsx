@@ -9,8 +9,7 @@
     <video src="/assets/chinese-landscape.mov#t=0.001" controls></video>
 
     <p>
-      You can view
-      <a href="https://lingdong-.github.io/shan-shui-inf/">the live project here</a> or the <a href="https://github.com/LingDong-/shan-shui-inf">source code here</a>. The landscape is completely generated from geometric primitives, and scrolls infinitely. I wanted to explore some of the techniques used, so I made my own version inspired by the landscape in Chicago right now:
+      You can view <a href="https://lingdong-.github.io/shan-shui-inf/">the live project here</a> or the <a href="https://github.com/LingDong-/shan-shui-inf">source code here</a>. The landscape is completely generated from geometric primitives, and scrolls infinitely. I wanted to explore some of the techniques used, so I made my own version inspired by the landscape in Chicago right now:
     </p>
 
     <CityLandscape />
