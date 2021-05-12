@@ -1,4 +1,4 @@
-/* ../../../../var/folders/vv/59_6rq_921j561ngk1c79y9h0000gn/T/tmp-17765-IoObEEGDeUE5/choxi.github.io/components/application.css */
+/* ../../../../var/folders/vv/59_6rq_921j561ngk1c79y9h0000gn/T/tmp-17996-8GbTQQC5SXAU/choxi.github.io/components/application.css */
 .post video,
 .post img,
 .post canvas {
@@ -100,7 +100,7 @@ ul.no-format li {
   border-radius: 0.25em;
 }
 .box--frost {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(50, 50, 50, 0.8);
 }
 @media (min-width:576px) {
   .sm-show {
