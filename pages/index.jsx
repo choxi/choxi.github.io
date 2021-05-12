@@ -1,5 +1,10 @@
 <div className="layout-absolute">
+  <Helmet>
+    <title> choxi </title>
+  </Helmet>
+
   <Raindrops />
+
   <div className="layout-absolute--center">
     <div className="box box--frost">
       <div className="text-center">

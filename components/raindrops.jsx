@@ -56,7 +56,7 @@ const sketch = (width, height, p) => {
     p.frameRate(30)
     p.createCanvas(width, height, p.WEBGL)
 
-    for(let i = 0; i < 2; i++) {
+    for(let i = 0; i < 1; i++) {
       const x = Utils.random(- width / 2, width / 2)
       const y = Utils.random(- height / 2, height / 2)
       const bubble = new Bubble(new Vector(x, y))
