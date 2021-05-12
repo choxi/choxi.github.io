@@ -1,6 +1,5 @@
 import React from "react"
 import p5 from "p5"
-import Helmet from "react-helmet"
 
 export default class P5Canvas extends React.Component {
   componentDidMount() {
