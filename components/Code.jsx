@@ -25,9 +25,10 @@ function padLevel(body) {
 
 export default function Code(props) {
   const body = padLevel(String(props.children))
+  const customStyle = { fontSize: "0.9em", borderRadius: "0.25em", color: "#333 !important" }
 
   return (
-    <SyntaxHighlighter language={ props.lang } style={ prism }>
+    <SyntaxHighlighter language={ props.lang } style={ prism } customStyle={ customStyle }>
       { body }
     </SyntaxHighlighter>
   )
