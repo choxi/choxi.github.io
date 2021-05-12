@@ -42469,9 +42469,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   }
   function Code(props) {
     const body = padLevel(String(props.children));
+    const customStyle = {fontSize: "0.9em", borderRadius: "0.25em", color: "#333 !important"};
     return /* @__PURE__ */ import_react4.default.createElement(prism_light_default, {
       language: props.lang,
-      style: prism_default
+      style: prism_default,
+      customStyle
     }, body);
   }
 
@@ -43387,7 +43389,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     p.setup = () => {
       p.frameRate(30);
       p.createCanvas(width, height, p.WEBGL);
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 1; i++) {
         const x = utils_default.random(-width / 2, width / 2);
         const y = utils_default.random(-height / 2, height / 2);
         const bubble = new Bubble(new vector_default(x, y));
@@ -43477,16 +43479,21 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
           <Subscribe newsletter="idiom" cta="Get updates on Idiom" />
         </Post>
-      `), /* @__PURE__ */ import_react12.default.createElement("p", null, "A popular framework for this type of React-based static site is GatsbyJS. Gatsby is powerful but complex, it requires a lot of configuration, can be difficult to debug, and uses Webpack and GraphQL in its toolchain. This seems like overkill for a static site generator, I wanted something that:"), /* @__PURE__ */ import_react12.default.createElement("ul", null, /* @__PURE__ */ import_react12.default.createElement("li", null, "Has an extendable markup language"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Is search-engine friendly"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Has a simple toolchain with a minimal number of dependencies"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Can easily be deployed to any static site host (e.g. GitHub Pages or S3)")), /* @__PURE__ */ import_react12.default.createElement("p", null, "Idiom is like a slimmed down version of Gatsby. It runs faster by using ", /* @__PURE__ */ import_react12.default.createElement("a", null, "esbuild"), " to compile your JS and ", /* @__PURE__ */ import_react12.default.createElement("a", null, "jsdom"), " for prerendering. It uses sensible defaults and favors convention over configuration, allowing you to write your pages as a pure JSX expression by autoloading your components."), /* @__PURE__ */ import_react12.default.createElement("p", null, "An Idiom site looks like this:"), /* @__PURE__ */ import_react12.default.createElement(Code, null, `
+      `), /* @__PURE__ */ import_react12.default.createElement("p", null, /* @__PURE__ */ import_react12.default.createElement("a", {
+        href: "https://www.gatsbyjs.com"
+      }, "Gatsby"), " is a popular framework for this type of React-based static site. It's powerful but complex, requires a lot of configuration, and can be difficult to debug since it uses a lot of libraries like Webpack and GraphQL in its toolchain. This seems like overkill for a static site generator, I wanted something that:"), /* @__PURE__ */ import_react12.default.createElement("ul", null, /* @__PURE__ */ import_react12.default.createElement("li", null, "Has an extendable markup language"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Is search-engine friendly"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Has a simple toolchain with a minimal number of dependencies"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Can easily be deployed to any static site host (e.g. GitHub Pages or S3)")), /* @__PURE__ */ import_react12.default.createElement("p", null, "Idiom is like a slimmed down version of Gatsby. It runs faster by using ", /* @__PURE__ */ import_react12.default.createElement("a", null, "esbuild"), " to compile your JS and ", /* @__PURE__ */ import_react12.default.createElement("a", null, "jsdom"), " for prerendering. It uses sensible defaults and favors convention over configuration, allowing you to write your pages as a pure JSX expression by autoloading your components."), /* @__PURE__ */ import_react12.default.createElement("p", null, "An Idiom site looks like this:"), /* @__PURE__ */ import_react12.default.createElement(Code, null, `
         my-site/
           components/
             layout.jsx
             layout.scss
           pages/
             index.jsx
-      `), /* @__PURE__ */ import_react12.default.createElement("p", null, "Idiom is still a work in progress, but if you'd like to try it out or send along any feedback check out the ", /* @__PURE__ */ import_react12.default.createElement(Link, {
+            second-page.jsx
+      `), /* @__PURE__ */ import_react12.default.createElement("p", null, "You can use React components to create shared partials like layouts, headers, or higlighted code snippets. Routes are automatically generated based on the page name, and components are automatically loaded into each page and can be referenced by the pascalcase version of their filename."), /* @__PURE__ */ import_react12.default.createElement("p", null, "Idiom is still a work in progress, but if you'd like to try it out or send along any feedback check out the ", /* @__PURE__ */ import_react12.default.createElement(Link, {
         href: "https://github.com/choxi/idiomjs"
-      }, "GitHub repo"), ".")));
+      }, "GitHub repo"), ". This site is also built using Idiom, and you can ", /* @__PURE__ */ import_react12.default.createElement("a", {
+        href: "https://github.com/choxi.github.io"
+      }, "view the source code here"), ".")));
     }
   };
   document.addEventListener("DOMContentLoaded", (event) => {
@@ -43502,7 +43509,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     render() {
       return /* @__PURE__ */ import_react12.default.createElement("div", {
         className: "layout-absolute"
-      }, /* @__PURE__ */ import_react12.default.createElement(raindrops_default, null), /* @__PURE__ */ import_react12.default.createElement("div", {
+      }, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, " choxi ")), /* @__PURE__ */ import_react12.default.createElement(raindrops_default, null), /* @__PURE__ */ import_react12.default.createElement("div", {
         className: "layout-absolute--center"
       }, /* @__PURE__ */ import_react12.default.createElement("div", {
         className: "box box--frost"
