@@ -20,7 +20,7 @@ export default class Raindrops extends React.Component {
     const { width, height } = this.props
     const w = width ? width : window.innerWidth
     const h = height ? height : window.innerHeight
-    return <div id="p5-canvas" width={ w } height={ h }></div>
+    return <div id="p5-canvas" width={ w } height={ h } style={{ background: "black" }}></div>
   }
 }
 
