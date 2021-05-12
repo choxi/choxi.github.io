@@ -13,7 +13,7 @@
           technology, and design.
         </h2>
 
-        <h3 className="spc-n-l">Posts</h3>
+        <h3 className="spc-n-l">Recent Posts</h3>
         <ul className="no-format">
           <li><a href="/idiom-static-site-generator.html">Idiom: A Simple Static Site Generator in React</a></li>
           <li>

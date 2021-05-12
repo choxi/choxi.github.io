@@ -7,8 +7,7 @@
     <h1 className="spc-n-zero">Gesture Detection Using Tensorflow.js</h1>
     <p>
       I started this project to create an end-to-end training tool for gesture recognition using deep learning.
-      You can view the code <a href="https://github.com/choxi/rune">here</a> and try the demo
-      <a href="https://priceless-jones-bef040.netlify.com/">here</a>.
+      You can view the code <a href="https://github.com/choxi/rune">here</a> and try the demo <a href="https://priceless-jones-bef040.netlify.com/">here</a>.
     </p>
 
     <img src="/assets/gesture-detection-overview.gif" />
