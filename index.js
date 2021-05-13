@@ -20419,6 +20419,2635 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
+  // node_modules/xtend/immutable.js
+  var require_immutable = __commonJS({
+    "node_modules/xtend/immutable.js"(exports, module) {
+      module.exports = extend;
+      var hasOwnProperty = Object.prototype.hasOwnProperty;
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/schema.js
+  var require_schema = __commonJS({
+    "node_modules/property-information/lib/util/schema.js"(exports, module) {
+      "use strict";
+      module.exports = Schema;
+      var proto = Schema.prototype;
+      proto.space = null;
+      proto.normal = {};
+      proto.property = {};
+      function Schema(property, normal, space) {
+        this.property = property;
+        this.normal = normal;
+        if (space) {
+          this.space = space;
+        }
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/merge.js
+  var require_merge = __commonJS({
+    "node_modules/property-information/lib/util/merge.js"(exports, module) {
+      "use strict";
+      var xtend = require_immutable();
+      var Schema = require_schema();
+      module.exports = merge;
+      function merge(definitions) {
+        var length = definitions.length;
+        var property = [];
+        var normal = [];
+        var index = -1;
+        var info;
+        var space;
+        while (++index < length) {
+          info = definitions[index];
+          property.push(info.property);
+          normal.push(info.normal);
+          space = info.space;
+        }
+        return new Schema(xtend.apply(null, property), xtend.apply(null, normal), space);
+      }
+    }
+  });
+
+  // node_modules/property-information/normalize.js
+  var require_normalize = __commonJS({
+    "node_modules/property-information/normalize.js"(exports, module) {
+      "use strict";
+      module.exports = normalize;
+      function normalize(value) {
+        return value.toLowerCase();
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/info.js
+  var require_info = __commonJS({
+    "node_modules/property-information/lib/util/info.js"(exports, module) {
+      "use strict";
+      module.exports = Info;
+      var proto = Info.prototype;
+      proto.space = null;
+      proto.attribute = null;
+      proto.property = null;
+      proto.boolean = false;
+      proto.booleanish = false;
+      proto.overloadedBoolean = false;
+      proto.number = false;
+      proto.commaSeparated = false;
+      proto.spaceSeparated = false;
+      proto.commaOrSpaceSeparated = false;
+      proto.mustUseProperty = false;
+      proto.defined = false;
+      function Info(property, attribute) {
+        this.property = property;
+        this.attribute = attribute;
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/types.js
+  var require_types = __commonJS({
+    "node_modules/property-information/lib/util/types.js"(exports) {
+      "use strict";
+      var powers = 0;
+      exports.boolean = increment();
+      exports.booleanish = increment();
+      exports.overloadedBoolean = increment();
+      exports.number = increment();
+      exports.spaceSeparated = increment();
+      exports.commaSeparated = increment();
+      exports.commaOrSpaceSeparated = increment();
+      function increment() {
+        return Math.pow(2, ++powers);
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/defined-info.js
+  var require_defined_info = __commonJS({
+    "node_modules/property-information/lib/util/defined-info.js"(exports, module) {
+      "use strict";
+      var Info = require_info();
+      var types = require_types();
+      module.exports = DefinedInfo;
+      DefinedInfo.prototype = new Info();
+      DefinedInfo.prototype.defined = true;
+      var checks = [
+        "boolean",
+        "booleanish",
+        "overloadedBoolean",
+        "number",
+        "commaSeparated",
+        "spaceSeparated",
+        "commaOrSpaceSeparated"
+      ];
+      var checksLength = checks.length;
+      function DefinedInfo(property, attribute, mask, space) {
+        var index = -1;
+        var check;
+        mark(this, "space", space);
+        Info.call(this, property, attribute);
+        while (++index < checksLength) {
+          check = checks[index];
+          mark(this, check, (mask & types[check]) === types[check]);
+        }
+      }
+      function mark(values, key, value) {
+        if (value) {
+          values[key] = value;
+        }
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/create.js
+  var require_create = __commonJS({
+    "node_modules/property-information/lib/util/create.js"(exports, module) {
+      "use strict";
+      var normalize = require_normalize();
+      var Schema = require_schema();
+      var DefinedInfo = require_defined_info();
+      module.exports = create;
+      function create(definition) {
+        var space = definition.space;
+        var mustUseProperty = definition.mustUseProperty || [];
+        var attributes = definition.attributes || {};
+        var props = definition.properties;
+        var transform = definition.transform;
+        var property = {};
+        var normal = {};
+        var prop;
+        var info;
+        for (prop in props) {
+          info = new DefinedInfo(prop, transform(attributes, prop), props[prop], space);
+          if (mustUseProperty.indexOf(prop) !== -1) {
+            info.mustUseProperty = true;
+          }
+          property[prop] = info;
+          normal[normalize(prop)] = prop;
+          normal[normalize(info.attribute)] = prop;
+        }
+        return new Schema(property, normal, space);
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/xlink.js
+  var require_xlink = __commonJS({
+    "node_modules/property-information/lib/xlink.js"(exports, module) {
+      "use strict";
+      var create = require_create();
+      module.exports = create({
+        space: "xlink",
+        transform: xlinkTransform,
+        properties: {
+          xLinkActuate: null,
+          xLinkArcRole: null,
+          xLinkHref: null,
+          xLinkRole: null,
+          xLinkShow: null,
+          xLinkTitle: null,
+          xLinkType: null
+        }
+      });
+      function xlinkTransform(_, prop) {
+        return "xlink:" + prop.slice(5).toLowerCase();
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/xml.js
+  var require_xml = __commonJS({
+    "node_modules/property-information/lib/xml.js"(exports, module) {
+      "use strict";
+      var create = require_create();
+      module.exports = create({
+        space: "xml",
+        transform: xmlTransform,
+        properties: {
+          xmlLang: null,
+          xmlBase: null,
+          xmlSpace: null
+        }
+      });
+      function xmlTransform(_, prop) {
+        return "xml:" + prop.slice(3).toLowerCase();
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/case-sensitive-transform.js
+  var require_case_sensitive_transform = __commonJS({
+    "node_modules/property-information/lib/util/case-sensitive-transform.js"(exports, module) {
+      "use strict";
+      module.exports = caseSensitiveTransform;
+      function caseSensitiveTransform(attributes, attribute) {
+        return attribute in attributes ? attributes[attribute] : attribute;
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/util/case-insensitive-transform.js
+  var require_case_insensitive_transform = __commonJS({
+    "node_modules/property-information/lib/util/case-insensitive-transform.js"(exports, module) {
+      "use strict";
+      var caseSensitiveTransform = require_case_sensitive_transform();
+      module.exports = caseInsensitiveTransform;
+      function caseInsensitiveTransform(attributes, property) {
+        return caseSensitiveTransform(attributes, property.toLowerCase());
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/xmlns.js
+  var require_xmlns = __commonJS({
+    "node_modules/property-information/lib/xmlns.js"(exports, module) {
+      "use strict";
+      var create = require_create();
+      var caseInsensitiveTransform = require_case_insensitive_transform();
+      module.exports = create({
+        space: "xmlns",
+        attributes: {
+          xmlnsxlink: "xmlns:xlink"
+        },
+        transform: caseInsensitiveTransform,
+        properties: {
+          xmlns: null,
+          xmlnsXLink: null
+        }
+      });
+    }
+  });
+
+  // node_modules/property-information/lib/aria.js
+  var require_aria = __commonJS({
+    "node_modules/property-information/lib/aria.js"(exports, module) {
+      "use strict";
+      var types = require_types();
+      var create = require_create();
+      var booleanish = types.booleanish;
+      var number = types.number;
+      var spaceSeparated = types.spaceSeparated;
+      module.exports = create({
+        transform: ariaTransform,
+        properties: {
+          ariaActiveDescendant: null,
+          ariaAtomic: booleanish,
+          ariaAutoComplete: null,
+          ariaBusy: booleanish,
+          ariaChecked: booleanish,
+          ariaColCount: number,
+          ariaColIndex: number,
+          ariaColSpan: number,
+          ariaControls: spaceSeparated,
+          ariaCurrent: null,
+          ariaDescribedBy: spaceSeparated,
+          ariaDetails: null,
+          ariaDisabled: booleanish,
+          ariaDropEffect: spaceSeparated,
+          ariaErrorMessage: null,
+          ariaExpanded: booleanish,
+          ariaFlowTo: spaceSeparated,
+          ariaGrabbed: booleanish,
+          ariaHasPopup: null,
+          ariaHidden: booleanish,
+          ariaInvalid: null,
+          ariaKeyShortcuts: null,
+          ariaLabel: null,
+          ariaLabelledBy: spaceSeparated,
+          ariaLevel: number,
+          ariaLive: null,
+          ariaModal: booleanish,
+          ariaMultiLine: booleanish,
+          ariaMultiSelectable: booleanish,
+          ariaOrientation: null,
+          ariaOwns: spaceSeparated,
+          ariaPlaceholder: null,
+          ariaPosInSet: number,
+          ariaPressed: booleanish,
+          ariaReadOnly: booleanish,
+          ariaRelevant: null,
+          ariaRequired: booleanish,
+          ariaRoleDescription: spaceSeparated,
+          ariaRowCount: number,
+          ariaRowIndex: number,
+          ariaRowSpan: number,
+          ariaSelected: booleanish,
+          ariaSetSize: number,
+          ariaSort: null,
+          ariaValueMax: number,
+          ariaValueMin: number,
+          ariaValueNow: number,
+          ariaValueText: null,
+          role: null
+        }
+      });
+      function ariaTransform(_, prop) {
+        return prop === "role" ? prop : "aria-" + prop.slice(4).toLowerCase();
+      }
+    }
+  });
+
+  // node_modules/property-information/lib/html.js
+  var require_html = __commonJS({
+    "node_modules/property-information/lib/html.js"(exports, module) {
+      "use strict";
+      var types = require_types();
+      var create = require_create();
+      var caseInsensitiveTransform = require_case_insensitive_transform();
+      var boolean = types.boolean;
+      var overloadedBoolean = types.overloadedBoolean;
+      var booleanish = types.booleanish;
+      var number = types.number;
+      var spaceSeparated = types.spaceSeparated;
+      var commaSeparated = types.commaSeparated;
+      module.exports = create({
+        space: "html",
+        attributes: {
+          acceptcharset: "accept-charset",
+          classname: "class",
+          htmlfor: "for",
+          httpequiv: "http-equiv"
+        },
+        transform: caseInsensitiveTransform,
+        mustUseProperty: ["checked", "multiple", "muted", "selected"],
+        properties: {
+          abbr: null,
+          accept: commaSeparated,
+          acceptCharset: spaceSeparated,
+          accessKey: spaceSeparated,
+          action: null,
+          allow: null,
+          allowFullScreen: boolean,
+          allowPaymentRequest: boolean,
+          allowUserMedia: boolean,
+          alt: null,
+          as: null,
+          async: boolean,
+          autoCapitalize: null,
+          autoComplete: spaceSeparated,
+          autoFocus: boolean,
+          autoPlay: boolean,
+          capture: boolean,
+          charSet: null,
+          checked: boolean,
+          cite: null,
+          className: spaceSeparated,
+          cols: number,
+          colSpan: null,
+          content: null,
+          contentEditable: booleanish,
+          controls: boolean,
+          controlsList: spaceSeparated,
+          coords: number | commaSeparated,
+          crossOrigin: null,
+          data: null,
+          dateTime: null,
+          decoding: null,
+          default: boolean,
+          defer: boolean,
+          dir: null,
+          dirName: null,
+          disabled: boolean,
+          download: overloadedBoolean,
+          draggable: booleanish,
+          encType: null,
+          enterKeyHint: null,
+          form: null,
+          formAction: null,
+          formEncType: null,
+          formMethod: null,
+          formNoValidate: boolean,
+          formTarget: null,
+          headers: spaceSeparated,
+          height: number,
+          hidden: boolean,
+          high: number,
+          href: null,
+          hrefLang: null,
+          htmlFor: spaceSeparated,
+          httpEquiv: spaceSeparated,
+          id: null,
+          imageSizes: null,
+          imageSrcSet: commaSeparated,
+          inputMode: null,
+          integrity: null,
+          is: null,
+          isMap: boolean,
+          itemId: null,
+          itemProp: spaceSeparated,
+          itemRef: spaceSeparated,
+          itemScope: boolean,
+          itemType: spaceSeparated,
+          kind: null,
+          label: null,
+          lang: null,
+          language: null,
+          list: null,
+          loading: null,
+          loop: boolean,
+          low: number,
+          manifest: null,
+          max: null,
+          maxLength: number,
+          media: null,
+          method: null,
+          min: null,
+          minLength: number,
+          multiple: boolean,
+          muted: boolean,
+          name: null,
+          nonce: null,
+          noModule: boolean,
+          noValidate: boolean,
+          onAbort: null,
+          onAfterPrint: null,
+          onAuxClick: null,
+          onBeforePrint: null,
+          onBeforeUnload: null,
+          onBlur: null,
+          onCancel: null,
+          onCanPlay: null,
+          onCanPlayThrough: null,
+          onChange: null,
+          onClick: null,
+          onClose: null,
+          onContextMenu: null,
+          onCopy: null,
+          onCueChange: null,
+          onCut: null,
+          onDblClick: null,
+          onDrag: null,
+          onDragEnd: null,
+          onDragEnter: null,
+          onDragExit: null,
+          onDragLeave: null,
+          onDragOver: null,
+          onDragStart: null,
+          onDrop: null,
+          onDurationChange: null,
+          onEmptied: null,
+          onEnded: null,
+          onError: null,
+          onFocus: null,
+          onFormData: null,
+          onHashChange: null,
+          onInput: null,
+          onInvalid: null,
+          onKeyDown: null,
+          onKeyPress: null,
+          onKeyUp: null,
+          onLanguageChange: null,
+          onLoad: null,
+          onLoadedData: null,
+          onLoadedMetadata: null,
+          onLoadEnd: null,
+          onLoadStart: null,
+          onMessage: null,
+          onMessageError: null,
+          onMouseDown: null,
+          onMouseEnter: null,
+          onMouseLeave: null,
+          onMouseMove: null,
+          onMouseOut: null,
+          onMouseOver: null,
+          onMouseUp: null,
+          onOffline: null,
+          onOnline: null,
+          onPageHide: null,
+          onPageShow: null,
+          onPaste: null,
+          onPause: null,
+          onPlay: null,
+          onPlaying: null,
+          onPopState: null,
+          onProgress: null,
+          onRateChange: null,
+          onRejectionHandled: null,
+          onReset: null,
+          onResize: null,
+          onScroll: null,
+          onSecurityPolicyViolation: null,
+          onSeeked: null,
+          onSeeking: null,
+          onSelect: null,
+          onSlotChange: null,
+          onStalled: null,
+          onStorage: null,
+          onSubmit: null,
+          onSuspend: null,
+          onTimeUpdate: null,
+          onToggle: null,
+          onUnhandledRejection: null,
+          onUnload: null,
+          onVolumeChange: null,
+          onWaiting: null,
+          onWheel: null,
+          open: boolean,
+          optimum: number,
+          pattern: null,
+          ping: spaceSeparated,
+          placeholder: null,
+          playsInline: boolean,
+          poster: null,
+          preload: null,
+          readOnly: boolean,
+          referrerPolicy: null,
+          rel: spaceSeparated,
+          required: boolean,
+          reversed: boolean,
+          rows: number,
+          rowSpan: number,
+          sandbox: spaceSeparated,
+          scope: null,
+          scoped: boolean,
+          seamless: boolean,
+          selected: boolean,
+          shape: null,
+          size: number,
+          sizes: null,
+          slot: null,
+          span: number,
+          spellCheck: booleanish,
+          src: null,
+          srcDoc: null,
+          srcLang: null,
+          srcSet: commaSeparated,
+          start: number,
+          step: null,
+          style: null,
+          tabIndex: number,
+          target: null,
+          title: null,
+          translate: null,
+          type: null,
+          typeMustMatch: boolean,
+          useMap: null,
+          value: booleanish,
+          width: number,
+          wrap: null,
+          align: null,
+          aLink: null,
+          archive: spaceSeparated,
+          axis: null,
+          background: null,
+          bgColor: null,
+          border: number,
+          borderColor: null,
+          bottomMargin: number,
+          cellPadding: null,
+          cellSpacing: null,
+          char: null,
+          charOff: null,
+          classId: null,
+          clear: null,
+          code: null,
+          codeBase: null,
+          codeType: null,
+          color: null,
+          compact: boolean,
+          declare: boolean,
+          event: null,
+          face: null,
+          frame: null,
+          frameBorder: null,
+          hSpace: number,
+          leftMargin: number,
+          link: null,
+          longDesc: null,
+          lowSrc: null,
+          marginHeight: number,
+          marginWidth: number,
+          noResize: boolean,
+          noHref: boolean,
+          noShade: boolean,
+          noWrap: boolean,
+          object: null,
+          profile: null,
+          prompt: null,
+          rev: null,
+          rightMargin: number,
+          rules: null,
+          scheme: null,
+          scrolling: booleanish,
+          standby: null,
+          summary: null,
+          text: null,
+          topMargin: number,
+          valueType: null,
+          version: null,
+          vAlign: null,
+          vLink: null,
+          vSpace: number,
+          allowTransparency: null,
+          autoCorrect: null,
+          autoSave: null,
+          disablePictureInPicture: boolean,
+          disableRemotePlayback: boolean,
+          prefix: null,
+          property: null,
+          results: number,
+          security: null,
+          unselectable: null
+        }
+      });
+    }
+  });
+
+  // node_modules/property-information/html.js
+  var require_html2 = __commonJS({
+    "node_modules/property-information/html.js"(exports, module) {
+      "use strict";
+      var merge = require_merge();
+      var xlink = require_xlink();
+      var xml = require_xml();
+      var xmlns = require_xmlns();
+      var aria = require_aria();
+      var html = require_html();
+      module.exports = merge([xml, xlink, xmlns, aria, html]);
+    }
+  });
+
+  // node_modules/property-information/find.js
+  var require_find = __commonJS({
+    "node_modules/property-information/find.js"(exports, module) {
+      "use strict";
+      var normalize = require_normalize();
+      var DefinedInfo = require_defined_info();
+      var Info = require_info();
+      var data = "data";
+      module.exports = find;
+      var valid = /^data[-\w.:]+$/i;
+      var dash = /-[a-z]/g;
+      var cap = /[A-Z]/g;
+      function find(schema, value) {
+        var normal = normalize(value);
+        var prop = value;
+        var Type = Info;
+        if (normal in schema.normal) {
+          return schema.property[schema.normal[normal]];
+        }
+        if (normal.length > 4 && normal.slice(0, 4) === data && valid.test(value)) {
+          if (value.charAt(4) === "-") {
+            prop = datasetToProperty(value);
+          } else {
+            value = datasetToAttribute(value);
+          }
+          Type = DefinedInfo;
+        }
+        return new Type(prop, value);
+      }
+      function datasetToProperty(attribute) {
+        var value = attribute.slice(5).replace(dash, camelcase);
+        return data + value.charAt(0).toUpperCase() + value.slice(1);
+      }
+      function datasetToAttribute(property) {
+        var value = property.slice(4);
+        if (dash.test(value)) {
+          return property;
+        }
+        value = value.replace(cap, kebab);
+        if (value.charAt(0) !== "-") {
+          value = "-" + value;
+        }
+        return data + value;
+      }
+      function kebab($0) {
+        return "-" + $0.toLowerCase();
+      }
+      function camelcase($0) {
+        return $0.charAt(1).toUpperCase();
+      }
+    }
+  });
+
+  // node_modules/hast-util-parse-selector/index.js
+  var require_hast_util_parse_selector = __commonJS({
+    "node_modules/hast-util-parse-selector/index.js"(exports, module) {
+      "use strict";
+      module.exports = parse;
+      var search = /[#.]/g;
+      function parse(selector, defaultTagName) {
+        var value = selector || "";
+        var name = defaultTagName || "div";
+        var props = {};
+        var start = 0;
+        var subvalue;
+        var previous;
+        var match;
+        while (start < value.length) {
+          search.lastIndex = start;
+          match = search.exec(value);
+          subvalue = value.slice(start, match ? match.index : value.length);
+          if (subvalue) {
+            if (!previous) {
+              name = subvalue;
+            } else if (previous === "#") {
+              props.id = subvalue;
+            } else if (props.className) {
+              props.className.push(subvalue);
+            } else {
+              props.className = [subvalue];
+            }
+            start += subvalue.length;
+          }
+          if (match) {
+            previous = match[0];
+            start++;
+          }
+        }
+        return {type: "element", tagName: name, properties: props, children: []};
+      }
+    }
+  });
+
+  // node_modules/space-separated-tokens/index.js
+  var require_space_separated_tokens = __commonJS({
+    "node_modules/space-separated-tokens/index.js"(exports) {
+      "use strict";
+      exports.parse = parse;
+      exports.stringify = stringify2;
+      var empty = "";
+      var space = " ";
+      var whiteSpace = /[ \t\n\r\f]+/g;
+      function parse(value) {
+        var input = String(value || empty).trim();
+        return input === empty ? [] : input.split(whiteSpace);
+      }
+      function stringify2(values) {
+        return values.join(space).trim();
+      }
+    }
+  });
+
+  // node_modules/comma-separated-tokens/index.js
+  var require_comma_separated_tokens = __commonJS({
+    "node_modules/comma-separated-tokens/index.js"(exports) {
+      "use strict";
+      exports.parse = parse;
+      exports.stringify = stringify2;
+      var comma = ",";
+      var space = " ";
+      var empty = "";
+      function parse(value) {
+        var values = [];
+        var input = String(value || empty);
+        var index = input.indexOf(comma);
+        var lastIndex = 0;
+        var end = false;
+        var val;
+        while (!end) {
+          if (index === -1) {
+            index = input.length;
+            end = true;
+          }
+          val = input.slice(lastIndex, index).trim();
+          if (val || !end) {
+            values.push(val);
+          }
+          lastIndex = index + 1;
+          index = input.indexOf(comma, lastIndex);
+        }
+        return values;
+      }
+      function stringify2(values, options) {
+        var settings = options || {};
+        var left = settings.padLeft === false ? empty : space;
+        var right = settings.padRight ? space : empty;
+        if (values[values.length - 1] === empty) {
+          values = values.concat(empty);
+        }
+        return values.join(right + comma + left).trim();
+      }
+    }
+  });
+
+  // node_modules/hastscript/factory.js
+  var require_factory = __commonJS({
+    "node_modules/hastscript/factory.js"(exports, module) {
+      "use strict";
+      var find = require_find();
+      var normalize = require_normalize();
+      var parseSelector = require_hast_util_parse_selector();
+      var spaces = require_space_separated_tokens().parse;
+      var commas = require_comma_separated_tokens().parse;
+      module.exports = factory;
+      var own = {}.hasOwnProperty;
+      function factory(schema, defaultTagName, caseSensitive) {
+        var adjust = caseSensitive ? createAdjustMap(caseSensitive) : null;
+        return h;
+        function h(selector, properties) {
+          var node = parseSelector(selector, defaultTagName);
+          var children = Array.prototype.slice.call(arguments, 2);
+          var name = node.tagName.toLowerCase();
+          var property;
+          node.tagName = adjust && own.call(adjust, name) ? adjust[name] : name;
+          if (properties && isChildren(properties, node)) {
+            children.unshift(properties);
+            properties = null;
+          }
+          if (properties) {
+            for (property in properties) {
+              addProperty(node.properties, property, properties[property]);
+            }
+          }
+          addChild(node.children, children);
+          if (node.tagName === "template") {
+            node.content = {type: "root", children: node.children};
+            node.children = [];
+          }
+          return node;
+        }
+        function addProperty(properties, key, value) {
+          var info;
+          var property;
+          var result;
+          if (value === null || value === void 0 || value !== value) {
+            return;
+          }
+          info = find(schema, key);
+          property = info.property;
+          result = value;
+          if (typeof result === "string") {
+            if (info.spaceSeparated) {
+              result = spaces(result);
+            } else if (info.commaSeparated) {
+              result = commas(result);
+            } else if (info.commaOrSpaceSeparated) {
+              result = spaces(commas(result).join(" "));
+            }
+          }
+          if (property === "style" && typeof value !== "string") {
+            result = style(result);
+          }
+          if (property === "className" && properties.className) {
+            result = properties.className.concat(result);
+          }
+          properties[property] = parsePrimitives(info, property, result);
+        }
+      }
+      function isChildren(value, node) {
+        return typeof value === "string" || "length" in value || isNode(node.tagName, value);
+      }
+      function isNode(tagName, value) {
+        var type = value.type;
+        if (tagName === "input" || !type || typeof type !== "string") {
+          return false;
+        }
+        if (typeof value.children === "object" && "length" in value.children) {
+          return true;
+        }
+        type = type.toLowerCase();
+        if (tagName === "button") {
+          return type !== "menu" && type !== "submit" && type !== "reset" && type !== "button";
+        }
+        return "value" in value;
+      }
+      function addChild(nodes, value) {
+        var index;
+        var length;
+        if (typeof value === "string" || typeof value === "number") {
+          nodes.push({type: "text", value: String(value)});
+          return;
+        }
+        if (typeof value === "object" && "length" in value) {
+          index = -1;
+          length = value.length;
+          while (++index < length) {
+            addChild(nodes, value[index]);
+          }
+          return;
+        }
+        if (typeof value !== "object" || !("type" in value)) {
+          throw new Error("Expected node, nodes, or string, got `" + value + "`");
+        }
+        nodes.push(value);
+      }
+      function parsePrimitives(info, name, value) {
+        var index;
+        var length;
+        var result;
+        if (typeof value !== "object" || !("length" in value)) {
+          return parsePrimitive(info, name, value);
+        }
+        length = value.length;
+        index = -1;
+        result = [];
+        while (++index < length) {
+          result[index] = parsePrimitive(info, name, value[index]);
+        }
+        return result;
+      }
+      function parsePrimitive(info, name, value) {
+        var result = value;
+        if (info.number || info.positiveNumber) {
+          if (!isNaN(result) && result !== "") {
+            result = Number(result);
+          }
+        } else if (info.boolean || info.overloadedBoolean) {
+          if (typeof result === "string" && (result === "" || normalize(value) === normalize(name))) {
+            result = true;
+          }
+        }
+        return result;
+      }
+      function style(value) {
+        var result = [];
+        var key;
+        for (key in value) {
+          result.push([key, value[key]].join(": "));
+        }
+        return result.join("; ");
+      }
+      function createAdjustMap(values) {
+        var length = values.length;
+        var index = -1;
+        var result = {};
+        var value;
+        while (++index < length) {
+          value = values[index];
+          result[value.toLowerCase()] = value;
+        }
+        return result;
+      }
+    }
+  });
+
+  // node_modules/hastscript/html.js
+  var require_html3 = __commonJS({
+    "node_modules/hastscript/html.js"(exports, module) {
+      "use strict";
+      var schema = require_html2();
+      var factory = require_factory();
+      var html = factory(schema, "div");
+      html.displayName = "html";
+      module.exports = html;
+    }
+  });
+
+  // node_modules/hastscript/index.js
+  var require_hastscript = __commonJS({
+    "node_modules/hastscript/index.js"(exports, module) {
+      "use strict";
+      module.exports = require_html3();
+    }
+  });
+
+  // node_modules/character-entities-legacy/index.json
+  var require_character_entities_legacy = __commonJS({
+    "node_modules/character-entities-legacy/index.json"(exports, module) {
+      module.exports = {
+        AElig: "\xC6",
+        AMP: "&",
+        Aacute: "\xC1",
+        Acirc: "\xC2",
+        Agrave: "\xC0",
+        Aring: "\xC5",
+        Atilde: "\xC3",
+        Auml: "\xC4",
+        COPY: "\xA9",
+        Ccedil: "\xC7",
+        ETH: "\xD0",
+        Eacute: "\xC9",
+        Ecirc: "\xCA",
+        Egrave: "\xC8",
+        Euml: "\xCB",
+        GT: ">",
+        Iacute: "\xCD",
+        Icirc: "\xCE",
+        Igrave: "\xCC",
+        Iuml: "\xCF",
+        LT: "<",
+        Ntilde: "\xD1",
+        Oacute: "\xD3",
+        Ocirc: "\xD4",
+        Ograve: "\xD2",
+        Oslash: "\xD8",
+        Otilde: "\xD5",
+        Ouml: "\xD6",
+        QUOT: '"',
+        REG: "\xAE",
+        THORN: "\xDE",
+        Uacute: "\xDA",
+        Ucirc: "\xDB",
+        Ugrave: "\xD9",
+        Uuml: "\xDC",
+        Yacute: "\xDD",
+        aacute: "\xE1",
+        acirc: "\xE2",
+        acute: "\xB4",
+        aelig: "\xE6",
+        agrave: "\xE0",
+        amp: "&",
+        aring: "\xE5",
+        atilde: "\xE3",
+        auml: "\xE4",
+        brvbar: "\xA6",
+        ccedil: "\xE7",
+        cedil: "\xB8",
+        cent: "\xA2",
+        copy: "\xA9",
+        curren: "\xA4",
+        deg: "\xB0",
+        divide: "\xF7",
+        eacute: "\xE9",
+        ecirc: "\xEA",
+        egrave: "\xE8",
+        eth: "\xF0",
+        euml: "\xEB",
+        frac12: "\xBD",
+        frac14: "\xBC",
+        frac34: "\xBE",
+        gt: ">",
+        iacute: "\xED",
+        icirc: "\xEE",
+        iexcl: "\xA1",
+        igrave: "\xEC",
+        iquest: "\xBF",
+        iuml: "\xEF",
+        laquo: "\xAB",
+        lt: "<",
+        macr: "\xAF",
+        micro: "\xB5",
+        middot: "\xB7",
+        nbsp: "\xA0",
+        not: "\xAC",
+        ntilde: "\xF1",
+        oacute: "\xF3",
+        ocirc: "\xF4",
+        ograve: "\xF2",
+        ordf: "\xAA",
+        ordm: "\xBA",
+        oslash: "\xF8",
+        otilde: "\xF5",
+        ouml: "\xF6",
+        para: "\xB6",
+        plusmn: "\xB1",
+        pound: "\xA3",
+        quot: '"',
+        raquo: "\xBB",
+        reg: "\xAE",
+        sect: "\xA7",
+        shy: "\xAD",
+        sup1: "\xB9",
+        sup2: "\xB2",
+        sup3: "\xB3",
+        szlig: "\xDF",
+        thorn: "\xFE",
+        times: "\xD7",
+        uacute: "\xFA",
+        ucirc: "\xFB",
+        ugrave: "\xF9",
+        uml: "\xA8",
+        uuml: "\xFC",
+        yacute: "\xFD",
+        yen: "\xA5",
+        yuml: "\xFF"
+      };
+    }
+  });
+
+  // node_modules/character-reference-invalid/index.json
+  var require_character_reference_invalid = __commonJS({
+    "node_modules/character-reference-invalid/index.json"(exports, module) {
+      module.exports = {
+        "0": "\uFFFD",
+        "128": "\u20AC",
+        "130": "\u201A",
+        "131": "\u0192",
+        "132": "\u201E",
+        "133": "\u2026",
+        "134": "\u2020",
+        "135": "\u2021",
+        "136": "\u02C6",
+        "137": "\u2030",
+        "138": "\u0160",
+        "139": "\u2039",
+        "140": "\u0152",
+        "142": "\u017D",
+        "145": "\u2018",
+        "146": "\u2019",
+        "147": "\u201C",
+        "148": "\u201D",
+        "149": "\u2022",
+        "150": "\u2013",
+        "151": "\u2014",
+        "152": "\u02DC",
+        "153": "\u2122",
+        "154": "\u0161",
+        "155": "\u203A",
+        "156": "\u0153",
+        "158": "\u017E",
+        "159": "\u0178"
+      };
+    }
+  });
+
+  // node_modules/is-decimal/index.js
+  var require_is_decimal = __commonJS({
+    "node_modules/is-decimal/index.js"(exports, module) {
+      "use strict";
+      module.exports = decimal;
+      function decimal(character) {
+        var code = typeof character === "string" ? character.charCodeAt(0) : character;
+        return code >= 48 && code <= 57;
+      }
+    }
+  });
+
+  // node_modules/is-hexadecimal/index.js
+  var require_is_hexadecimal = __commonJS({
+    "node_modules/is-hexadecimal/index.js"(exports, module) {
+      "use strict";
+      module.exports = hexadecimal;
+      function hexadecimal(character) {
+        var code = typeof character === "string" ? character.charCodeAt(0) : character;
+        return code >= 97 && code <= 102 || code >= 65 && code <= 70 || code >= 48 && code <= 57;
+      }
+    }
+  });
+
+  // node_modules/is-alphabetical/index.js
+  var require_is_alphabetical = __commonJS({
+    "node_modules/is-alphabetical/index.js"(exports, module) {
+      "use strict";
+      module.exports = alphabetical;
+      function alphabetical(character) {
+        var code = typeof character === "string" ? character.charCodeAt(0) : character;
+        return code >= 97 && code <= 122 || code >= 65 && code <= 90;
+      }
+    }
+  });
+
+  // node_modules/is-alphanumerical/index.js
+  var require_is_alphanumerical = __commonJS({
+    "node_modules/is-alphanumerical/index.js"(exports, module) {
+      "use strict";
+      var alphabetical = require_is_alphabetical();
+      var decimal = require_is_decimal();
+      module.exports = alphanumerical;
+      function alphanumerical(character) {
+        return alphabetical(character) || decimal(character);
+      }
+    }
+  });
+
+  // node_modules/parse-entities/decode-entity.browser.js
+  var require_decode_entity_browser = __commonJS({
+    "node_modules/parse-entities/decode-entity.browser.js"(exports, module) {
+      "use strict";
+      var el;
+      var semicolon = 59;
+      module.exports = decodeEntity;
+      function decodeEntity(characters) {
+        var entity = "&" + characters + ";";
+        var char;
+        el = el || document.createElement("i");
+        el.innerHTML = entity;
+        char = el.textContent;
+        if (char.charCodeAt(char.length - 1) === semicolon && characters !== "semi") {
+          return false;
+        }
+        return char === entity ? false : char;
+      }
+    }
+  });
+
+  // node_modules/parse-entities/index.js
+  var require_parse_entities = __commonJS({
+    "node_modules/parse-entities/index.js"(exports, module) {
+      "use strict";
+      var legacy = require_character_entities_legacy();
+      var invalid = require_character_reference_invalid();
+      var decimal = require_is_decimal();
+      var hexadecimal = require_is_hexadecimal();
+      var alphanumerical = require_is_alphanumerical();
+      var decodeEntity = require_decode_entity_browser();
+      module.exports = parseEntities;
+      var own = {}.hasOwnProperty;
+      var fromCharCode = String.fromCharCode;
+      var noop = Function.prototype;
+      var defaults = {
+        warning: null,
+        reference: null,
+        text: null,
+        warningContext: null,
+        referenceContext: null,
+        textContext: null,
+        position: {},
+        additional: null,
+        attribute: false,
+        nonTerminated: true
+      };
+      var tab = 9;
+      var lineFeed = 10;
+      var formFeed = 12;
+      var space = 32;
+      var ampersand = 38;
+      var semicolon = 59;
+      var lessThan = 60;
+      var equalsTo = 61;
+      var numberSign = 35;
+      var uppercaseX = 88;
+      var lowercaseX = 120;
+      var replacementCharacter = 65533;
+      var name = "named";
+      var hexa = "hexadecimal";
+      var deci = "decimal";
+      var bases = {};
+      bases[hexa] = 16;
+      bases[deci] = 10;
+      var tests = {};
+      tests[name] = alphanumerical;
+      tests[deci] = decimal;
+      tests[hexa] = hexadecimal;
+      var namedNotTerminated = 1;
+      var numericNotTerminated = 2;
+      var namedEmpty = 3;
+      var numericEmpty = 4;
+      var namedUnknown = 5;
+      var numericDisallowed = 6;
+      var numericProhibited = 7;
+      var messages = {};
+      messages[namedNotTerminated] = "Named character references must be terminated by a semicolon";
+      messages[numericNotTerminated] = "Numeric character references must be terminated by a semicolon";
+      messages[namedEmpty] = "Named character references cannot be empty";
+      messages[numericEmpty] = "Numeric character references cannot be empty";
+      messages[namedUnknown] = "Named character references must be known";
+      messages[numericDisallowed] = "Numeric character references cannot be disallowed";
+      messages[numericProhibited] = "Numeric character references cannot be outside the permissible Unicode range";
+      function parseEntities(value, options) {
+        var settings = {};
+        var option;
+        var key;
+        if (!options) {
+          options = {};
+        }
+        for (key in defaults) {
+          option = options[key];
+          settings[key] = option === null || option === void 0 ? defaults[key] : option;
+        }
+        if (settings.position.indent || settings.position.start) {
+          settings.indent = settings.position.indent || [];
+          settings.position = settings.position.start;
+        }
+        return parse(value, settings);
+      }
+      function parse(value, settings) {
+        var additional = settings.additional;
+        var nonTerminated = settings.nonTerminated;
+        var handleText = settings.text;
+        var handleReference = settings.reference;
+        var handleWarning = settings.warning;
+        var textContext = settings.textContext;
+        var referenceContext = settings.referenceContext;
+        var warningContext = settings.warningContext;
+        var pos = settings.position;
+        var indent = settings.indent || [];
+        var length = value.length;
+        var index = 0;
+        var lines = -1;
+        var column = pos.column || 1;
+        var line = pos.line || 1;
+        var queue = "";
+        var result = [];
+        var entityCharacters;
+        var namedEntity;
+        var terminated;
+        var characters;
+        var character;
+        var reference;
+        var following;
+        var warning;
+        var reason;
+        var output;
+        var entity;
+        var begin;
+        var start;
+        var type;
+        var test;
+        var prev;
+        var next;
+        var diff;
+        var end;
+        if (typeof additional === "string") {
+          additional = additional.charCodeAt(0);
+        }
+        prev = now();
+        warning = handleWarning ? parseError : noop;
+        index--;
+        length++;
+        while (++index < length) {
+          if (character === lineFeed) {
+            column = indent[lines] || 1;
+          }
+          character = value.charCodeAt(index);
+          if (character === ampersand) {
+            following = value.charCodeAt(index + 1);
+            if (following === tab || following === lineFeed || following === formFeed || following === space || following === ampersand || following === lessThan || following !== following || additional && following === additional) {
+              queue += fromCharCode(character);
+              column++;
+              continue;
+            }
+            start = index + 1;
+            begin = start;
+            end = start;
+            if (following === numberSign) {
+              end = ++begin;
+              following = value.charCodeAt(end);
+              if (following === uppercaseX || following === lowercaseX) {
+                type = hexa;
+                end = ++begin;
+              } else {
+                type = deci;
+              }
+            } else {
+              type = name;
+            }
+            entityCharacters = "";
+            entity = "";
+            characters = "";
+            test = tests[type];
+            end--;
+            while (++end < length) {
+              following = value.charCodeAt(end);
+              if (!test(following)) {
+                break;
+              }
+              characters += fromCharCode(following);
+              if (type === name && own.call(legacy, characters)) {
+                entityCharacters = characters;
+                entity = legacy[characters];
+              }
+            }
+            terminated = value.charCodeAt(end) === semicolon;
+            if (terminated) {
+              end++;
+              namedEntity = type === name ? decodeEntity(characters) : false;
+              if (namedEntity) {
+                entityCharacters = characters;
+                entity = namedEntity;
+              }
+            }
+            diff = 1 + end - start;
+            if (!terminated && !nonTerminated) {
+            } else if (!characters) {
+              if (type !== name) {
+                warning(numericEmpty, diff);
+              }
+            } else if (type === name) {
+              if (terminated && !entity) {
+                warning(namedUnknown, 1);
+              } else {
+                if (entityCharacters !== characters) {
+                  end = begin + entityCharacters.length;
+                  diff = 1 + end - begin;
+                  terminated = false;
+                }
+                if (!terminated) {
+                  reason = entityCharacters ? namedNotTerminated : namedEmpty;
+                  if (settings.attribute) {
+                    following = value.charCodeAt(end);
+                    if (following === equalsTo) {
+                      warning(reason, diff);
+                      entity = null;
+                    } else if (alphanumerical(following)) {
+                      entity = null;
+                    } else {
+                      warning(reason, diff);
+                    }
+                  } else {
+                    warning(reason, diff);
+                  }
+                }
+              }
+              reference = entity;
+            } else {
+              if (!terminated) {
+                warning(numericNotTerminated, diff);
+              }
+              reference = parseInt(characters, bases[type]);
+              if (prohibited(reference)) {
+                warning(numericProhibited, diff);
+                reference = fromCharCode(replacementCharacter);
+              } else if (reference in invalid) {
+                warning(numericDisallowed, diff);
+                reference = invalid[reference];
+              } else {
+                output = "";
+                if (disallowed(reference)) {
+                  warning(numericDisallowed, diff);
+                }
+                if (reference > 65535) {
+                  reference -= 65536;
+                  output += fromCharCode(reference >>> (10 & 1023) | 55296);
+                  reference = 56320 | reference & 1023;
+                }
+                reference = output + fromCharCode(reference);
+              }
+            }
+            if (reference) {
+              flush();
+              prev = now();
+              index = end - 1;
+              column += end - start + 1;
+              result.push(reference);
+              next = now();
+              next.offset++;
+              if (handleReference) {
+                handleReference.call(referenceContext, reference, {start: prev, end: next}, value.slice(start - 1, end));
+              }
+              prev = next;
+            } else {
+              characters = value.slice(start - 1, end);
+              queue += characters;
+              column += characters.length;
+              index = end - 1;
+            }
+          } else {
+            if (character === 10) {
+              line++;
+              lines++;
+              column = 0;
+            }
+            if (character === character) {
+              queue += fromCharCode(character);
+              column++;
+            } else {
+              flush();
+            }
+          }
+        }
+        return result.join("");
+        function now() {
+          return {
+            line,
+            column,
+            offset: index + (pos.offset || 0)
+          };
+        }
+        function parseError(code, offset) {
+          var position = now();
+          position.column += offset;
+          position.offset += offset;
+          handleWarning.call(warningContext, messages[code], position, code);
+        }
+        function flush() {
+          if (queue) {
+            result.push(queue);
+            if (handleText) {
+              handleText.call(textContext, queue, {start: prev, end: now()});
+            }
+            queue = "";
+          }
+        }
+      }
+      function prohibited(code) {
+        return code >= 55296 && code <= 57343 || code > 1114111;
+      }
+      function disallowed(code) {
+        return code >= 1 && code <= 8 || code === 11 || code >= 13 && code <= 31 || code >= 127 && code <= 159 || code >= 64976 && code <= 65007 || (code & 65535) === 65535 || (code & 65535) === 65534;
+      }
+    }
+  });
+
+  // node_modules/prismjs/components/prism-core.js
+  var require_prism_core = __commonJS({
+    "node_modules/prismjs/components/prism-core.js"(exports, module) {
+      var _self = typeof window !== "undefined" ? window : typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope ? self : {};
+      var Prism = function(_self2) {
+        var lang = /\blang(?:uage)?-([\w-]+)\b/i;
+        var uniqueId = 0;
+        var _ = {
+          manual: _self2.Prism && _self2.Prism.manual,
+          disableWorkerMessageHandler: _self2.Prism && _self2.Prism.disableWorkerMessageHandler,
+          util: {
+            encode: function encode(tokens) {
+              if (tokens instanceof Token) {
+                return new Token(tokens.type, encode(tokens.content), tokens.alias);
+              } else if (Array.isArray(tokens)) {
+                return tokens.map(encode);
+              } else {
+                return tokens.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\u00a0/g, " ");
+              }
+            },
+            type: function(o) {
+              return Object.prototype.toString.call(o).slice(8, -1);
+            },
+            objId: function(obj) {
+              if (!obj["__id"]) {
+                Object.defineProperty(obj, "__id", {value: ++uniqueId});
+              }
+              return obj["__id"];
+            },
+            clone: function deepClone(o, visited) {
+              visited = visited || {};
+              var clone, id;
+              switch (_.util.type(o)) {
+                case "Object":
+                  id = _.util.objId(o);
+                  if (visited[id]) {
+                    return visited[id];
+                  }
+                  clone = {};
+                  visited[id] = clone;
+                  for (var key in o) {
+                    if (o.hasOwnProperty(key)) {
+                      clone[key] = deepClone(o[key], visited);
+                    }
+                  }
+                  return clone;
+                case "Array":
+                  id = _.util.objId(o);
+                  if (visited[id]) {
+                    return visited[id];
+                  }
+                  clone = [];
+                  visited[id] = clone;
+                  o.forEach(function(v, i) {
+                    clone[i] = deepClone(v, visited);
+                  });
+                  return clone;
+                default:
+                  return o;
+              }
+            },
+            getLanguage: function(element) {
+              while (element && !lang.test(element.className)) {
+                element = element.parentElement;
+              }
+              if (element) {
+                return (element.className.match(lang) || [, "none"])[1].toLowerCase();
+              }
+              return "none";
+            },
+            currentScript: function() {
+              if (typeof document === "undefined") {
+                return null;
+              }
+              if ("currentScript" in document && 1 < 2) {
+                return document.currentScript;
+              }
+              try {
+                throw new Error();
+              } catch (err) {
+                var src = (/at [^(\r\n]*\((.*):.+:.+\)$/i.exec(err.stack) || [])[1];
+                if (src) {
+                  var scripts = document.getElementsByTagName("script");
+                  for (var i in scripts) {
+                    if (scripts[i].src == src) {
+                      return scripts[i];
+                    }
+                  }
+                }
+                return null;
+              }
+            },
+            isActive: function(element, className, defaultActivation) {
+              var no = "no-" + className;
+              while (element) {
+                var classList = element.classList;
+                if (classList.contains(className)) {
+                  return true;
+                }
+                if (classList.contains(no)) {
+                  return false;
+                }
+                element = element.parentElement;
+              }
+              return !!defaultActivation;
+            }
+          },
+          languages: {
+            extend: function(id, redef) {
+              var lang2 = _.util.clone(_.languages[id]);
+              for (var key in redef) {
+                lang2[key] = redef[key];
+              }
+              return lang2;
+            },
+            insertBefore: function(inside, before, insert, root) {
+              root = root || _.languages;
+              var grammar = root[inside];
+              var ret = {};
+              for (var token in grammar) {
+                if (grammar.hasOwnProperty(token)) {
+                  if (token == before) {
+                    for (var newToken in insert) {
+                      if (insert.hasOwnProperty(newToken)) {
+                        ret[newToken] = insert[newToken];
+                      }
+                    }
+                  }
+                  if (!insert.hasOwnProperty(token)) {
+                    ret[token] = grammar[token];
+                  }
+                }
+              }
+              var old = root[inside];
+              root[inside] = ret;
+              _.languages.DFS(_.languages, function(key, value) {
+                if (value === old && key != inside) {
+                  this[key] = ret;
+                }
+              });
+              return ret;
+            },
+            DFS: function DFS(o, callback, type, visited) {
+              visited = visited || {};
+              var objId = _.util.objId;
+              for (var i in o) {
+                if (o.hasOwnProperty(i)) {
+                  callback.call(o, i, o[i], type || i);
+                  var property = o[i], propertyType = _.util.type(property);
+                  if (propertyType === "Object" && !visited[objId(property)]) {
+                    visited[objId(property)] = true;
+                    DFS(property, callback, null, visited);
+                  } else if (propertyType === "Array" && !visited[objId(property)]) {
+                    visited[objId(property)] = true;
+                    DFS(property, callback, i, visited);
+                  }
+                }
+              }
+            }
+          },
+          plugins: {},
+          highlightAll: function(async, callback) {
+            _.highlightAllUnder(document, async, callback);
+          },
+          highlightAllUnder: function(container, async, callback) {
+            var env = {
+              callback,
+              container,
+              selector: 'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'
+            };
+            _.hooks.run("before-highlightall", env);
+            env.elements = Array.prototype.slice.apply(env.container.querySelectorAll(env.selector));
+            _.hooks.run("before-all-elements-highlight", env);
+            for (var i = 0, element; element = env.elements[i++]; ) {
+              _.highlightElement(element, async === true, env.callback);
+            }
+          },
+          highlightElement: function(element, async, callback) {
+            var language = _.util.getLanguage(element);
+            var grammar = _.languages[language];
+            element.className = element.className.replace(lang, "").replace(/\s+/g, " ") + " language-" + language;
+            var parent = element.parentElement;
+            if (parent && parent.nodeName.toLowerCase() === "pre") {
+              parent.className = parent.className.replace(lang, "").replace(/\s+/g, " ") + " language-" + language;
+            }
+            var code = element.textContent;
+            var env = {
+              element,
+              language,
+              grammar,
+              code
+            };
+            function insertHighlightedCode(highlightedCode) {
+              env.highlightedCode = highlightedCode;
+              _.hooks.run("before-insert", env);
+              env.element.innerHTML = env.highlightedCode;
+              _.hooks.run("after-highlight", env);
+              _.hooks.run("complete", env);
+              callback && callback.call(env.element);
+            }
+            _.hooks.run("before-sanity-check", env);
+            if (!env.code) {
+              _.hooks.run("complete", env);
+              callback && callback.call(env.element);
+              return;
+            }
+            _.hooks.run("before-highlight", env);
+            if (!env.grammar) {
+              insertHighlightedCode(_.util.encode(env.code));
+              return;
+            }
+            if (async && _self2.Worker) {
+              var worker = new Worker(_.filename);
+              worker.onmessage = function(evt) {
+                insertHighlightedCode(evt.data);
+              };
+              worker.postMessage(JSON.stringify({
+                language: env.language,
+                code: env.code,
+                immediateClose: true
+              }));
+            } else {
+              insertHighlightedCode(_.highlight(env.code, env.grammar, env.language));
+            }
+          },
+          highlight: function(text, grammar, language) {
+            var env = {
+              code: text,
+              grammar,
+              language
+            };
+            _.hooks.run("before-tokenize", env);
+            env.tokens = _.tokenize(env.code, env.grammar);
+            _.hooks.run("after-tokenize", env);
+            return Token.stringify(_.util.encode(env.tokens), env.language);
+          },
+          tokenize: function(text, grammar) {
+            var rest = grammar.rest;
+            if (rest) {
+              for (var token in rest) {
+                grammar[token] = rest[token];
+              }
+              delete grammar.rest;
+            }
+            var tokenList = new LinkedList();
+            addAfter(tokenList, tokenList.head, text);
+            matchGrammar(text, tokenList, grammar, tokenList.head, 0);
+            return toArray(tokenList);
+          },
+          hooks: {
+            all: {},
+            add: function(name, callback) {
+              var hooks = _.hooks.all;
+              hooks[name] = hooks[name] || [];
+              hooks[name].push(callback);
+            },
+            run: function(name, env) {
+              var callbacks = _.hooks.all[name];
+              if (!callbacks || !callbacks.length) {
+                return;
+              }
+              for (var i = 0, callback; callback = callbacks[i++]; ) {
+                callback(env);
+              }
+            }
+          },
+          Token
+        };
+        _self2.Prism = _;
+        function Token(type, content, alias, matchedStr) {
+          this.type = type;
+          this.content = content;
+          this.alias = alias;
+          this.length = (matchedStr || "").length | 0;
+        }
+        Token.stringify = function stringify2(o, language) {
+          if (typeof o == "string") {
+            return o;
+          }
+          if (Array.isArray(o)) {
+            var s = "";
+            o.forEach(function(e) {
+              s += stringify2(e, language);
+            });
+            return s;
+          }
+          var env = {
+            type: o.type,
+            content: stringify2(o.content, language),
+            tag: "span",
+            classes: ["token", o.type],
+            attributes: {},
+            language
+          };
+          var aliases = o.alias;
+          if (aliases) {
+            if (Array.isArray(aliases)) {
+              Array.prototype.push.apply(env.classes, aliases);
+            } else {
+              env.classes.push(aliases);
+            }
+          }
+          _.hooks.run("wrap", env);
+          var attributes = "";
+          for (var name in env.attributes) {
+            attributes += " " + name + '="' + (env.attributes[name] || "").replace(/"/g, "&quot;") + '"';
+          }
+          return "<" + env.tag + ' class="' + env.classes.join(" ") + '"' + attributes + ">" + env.content + "</" + env.tag + ">";
+        };
+        function matchPattern(pattern, pos, text, lookbehind) {
+          pattern.lastIndex = pos;
+          var match = pattern.exec(text);
+          if (match && lookbehind && match[1]) {
+            var lookbehindLength = match[1].length;
+            match.index += lookbehindLength;
+            match[0] = match[0].slice(lookbehindLength);
+          }
+          return match;
+        }
+        function matchGrammar(text, tokenList, grammar, startNode, startPos, rematch) {
+          for (var token in grammar) {
+            if (!grammar.hasOwnProperty(token) || !grammar[token]) {
+              continue;
+            }
+            var patterns = grammar[token];
+            patterns = Array.isArray(patterns) ? patterns : [patterns];
+            for (var j = 0; j < patterns.length; ++j) {
+              if (rematch && rematch.cause == token + "," + j) {
+                return;
+              }
+              var patternObj = patterns[j], inside = patternObj.inside, lookbehind = !!patternObj.lookbehind, greedy = !!patternObj.greedy, alias = patternObj.alias;
+              if (greedy && !patternObj.pattern.global) {
+                var flags = patternObj.pattern.toString().match(/[imsuy]*$/)[0];
+                patternObj.pattern = RegExp(patternObj.pattern.source, flags + "g");
+              }
+              var pattern = patternObj.pattern || patternObj;
+              for (var currentNode = startNode.next, pos = startPos; currentNode !== tokenList.tail; pos += currentNode.value.length, currentNode = currentNode.next) {
+                if (rematch && pos >= rematch.reach) {
+                  break;
+                }
+                var str = currentNode.value;
+                if (tokenList.length > text.length) {
+                  return;
+                }
+                if (str instanceof Token) {
+                  continue;
+                }
+                var removeCount = 1;
+                var match;
+                if (greedy) {
+                  match = matchPattern(pattern, pos, text, lookbehind);
+                  if (!match) {
+                    break;
+                  }
+                  var from = match.index;
+                  var to = match.index + match[0].length;
+                  var p = pos;
+                  p += currentNode.value.length;
+                  while (from >= p) {
+                    currentNode = currentNode.next;
+                    p += currentNode.value.length;
+                  }
+                  p -= currentNode.value.length;
+                  pos = p;
+                  if (currentNode.value instanceof Token) {
+                    continue;
+                  }
+                  for (var k = currentNode; k !== tokenList.tail && (p < to || typeof k.value === "string"); k = k.next) {
+                    removeCount++;
+                    p += k.value.length;
+                  }
+                  removeCount--;
+                  str = text.slice(pos, p);
+                  match.index -= pos;
+                } else {
+                  match = matchPattern(pattern, 0, str, lookbehind);
+                  if (!match) {
+                    continue;
+                  }
+                }
+                var from = match.index, matchStr = match[0], before = str.slice(0, from), after = str.slice(from + matchStr.length);
+                var reach = pos + str.length;
+                if (rematch && reach > rematch.reach) {
+                  rematch.reach = reach;
+                }
+                var removeFrom = currentNode.prev;
+                if (before) {
+                  removeFrom = addAfter(tokenList, removeFrom, before);
+                  pos += before.length;
+                }
+                removeRange(tokenList, removeFrom, removeCount);
+                var wrapped = new Token(token, inside ? _.tokenize(matchStr, inside) : matchStr, alias, matchStr);
+                currentNode = addAfter(tokenList, removeFrom, wrapped);
+                if (after) {
+                  addAfter(tokenList, currentNode, after);
+                }
+                if (removeCount > 1) {
+                  matchGrammar(text, tokenList, grammar, currentNode.prev, pos, {
+                    cause: token + "," + j,
+                    reach
+                  });
+                }
+              }
+            }
+          }
+        }
+        function LinkedList() {
+          var head = {value: null, prev: null, next: null};
+          var tail = {value: null, prev: head, next: null};
+          head.next = tail;
+          this.head = head;
+          this.tail = tail;
+          this.length = 0;
+        }
+        function addAfter(list, node, value) {
+          var next = node.next;
+          var newNode = {value, prev: node, next};
+          node.next = newNode;
+          next.prev = newNode;
+          list.length++;
+          return newNode;
+        }
+        function removeRange(list, node, count) {
+          var next = node.next;
+          for (var i = 0; i < count && next !== list.tail; i++) {
+            next = next.next;
+          }
+          node.next = next;
+          next.prev = node;
+          list.length -= i;
+        }
+        function toArray(list) {
+          var array = [];
+          var node = list.head.next;
+          while (node !== list.tail) {
+            array.push(node.value);
+            node = node.next;
+          }
+          return array;
+        }
+        if (!_self2.document) {
+          if (!_self2.addEventListener) {
+            return _;
+          }
+          if (!_.disableWorkerMessageHandler) {
+            _self2.addEventListener("message", function(evt) {
+              var message = JSON.parse(evt.data), lang2 = message.language, code = message.code, immediateClose = message.immediateClose;
+              _self2.postMessage(_.highlight(code, _.languages[lang2], lang2));
+              if (immediateClose) {
+                _self2.close();
+              }
+            }, false);
+          }
+          return _;
+        }
+        var script = _.util.currentScript();
+        if (script) {
+          _.filename = script.src;
+          if (script.hasAttribute("data-manual")) {
+            _.manual = true;
+          }
+        }
+        function highlightAutomaticallyCallback() {
+          if (!_.manual) {
+            _.highlightAll();
+          }
+        }
+        if (!_.manual) {
+          var readyState = document.readyState;
+          if (readyState === "loading" || readyState === "interactive" && script && script.defer) {
+            document.addEventListener("DOMContentLoaded", highlightAutomaticallyCallback);
+          } else {
+            if (window.requestAnimationFrame) {
+              window.requestAnimationFrame(highlightAutomaticallyCallback);
+            } else {
+              window.setTimeout(highlightAutomaticallyCallback, 16);
+            }
+          }
+        }
+        return _;
+      }(_self);
+      if (typeof module !== "undefined" && module.exports) {
+        module.exports = Prism;
+      }
+      if (typeof global !== "undefined") {
+        global.Prism = Prism;
+      }
+    }
+  });
+
+  // node_modules/refractor/lang/markup.js
+  var require_markup = __commonJS({
+    "node_modules/refractor/lang/markup.js"(exports, module) {
+      "use strict";
+      module.exports = markup;
+      markup.displayName = "markup";
+      markup.aliases = ["html", "mathml", "svg", "xml", "ssml", "atom", "rss"];
+      function markup(Prism) {
+        Prism.languages.markup = {
+          comment: /<!--[\s\S]*?-->/,
+          prolog: /<\?[\s\S]+?\?>/,
+          doctype: {
+            pattern: /<!DOCTYPE(?:[^>"'[\]]|"[^"]*"|'[^']*')+(?:\[(?:[^<"'\]]|"[^"]*"|'[^']*'|<(?!!--)|<!--(?:[^-]|-(?!->))*-->)*\]\s*)?>/i,
+            greedy: true,
+            inside: {
+              "internal-subset": {
+                pattern: /(\[)[\s\S]+(?=\]>$)/,
+                lookbehind: true,
+                greedy: true,
+                inside: null
+              },
+              string: {
+                pattern: /"[^"]*"|'[^']*'/,
+                greedy: true
+              },
+              punctuation: /^<!|>$|[[\]]/,
+              "doctype-tag": /^DOCTYPE/,
+              name: /[^\s<>'"]+/
+            }
+          },
+          cdata: /<!\[CDATA\[[\s\S]*?]]>/i,
+          tag: {
+            pattern: /<\/?(?!\d)[^\s>\/=$<%]+(?:\s(?:\s*[^\s>\/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+(?=[\s>]))|(?=[\s/>])))+)?\s*\/?>/,
+            greedy: true,
+            inside: {
+              tag: {
+                pattern: /^<\/?[^\s>\/]+/,
+                inside: {
+                  punctuation: /^<\/?/,
+                  namespace: /^[^\s>\/:]+:/
+                }
+              },
+              "attr-value": {
+                pattern: /=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+)/,
+                inside: {
+                  punctuation: [
+                    {
+                      pattern: /^=/,
+                      alias: "attr-equals"
+                    },
+                    /"|'/
+                  ]
+                }
+              },
+              punctuation: /\/?>/,
+              "attr-name": {
+                pattern: /[^\s>\/]+/,
+                inside: {
+                  namespace: /^[^\s>\/:]+:/
+                }
+              }
+            }
+          },
+          entity: [
+            {
+              pattern: /&[\da-z]{1,8};/i,
+              alias: "named-entity"
+            },
+            /&#x?[\da-f]{1,8};/i
+          ]
+        };
+        Prism.languages.markup["tag"].inside["attr-value"].inside["entity"] = Prism.languages.markup["entity"];
+        Prism.languages.markup["doctype"].inside["internal-subset"].inside = Prism.languages.markup;
+        Prism.hooks.add("wrap", function(env) {
+          if (env.type === "entity") {
+            env.attributes["title"] = env.content.value.replace(/&amp;/, "&");
+          }
+        });
+        Object.defineProperty(Prism.languages.markup.tag, "addInlined", {
+          value: function addInlined(tagName, lang) {
+            var includedCdataInside = {};
+            includedCdataInside["language-" + lang] = {
+              pattern: /(^<!\[CDATA\[)[\s\S]+?(?=\]\]>$)/i,
+              lookbehind: true,
+              inside: Prism.languages[lang]
+            };
+            includedCdataInside["cdata"] = /^<!\[CDATA\[|\]\]>$/i;
+            var inside = {
+              "included-cdata": {
+                pattern: /<!\[CDATA\[[\s\S]*?\]\]>/i,
+                inside: includedCdataInside
+              }
+            };
+            inside["language-" + lang] = {
+              pattern: /[\s\S]+/,
+              inside: Prism.languages[lang]
+            };
+            var def = {};
+            def[tagName] = {
+              pattern: RegExp(/(<__[^>]*>)(?:<!\[CDATA\[(?:[^\]]|\](?!\]>))*\]\]>|(?!<!\[CDATA\[)[\s\S])*?(?=<\/__>)/.source.replace(/__/g, function() {
+                return tagName;
+              }), "i"),
+              lookbehind: true,
+              greedy: true,
+              inside
+            };
+            Prism.languages.insertBefore("markup", "cdata", def);
+          }
+        });
+        Prism.languages.html = Prism.languages.markup;
+        Prism.languages.mathml = Prism.languages.markup;
+        Prism.languages.svg = Prism.languages.markup;
+        Prism.languages.xml = Prism.languages.extend("markup", {});
+        Prism.languages.ssml = Prism.languages.xml;
+        Prism.languages.atom = Prism.languages.xml;
+        Prism.languages.rss = Prism.languages.xml;
+      }
+    }
+  });
+
+  // node_modules/refractor/lang/css.js
+  var require_css = __commonJS({
+    "node_modules/refractor/lang/css.js"(exports, module) {
+      "use strict";
+      module.exports = css;
+      css.displayName = "css";
+      css.aliases = [];
+      function css(Prism) {
+        ;
+        (function(Prism2) {
+          var string = /("|')(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/;
+          Prism2.languages.css = {
+            comment: /\/\*[\s\S]*?\*\//,
+            atrule: {
+              pattern: /@[\w-](?:[^;{\s]|\s+(?![\s{]))*(?:;|(?=\s*\{))/,
+              inside: {
+                rule: /^@[\w-]+/,
+                "selector-function-argument": {
+                  pattern: /(\bselector\s*\(\s*(?![\s)]))(?:[^()\s]|\s+(?![\s)])|\((?:[^()]|\([^()]*\))*\))+(?=\s*\))/,
+                  lookbehind: true,
+                  alias: "selector"
+                },
+                keyword: {
+                  pattern: /(^|[^\w-])(?:and|not|only|or)(?![\w-])/,
+                  lookbehind: true
+                }
+              }
+            },
+            url: {
+              pattern: RegExp("\\burl\\((?:" + string.source + "|" + /(?:[^\\\r\n()"']|\\[\s\S])*/.source + ")\\)", "i"),
+              greedy: true,
+              inside: {
+                function: /^url/i,
+                punctuation: /^\(|\)$/,
+                string: {
+                  pattern: RegExp("^" + string.source + "$"),
+                  alias: "url"
+                }
+              }
+            },
+            selector: RegExp(`[^{}\\s](?:[^{};"'\\s]|\\s+(?![\\s{])|` + string.source + ")*(?=\\s*\\{)"),
+            string: {
+              pattern: string,
+              greedy: true
+            },
+            property: /(?!\s)[-_a-z\xA0-\uFFFF](?:(?!\s)[-\w\xA0-\uFFFF])*(?=\s*:)/i,
+            important: /!important\b/i,
+            function: /[-a-z0-9]+(?=\()/i,
+            punctuation: /[(){};:,]/
+          };
+          Prism2.languages.css["atrule"].inside.rest = Prism2.languages.css;
+          var markup = Prism2.languages.markup;
+          if (markup) {
+            markup.tag.addInlined("style", "css");
+            Prism2.languages.insertBefore("inside", "attr-value", {
+              "style-attr": {
+                pattern: /(^|["'\s])style\s*=\s*(?:"[^"]*"|'[^']*')/i,
+                lookbehind: true,
+                inside: {
+                  "attr-value": {
+                    pattern: /=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+)/,
+                    inside: {
+                      style: {
+                        pattern: /(["'])[\s\S]+(?=["']$)/,
+                        lookbehind: true,
+                        alias: "language-css",
+                        inside: Prism2.languages.css
+                      },
+                      punctuation: [
+                        {
+                          pattern: /^=/,
+                          alias: "attr-equals"
+                        },
+                        /"|'/
+                      ]
+                    }
+                  },
+                  "attr-name": /^style/i
+                }
+              }
+            }, markup.tag);
+          }
+        })(Prism);
+      }
+    }
+  });
+
+  // node_modules/refractor/lang/clike.js
+  var require_clike = __commonJS({
+    "node_modules/refractor/lang/clike.js"(exports, module) {
+      "use strict";
+      module.exports = clike;
+      clike.displayName = "clike";
+      clike.aliases = [];
+      function clike(Prism) {
+        Prism.languages.clike = {
+          comment: [
+            {
+              pattern: /(^|[^\\])\/\*[\s\S]*?(?:\*\/|$)/,
+              lookbehind: true,
+              greedy: true
+            },
+            {
+              pattern: /(^|[^\\:])\/\/.*/,
+              lookbehind: true,
+              greedy: true
+            }
+          ],
+          string: {
+            pattern: /(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+            greedy: true
+          },
+          "class-name": {
+            pattern: /(\b(?:class|interface|extends|implements|trait|instanceof|new)\s+|\bcatch\s+\()[\w.\\]+/i,
+            lookbehind: true,
+            inside: {
+              punctuation: /[.\\]/
+            }
+          },
+          keyword: /\b(?:if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
+          boolean: /\b(?:true|false)\b/,
+          function: /\w+(?=\()/,
+          number: /\b0x[\da-f]+\b|(?:\b\d+(?:\.\d*)?|\B\.\d+)(?:e[+-]?\d+)?/i,
+          operator: /[<>]=?|[!=]=?=?|--?|\+\+?|&&?|\|\|?|[?*/~^%]/,
+          punctuation: /[{}[\];(),.:]/
+        };
+      }
+    }
+  });
+
+  // node_modules/refractor/lang/javascript.js
+  var require_javascript = __commonJS({
+    "node_modules/refractor/lang/javascript.js"(exports, module) {
+      "use strict";
+      module.exports = javascript;
+      javascript.displayName = "javascript";
+      javascript.aliases = ["js"];
+      function javascript(Prism) {
+        Prism.languages.javascript = Prism.languages.extend("clike", {
+          "class-name": [
+            Prism.languages.clike["class-name"],
+            {
+              pattern: /(^|[^$\w\xA0-\uFFFF])(?!\s)[_$A-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\.(?:prototype|constructor))/,
+              lookbehind: true
+            }
+          ],
+          keyword: [
+            {
+              pattern: /((?:^|})\s*)(?:catch|finally)\b/,
+              lookbehind: true
+            },
+            {
+              pattern: /(^|[^.]|\.\.\.\s*)\b(?:as|async(?=\s*(?:function\b|\(|[$\w\xA0-\uFFFF]|$))|await|break|case|class|const|continue|debugger|default|delete|do|else|enum|export|extends|for|from|function|(?:get|set)(?=\s*[\[$\w\xA0-\uFFFF])|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|undefined|var|void|while|with|yield)\b/,
+              lookbehind: true
+            }
+          ],
+          function: /#?(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*(?:\.\s*(?:apply|bind|call)\s*)?\()/,
+          number: /\b(?:(?:0[xX](?:[\dA-Fa-f](?:_[\dA-Fa-f])?)+|0[bB](?:[01](?:_[01])?)+|0[oO](?:[0-7](?:_[0-7])?)+)n?|(?:\d(?:_\d)?)+n|NaN|Infinity)\b|(?:\b(?:\d(?:_\d)?)+\.?(?:\d(?:_\d)?)*|\B\.(?:\d(?:_\d)?)+)(?:[Ee][+-]?(?:\d(?:_\d)?)+)?/,
+          operator: /--|\+\+|\*\*=?|=>|&&=?|\|\|=?|[!=]==|<<=?|>>>?=?|[-+*/%&|^!=<>]=?|\.{3}|\?\?=?|\?\.?|[~:]/
+        });
+        Prism.languages.javascript["class-name"][0].pattern = /(\b(?:class|interface|extends|implements|instanceof|new)\s+)[\w.\\]+/;
+        Prism.languages.insertBefore("javascript", "keyword", {
+          regex: {
+            pattern: /((?:^|[^$\w\xA0-\uFFFF."'\])\s]|\b(?:return|yield))\s*)\/(?:\[(?:[^\]\\\r\n]|\\.)*]|\\.|[^/\\\[\r\n])+\/[gimyus]{0,6}(?=(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/)*(?:$|[\r\n,.;:})\]]|\/\/))/,
+            lookbehind: true,
+            greedy: true,
+            inside: {
+              "regex-source": {
+                pattern: /^(\/)[\s\S]+(?=\/[a-z]*$)/,
+                lookbehind: true,
+                alias: "language-regex",
+                inside: Prism.languages.regex
+              },
+              "regex-flags": /[a-z]+$/,
+              "regex-delimiter": /^\/|\/$/
+            }
+          },
+          "function-variable": {
+            pattern: /#?(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*[=:]\s*(?:async\s*)?(?:\bfunction\b|(?:\((?:[^()]|\([^()]*\))*\)|(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*)\s*=>))/,
+            alias: "function"
+          },
+          parameter: [
+            {
+              pattern: /(function(?:\s+(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*)?\s*\(\s*)(?!\s)(?:[^()\s]|\s+(?![\s)])|\([^()]*\))+(?=\s*\))/,
+              lookbehind: true,
+              inside: Prism.languages.javascript
+            },
+            {
+              pattern: /(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*=>)/i,
+              inside: Prism.languages.javascript
+            },
+            {
+              pattern: /(\(\s*)(?!\s)(?:[^()\s]|\s+(?![\s)])|\([^()]*\))+(?=\s*\)\s*=>)/,
+              lookbehind: true,
+              inside: Prism.languages.javascript
+            },
+            {
+              pattern: /((?:\b|\s|^)(?!(?:as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|undefined|var|void|while|with|yield)(?![$\w\xA0-\uFFFF]))(?:(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*\s*)\(\s*|\]\s*\(\s*)(?!\s)(?:[^()\s]|\s+(?![\s)])|\([^()]*\))+(?=\s*\)\s*\{)/,
+              lookbehind: true,
+              inside: Prism.languages.javascript
+            }
+          ],
+          constant: /\b[A-Z](?:[A-Z_]|\dx?)*\b/
+        });
+        Prism.languages.insertBefore("javascript", "string", {
+          "template-string": {
+            pattern: /`(?:\\[\s\S]|\${(?:[^{}]|{(?:[^{}]|{[^}]*})*})+}|(?!\${)[^\\`])*`/,
+            greedy: true,
+            inside: {
+              "template-punctuation": {
+                pattern: /^`|`$/,
+                alias: "string"
+              },
+              interpolation: {
+                pattern: /((?:^|[^\\])(?:\\{2})*)\${(?:[^{}]|{(?:[^{}]|{[^}]*})*})+}/,
+                lookbehind: true,
+                inside: {
+                  "interpolation-punctuation": {
+                    pattern: /^\${|}$/,
+                    alias: "punctuation"
+                  },
+                  rest: Prism.languages.javascript
+                }
+              },
+              string: /[\s\S]+/
+            }
+          }
+        });
+        if (Prism.languages.markup) {
+          Prism.languages.markup.tag.addInlined("script", "javascript");
+        }
+        Prism.languages.js = Prism.languages.javascript;
+      }
+    }
+  });
+
+  // node_modules/refractor/core.js
+  var require_core = __commonJS({
+    "node_modules/refractor/core.js"(exports, module) {
+      "use strict";
+      var ctx = typeof globalThis === "object" ? globalThis : typeof self === "object" ? self : typeof window === "object" ? window : typeof global === "object" ? global : {};
+      var restore = capture();
+      ctx.Prism = {manual: true, disableWorkerMessageHandler: true};
+      var h = require_hastscript();
+      var decode = require_parse_entities();
+      var Prism = require_prism_core();
+      var markup = require_markup();
+      var css = require_css();
+      var clike = require_clike();
+      var js = require_javascript();
+      restore();
+      var own = {}.hasOwnProperty;
+      function Refractor() {
+      }
+      Refractor.prototype = Prism;
+      var refract = new Refractor();
+      module.exports = refract;
+      refract.highlight = highlight;
+      refract.register = register;
+      refract.alias = alias;
+      refract.registered = registered;
+      refract.listLanguages = listLanguages;
+      register(markup);
+      register(css);
+      register(clike);
+      register(js);
+      refract.util.encode = encode;
+      refract.Token.stringify = stringify2;
+      function register(grammar) {
+        if (typeof grammar !== "function" || !grammar.displayName) {
+          throw new Error("Expected `function` for `grammar`, got `" + grammar + "`");
+        }
+        if (refract.languages[grammar.displayName] === void 0) {
+          grammar(refract);
+        }
+      }
+      function alias(name, alias2) {
+        var languages = refract.languages;
+        var map = name;
+        var key;
+        var list;
+        var length;
+        var index;
+        if (alias2) {
+          map = {};
+          map[name] = alias2;
+        }
+        for (key in map) {
+          list = map[key];
+          list = typeof list === "string" ? [list] : list;
+          length = list.length;
+          index = -1;
+          while (++index < length) {
+            languages[list[index]] = languages[key];
+          }
+        }
+      }
+      function highlight(value, name) {
+        var sup = Prism.highlight;
+        var grammar;
+        if (typeof value !== "string") {
+          throw new Error("Expected `string` for `value`, got `" + value + "`");
+        }
+        if (refract.util.type(name) === "Object") {
+          grammar = name;
+          name = null;
+        } else {
+          if (typeof name !== "string") {
+            throw new Error("Expected `string` for `name`, got `" + name + "`");
+          }
+          if (own.call(refract.languages, name)) {
+            grammar = refract.languages[name];
+          } else {
+            throw new Error("Unknown language: `" + name + "` is not registered");
+          }
+        }
+        return sup.call(this, value, grammar, name);
+      }
+      function registered(language) {
+        if (typeof language !== "string") {
+          throw new Error("Expected `string` for `language`, got `" + language + "`");
+        }
+        return own.call(refract.languages, language);
+      }
+      function listLanguages() {
+        var languages = refract.languages;
+        var list = [];
+        var language;
+        for (language in languages) {
+          if (own.call(languages, language) && typeof languages[language] === "object") {
+            list.push(language);
+          }
+        }
+        return list;
+      }
+      function stringify2(value, language, parent) {
+        var env;
+        if (typeof value === "string") {
+          return {type: "text", value};
+        }
+        if (refract.util.type(value) === "Array") {
+          return stringifyAll(value, language);
+        }
+        env = {
+          type: value.type,
+          content: refract.Token.stringify(value.content, language, parent),
+          tag: "span",
+          classes: ["token", value.type],
+          attributes: {},
+          language,
+          parent
+        };
+        if (value.alias) {
+          env.classes = env.classes.concat(value.alias);
+        }
+        refract.hooks.run("wrap", env);
+        return h(env.tag + "." + env.classes.join("."), attributes(env.attributes), env.content);
+      }
+      function stringifyAll(values, language) {
+        var result = [];
+        var length = values.length;
+        var index = -1;
+        var value;
+        while (++index < length) {
+          value = values[index];
+          if (value !== "" && value !== null && value !== void 0) {
+            result.push(value);
+          }
+        }
+        index = -1;
+        length = result.length;
+        while (++index < length) {
+          value = result[index];
+          result[index] = refract.Token.stringify(value, language, result);
+        }
+        return result;
+      }
+      function encode(tokens) {
+        return tokens;
+      }
+      function attributes(attrs) {
+        var key;
+        for (key in attrs) {
+          attrs[key] = decode(attrs[key]);
+        }
+        return attrs;
+      }
+      function capture() {
+        var defined = "Prism" in ctx;
+        var current = defined ? ctx.Prism : void 0;
+        return restore2;
+        function restore2() {
+          if (defined) {
+            ctx.Prism = current;
+          } else {
+            delete ctx.Prism;
+          }
+          defined = void 0;
+          current = void 0;
+        }
+      }
+    }
+  });
+
+  // node_modules/refractor/lang/jsx.js
+  var require_jsx = __commonJS({
+    "node_modules/refractor/lang/jsx.js"(exports, module) {
+      "use strict";
+      module.exports = jsx2;
+      jsx2.displayName = "jsx";
+      jsx2.aliases = [];
+      function jsx2(Prism) {
+        ;
+        (function(Prism2) {
+          var javascript = Prism2.util.clone(Prism2.languages.javascript);
+          Prism2.languages.jsx = Prism2.languages.extend("markup", javascript);
+          Prism2.languages.jsx.tag.pattern = /<\/?(?:[\w.:-]+(?:\s+(?:[\w.:$-]+(?:=(?:"(?:\\[^]|[^\\"])*"|'(?:\\[^]|[^\\'])*'|[^\s{'">=]+|\{(?:\{(?:\{[^{}]*\}|[^{}])*\}|[^{}])+\}))?|\{\s*\.{3}\s*[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)*\s*\}))*\s*\/?)?>/i;
+          Prism2.languages.jsx.tag.inside["tag"].pattern = /^<\/?[^\s>\/]*/i;
+          Prism2.languages.jsx.tag.inside["attr-value"].pattern = /=(?!\{)(?:"(?:\\[^]|[^\\"])*"|'(?:\\[^]|[^\\'])*'|[^\s'">]+)/i;
+          Prism2.languages.jsx.tag.inside["tag"].inside["class-name"] = /^[A-Z]\w*(?:\.[A-Z]\w*)*$/;
+          Prism2.languages.insertBefore("inside", "attr-name", {
+            spread: {
+              pattern: /\{\s*\.{3}\s*[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)*\s*\}/,
+              inside: {
+                punctuation: /\.{3}|[{}.]/,
+                "attr-value": /\w+/
+              }
+            }
+          }, Prism2.languages.jsx.tag);
+          Prism2.languages.insertBefore("inside", "attr-value", {
+            script: {
+              pattern: /=(?:\{(?:\{(?:\{[^{}]*\}|[^{}])*\}|[^{}])+\})/i,
+              inside: {
+                "script-punctuation": {
+                  pattern: /^=(?={)/,
+                  alias: "punctuation"
+                },
+                rest: Prism2.languages.jsx
+              },
+              alias: "language-javascript"
+            }
+          }, Prism2.languages.jsx.tag);
+          var stringifyToken = function(token) {
+            if (!token) {
+              return "";
+            }
+            if (typeof token === "string") {
+              return token;
+            }
+            if (typeof token.content === "string") {
+              return token.content;
+            }
+            return token.content.map(stringifyToken).join("");
+          };
+          var walkTokens = function(tokens) {
+            var openedTags = [];
+            for (var i = 0; i < tokens.length; i++) {
+              var token = tokens[i];
+              var notTagNorBrace = false;
+              if (typeof token !== "string") {
+                if (token.type === "tag" && token.content[0] && token.content[0].type === "tag") {
+                  if (token.content[0].content[0].content === "</") {
+                    if (openedTags.length > 0 && openedTags[openedTags.length - 1].tagName === stringifyToken(token.content[0].content[1])) {
+                      openedTags.pop();
+                    }
+                  } else {
+                    if (token.content[token.content.length - 1].content === "/>") {
+                    } else {
+                      openedTags.push({
+                        tagName: stringifyToken(token.content[0].content[1]),
+                        openedBraces: 0
+                      });
+                    }
+                  }
+                } else if (openedTags.length > 0 && token.type === "punctuation" && token.content === "{") {
+                  openedTags[openedTags.length - 1].openedBraces++;
+                } else if (openedTags.length > 0 && openedTags[openedTags.length - 1].openedBraces > 0 && token.type === "punctuation" && token.content === "}") {
+                  openedTags[openedTags.length - 1].openedBraces--;
+                } else {
+                  notTagNorBrace = true;
+                }
+              }
+              if (notTagNorBrace || typeof token === "string") {
+                if (openedTags.length > 0 && openedTags[openedTags.length - 1].openedBraces === 0) {
+                  var plainText = stringifyToken(token);
+                  if (i < tokens.length - 1 && (typeof tokens[i + 1] === "string" || tokens[i + 1].type === "plain-text")) {
+                    plainText += stringifyToken(tokens[i + 1]);
+                    tokens.splice(i + 1, 1);
+                  }
+                  if (i > 0 && (typeof tokens[i - 1] === "string" || tokens[i - 1].type === "plain-text")) {
+                    plainText = stringifyToken(tokens[i - 1]) + plainText;
+                    tokens.splice(i - 1, 1);
+                    i--;
+                  }
+                  tokens[i] = new Prism2.Token("plain-text", plainText, null, plainText);
+                }
+              }
+              if (token.content && typeof token.content !== "string") {
+                walkTokens(token.content);
+              }
+            }
+          };
+          Prism2.hooks.add("after-tokenize", function(env) {
+            if (env.language !== "jsx" && env.language !== "tsx") {
+              return;
+            }
+            walkTokens(env.tokens);
+          });
+        })(Prism);
+      }
+    }
+  });
+
   // node_modules/p5/lib/p5.min.js
   var require_p5_min = __commonJS({
     "node_modules/p5/lib/p5.min.js"(exports, module) {
@@ -37798,2635 +40427,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
   });
 
-  // node_modules/xtend/immutable.js
-  var require_immutable = __commonJS({
-    "node_modules/xtend/immutable.js"(exports, module) {
-      module.exports = extend;
-      var hasOwnProperty = Object.prototype.hasOwnProperty;
-      function extend() {
-        var target = {};
-        for (var i = 0; i < arguments.length; i++) {
-          var source = arguments[i];
-          for (var key in source) {
-            if (hasOwnProperty.call(source, key)) {
-              target[key] = source[key];
-            }
-          }
-        }
-        return target;
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/schema.js
-  var require_schema = __commonJS({
-    "node_modules/property-information/lib/util/schema.js"(exports, module) {
-      "use strict";
-      module.exports = Schema;
-      var proto = Schema.prototype;
-      proto.space = null;
-      proto.normal = {};
-      proto.property = {};
-      function Schema(property, normal, space) {
-        this.property = property;
-        this.normal = normal;
-        if (space) {
-          this.space = space;
-        }
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/merge.js
-  var require_merge = __commonJS({
-    "node_modules/property-information/lib/util/merge.js"(exports, module) {
-      "use strict";
-      var xtend = require_immutable();
-      var Schema = require_schema();
-      module.exports = merge;
-      function merge(definitions) {
-        var length = definitions.length;
-        var property = [];
-        var normal = [];
-        var index = -1;
-        var info;
-        var space;
-        while (++index < length) {
-          info = definitions[index];
-          property.push(info.property);
-          normal.push(info.normal);
-          space = info.space;
-        }
-        return new Schema(xtend.apply(null, property), xtend.apply(null, normal), space);
-      }
-    }
-  });
-
-  // node_modules/property-information/normalize.js
-  var require_normalize = __commonJS({
-    "node_modules/property-information/normalize.js"(exports, module) {
-      "use strict";
-      module.exports = normalize;
-      function normalize(value) {
-        return value.toLowerCase();
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/info.js
-  var require_info = __commonJS({
-    "node_modules/property-information/lib/util/info.js"(exports, module) {
-      "use strict";
-      module.exports = Info;
-      var proto = Info.prototype;
-      proto.space = null;
-      proto.attribute = null;
-      proto.property = null;
-      proto.boolean = false;
-      proto.booleanish = false;
-      proto.overloadedBoolean = false;
-      proto.number = false;
-      proto.commaSeparated = false;
-      proto.spaceSeparated = false;
-      proto.commaOrSpaceSeparated = false;
-      proto.mustUseProperty = false;
-      proto.defined = false;
-      function Info(property, attribute) {
-        this.property = property;
-        this.attribute = attribute;
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/types.js
-  var require_types = __commonJS({
-    "node_modules/property-information/lib/util/types.js"(exports) {
-      "use strict";
-      var powers = 0;
-      exports.boolean = increment();
-      exports.booleanish = increment();
-      exports.overloadedBoolean = increment();
-      exports.number = increment();
-      exports.spaceSeparated = increment();
-      exports.commaSeparated = increment();
-      exports.commaOrSpaceSeparated = increment();
-      function increment() {
-        return Math.pow(2, ++powers);
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/defined-info.js
-  var require_defined_info = __commonJS({
-    "node_modules/property-information/lib/util/defined-info.js"(exports, module) {
-      "use strict";
-      var Info = require_info();
-      var types = require_types();
-      module.exports = DefinedInfo;
-      DefinedInfo.prototype = new Info();
-      DefinedInfo.prototype.defined = true;
-      var checks = [
-        "boolean",
-        "booleanish",
-        "overloadedBoolean",
-        "number",
-        "commaSeparated",
-        "spaceSeparated",
-        "commaOrSpaceSeparated"
-      ];
-      var checksLength = checks.length;
-      function DefinedInfo(property, attribute, mask, space) {
-        var index = -1;
-        var check;
-        mark(this, "space", space);
-        Info.call(this, property, attribute);
-        while (++index < checksLength) {
-          check = checks[index];
-          mark(this, check, (mask & types[check]) === types[check]);
-        }
-      }
-      function mark(values, key, value) {
-        if (value) {
-          values[key] = value;
-        }
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/create.js
-  var require_create = __commonJS({
-    "node_modules/property-information/lib/util/create.js"(exports, module) {
-      "use strict";
-      var normalize = require_normalize();
-      var Schema = require_schema();
-      var DefinedInfo = require_defined_info();
-      module.exports = create;
-      function create(definition) {
-        var space = definition.space;
-        var mustUseProperty = definition.mustUseProperty || [];
-        var attributes = definition.attributes || {};
-        var props = definition.properties;
-        var transform = definition.transform;
-        var property = {};
-        var normal = {};
-        var prop;
-        var info;
-        for (prop in props) {
-          info = new DefinedInfo(prop, transform(attributes, prop), props[prop], space);
-          if (mustUseProperty.indexOf(prop) !== -1) {
-            info.mustUseProperty = true;
-          }
-          property[prop] = info;
-          normal[normalize(prop)] = prop;
-          normal[normalize(info.attribute)] = prop;
-        }
-        return new Schema(property, normal, space);
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/xlink.js
-  var require_xlink = __commonJS({
-    "node_modules/property-information/lib/xlink.js"(exports, module) {
-      "use strict";
-      var create = require_create();
-      module.exports = create({
-        space: "xlink",
-        transform: xlinkTransform,
-        properties: {
-          xLinkActuate: null,
-          xLinkArcRole: null,
-          xLinkHref: null,
-          xLinkRole: null,
-          xLinkShow: null,
-          xLinkTitle: null,
-          xLinkType: null
-        }
-      });
-      function xlinkTransform(_, prop) {
-        return "xlink:" + prop.slice(5).toLowerCase();
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/xml.js
-  var require_xml = __commonJS({
-    "node_modules/property-information/lib/xml.js"(exports, module) {
-      "use strict";
-      var create = require_create();
-      module.exports = create({
-        space: "xml",
-        transform: xmlTransform,
-        properties: {
-          xmlLang: null,
-          xmlBase: null,
-          xmlSpace: null
-        }
-      });
-      function xmlTransform(_, prop) {
-        return "xml:" + prop.slice(3).toLowerCase();
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/case-sensitive-transform.js
-  var require_case_sensitive_transform = __commonJS({
-    "node_modules/property-information/lib/util/case-sensitive-transform.js"(exports, module) {
-      "use strict";
-      module.exports = caseSensitiveTransform;
-      function caseSensitiveTransform(attributes, attribute) {
-        return attribute in attributes ? attributes[attribute] : attribute;
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/util/case-insensitive-transform.js
-  var require_case_insensitive_transform = __commonJS({
-    "node_modules/property-information/lib/util/case-insensitive-transform.js"(exports, module) {
-      "use strict";
-      var caseSensitiveTransform = require_case_sensitive_transform();
-      module.exports = caseInsensitiveTransform;
-      function caseInsensitiveTransform(attributes, property) {
-        return caseSensitiveTransform(attributes, property.toLowerCase());
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/xmlns.js
-  var require_xmlns = __commonJS({
-    "node_modules/property-information/lib/xmlns.js"(exports, module) {
-      "use strict";
-      var create = require_create();
-      var caseInsensitiveTransform = require_case_insensitive_transform();
-      module.exports = create({
-        space: "xmlns",
-        attributes: {
-          xmlnsxlink: "xmlns:xlink"
-        },
-        transform: caseInsensitiveTransform,
-        properties: {
-          xmlns: null,
-          xmlnsXLink: null
-        }
-      });
-    }
-  });
-
-  // node_modules/property-information/lib/aria.js
-  var require_aria = __commonJS({
-    "node_modules/property-information/lib/aria.js"(exports, module) {
-      "use strict";
-      var types = require_types();
-      var create = require_create();
-      var booleanish = types.booleanish;
-      var number = types.number;
-      var spaceSeparated = types.spaceSeparated;
-      module.exports = create({
-        transform: ariaTransform,
-        properties: {
-          ariaActiveDescendant: null,
-          ariaAtomic: booleanish,
-          ariaAutoComplete: null,
-          ariaBusy: booleanish,
-          ariaChecked: booleanish,
-          ariaColCount: number,
-          ariaColIndex: number,
-          ariaColSpan: number,
-          ariaControls: spaceSeparated,
-          ariaCurrent: null,
-          ariaDescribedBy: spaceSeparated,
-          ariaDetails: null,
-          ariaDisabled: booleanish,
-          ariaDropEffect: spaceSeparated,
-          ariaErrorMessage: null,
-          ariaExpanded: booleanish,
-          ariaFlowTo: spaceSeparated,
-          ariaGrabbed: booleanish,
-          ariaHasPopup: null,
-          ariaHidden: booleanish,
-          ariaInvalid: null,
-          ariaKeyShortcuts: null,
-          ariaLabel: null,
-          ariaLabelledBy: spaceSeparated,
-          ariaLevel: number,
-          ariaLive: null,
-          ariaModal: booleanish,
-          ariaMultiLine: booleanish,
-          ariaMultiSelectable: booleanish,
-          ariaOrientation: null,
-          ariaOwns: spaceSeparated,
-          ariaPlaceholder: null,
-          ariaPosInSet: number,
-          ariaPressed: booleanish,
-          ariaReadOnly: booleanish,
-          ariaRelevant: null,
-          ariaRequired: booleanish,
-          ariaRoleDescription: spaceSeparated,
-          ariaRowCount: number,
-          ariaRowIndex: number,
-          ariaRowSpan: number,
-          ariaSelected: booleanish,
-          ariaSetSize: number,
-          ariaSort: null,
-          ariaValueMax: number,
-          ariaValueMin: number,
-          ariaValueNow: number,
-          ariaValueText: null,
-          role: null
-        }
-      });
-      function ariaTransform(_, prop) {
-        return prop === "role" ? prop : "aria-" + prop.slice(4).toLowerCase();
-      }
-    }
-  });
-
-  // node_modules/property-information/lib/html.js
-  var require_html = __commonJS({
-    "node_modules/property-information/lib/html.js"(exports, module) {
-      "use strict";
-      var types = require_types();
-      var create = require_create();
-      var caseInsensitiveTransform = require_case_insensitive_transform();
-      var boolean = types.boolean;
-      var overloadedBoolean = types.overloadedBoolean;
-      var booleanish = types.booleanish;
-      var number = types.number;
-      var spaceSeparated = types.spaceSeparated;
-      var commaSeparated = types.commaSeparated;
-      module.exports = create({
-        space: "html",
-        attributes: {
-          acceptcharset: "accept-charset",
-          classname: "class",
-          htmlfor: "for",
-          httpequiv: "http-equiv"
-        },
-        transform: caseInsensitiveTransform,
-        mustUseProperty: ["checked", "multiple", "muted", "selected"],
-        properties: {
-          abbr: null,
-          accept: commaSeparated,
-          acceptCharset: spaceSeparated,
-          accessKey: spaceSeparated,
-          action: null,
-          allow: null,
-          allowFullScreen: boolean,
-          allowPaymentRequest: boolean,
-          allowUserMedia: boolean,
-          alt: null,
-          as: null,
-          async: boolean,
-          autoCapitalize: null,
-          autoComplete: spaceSeparated,
-          autoFocus: boolean,
-          autoPlay: boolean,
-          capture: boolean,
-          charSet: null,
-          checked: boolean,
-          cite: null,
-          className: spaceSeparated,
-          cols: number,
-          colSpan: null,
-          content: null,
-          contentEditable: booleanish,
-          controls: boolean,
-          controlsList: spaceSeparated,
-          coords: number | commaSeparated,
-          crossOrigin: null,
-          data: null,
-          dateTime: null,
-          decoding: null,
-          default: boolean,
-          defer: boolean,
-          dir: null,
-          dirName: null,
-          disabled: boolean,
-          download: overloadedBoolean,
-          draggable: booleanish,
-          encType: null,
-          enterKeyHint: null,
-          form: null,
-          formAction: null,
-          formEncType: null,
-          formMethod: null,
-          formNoValidate: boolean,
-          formTarget: null,
-          headers: spaceSeparated,
-          height: number,
-          hidden: boolean,
-          high: number,
-          href: null,
-          hrefLang: null,
-          htmlFor: spaceSeparated,
-          httpEquiv: spaceSeparated,
-          id: null,
-          imageSizes: null,
-          imageSrcSet: commaSeparated,
-          inputMode: null,
-          integrity: null,
-          is: null,
-          isMap: boolean,
-          itemId: null,
-          itemProp: spaceSeparated,
-          itemRef: spaceSeparated,
-          itemScope: boolean,
-          itemType: spaceSeparated,
-          kind: null,
-          label: null,
-          lang: null,
-          language: null,
-          list: null,
-          loading: null,
-          loop: boolean,
-          low: number,
-          manifest: null,
-          max: null,
-          maxLength: number,
-          media: null,
-          method: null,
-          min: null,
-          minLength: number,
-          multiple: boolean,
-          muted: boolean,
-          name: null,
-          nonce: null,
-          noModule: boolean,
-          noValidate: boolean,
-          onAbort: null,
-          onAfterPrint: null,
-          onAuxClick: null,
-          onBeforePrint: null,
-          onBeforeUnload: null,
-          onBlur: null,
-          onCancel: null,
-          onCanPlay: null,
-          onCanPlayThrough: null,
-          onChange: null,
-          onClick: null,
-          onClose: null,
-          onContextMenu: null,
-          onCopy: null,
-          onCueChange: null,
-          onCut: null,
-          onDblClick: null,
-          onDrag: null,
-          onDragEnd: null,
-          onDragEnter: null,
-          onDragExit: null,
-          onDragLeave: null,
-          onDragOver: null,
-          onDragStart: null,
-          onDrop: null,
-          onDurationChange: null,
-          onEmptied: null,
-          onEnded: null,
-          onError: null,
-          onFocus: null,
-          onFormData: null,
-          onHashChange: null,
-          onInput: null,
-          onInvalid: null,
-          onKeyDown: null,
-          onKeyPress: null,
-          onKeyUp: null,
-          onLanguageChange: null,
-          onLoad: null,
-          onLoadedData: null,
-          onLoadedMetadata: null,
-          onLoadEnd: null,
-          onLoadStart: null,
-          onMessage: null,
-          onMessageError: null,
-          onMouseDown: null,
-          onMouseEnter: null,
-          onMouseLeave: null,
-          onMouseMove: null,
-          onMouseOut: null,
-          onMouseOver: null,
-          onMouseUp: null,
-          onOffline: null,
-          onOnline: null,
-          onPageHide: null,
-          onPageShow: null,
-          onPaste: null,
-          onPause: null,
-          onPlay: null,
-          onPlaying: null,
-          onPopState: null,
-          onProgress: null,
-          onRateChange: null,
-          onRejectionHandled: null,
-          onReset: null,
-          onResize: null,
-          onScroll: null,
-          onSecurityPolicyViolation: null,
-          onSeeked: null,
-          onSeeking: null,
-          onSelect: null,
-          onSlotChange: null,
-          onStalled: null,
-          onStorage: null,
-          onSubmit: null,
-          onSuspend: null,
-          onTimeUpdate: null,
-          onToggle: null,
-          onUnhandledRejection: null,
-          onUnload: null,
-          onVolumeChange: null,
-          onWaiting: null,
-          onWheel: null,
-          open: boolean,
-          optimum: number,
-          pattern: null,
-          ping: spaceSeparated,
-          placeholder: null,
-          playsInline: boolean,
-          poster: null,
-          preload: null,
-          readOnly: boolean,
-          referrerPolicy: null,
-          rel: spaceSeparated,
-          required: boolean,
-          reversed: boolean,
-          rows: number,
-          rowSpan: number,
-          sandbox: spaceSeparated,
-          scope: null,
-          scoped: boolean,
-          seamless: boolean,
-          selected: boolean,
-          shape: null,
-          size: number,
-          sizes: null,
-          slot: null,
-          span: number,
-          spellCheck: booleanish,
-          src: null,
-          srcDoc: null,
-          srcLang: null,
-          srcSet: commaSeparated,
-          start: number,
-          step: null,
-          style: null,
-          tabIndex: number,
-          target: null,
-          title: null,
-          translate: null,
-          type: null,
-          typeMustMatch: boolean,
-          useMap: null,
-          value: booleanish,
-          width: number,
-          wrap: null,
-          align: null,
-          aLink: null,
-          archive: spaceSeparated,
-          axis: null,
-          background: null,
-          bgColor: null,
-          border: number,
-          borderColor: null,
-          bottomMargin: number,
-          cellPadding: null,
-          cellSpacing: null,
-          char: null,
-          charOff: null,
-          classId: null,
-          clear: null,
-          code: null,
-          codeBase: null,
-          codeType: null,
-          color: null,
-          compact: boolean,
-          declare: boolean,
-          event: null,
-          face: null,
-          frame: null,
-          frameBorder: null,
-          hSpace: number,
-          leftMargin: number,
-          link: null,
-          longDesc: null,
-          lowSrc: null,
-          marginHeight: number,
-          marginWidth: number,
-          noResize: boolean,
-          noHref: boolean,
-          noShade: boolean,
-          noWrap: boolean,
-          object: null,
-          profile: null,
-          prompt: null,
-          rev: null,
-          rightMargin: number,
-          rules: null,
-          scheme: null,
-          scrolling: booleanish,
-          standby: null,
-          summary: null,
-          text: null,
-          topMargin: number,
-          valueType: null,
-          version: null,
-          vAlign: null,
-          vLink: null,
-          vSpace: number,
-          allowTransparency: null,
-          autoCorrect: null,
-          autoSave: null,
-          disablePictureInPicture: boolean,
-          disableRemotePlayback: boolean,
-          prefix: null,
-          property: null,
-          results: number,
-          security: null,
-          unselectable: null
-        }
-      });
-    }
-  });
-
-  // node_modules/property-information/html.js
-  var require_html2 = __commonJS({
-    "node_modules/property-information/html.js"(exports, module) {
-      "use strict";
-      var merge = require_merge();
-      var xlink = require_xlink();
-      var xml = require_xml();
-      var xmlns = require_xmlns();
-      var aria = require_aria();
-      var html = require_html();
-      module.exports = merge([xml, xlink, xmlns, aria, html]);
-    }
-  });
-
-  // node_modules/property-information/find.js
-  var require_find = __commonJS({
-    "node_modules/property-information/find.js"(exports, module) {
-      "use strict";
-      var normalize = require_normalize();
-      var DefinedInfo = require_defined_info();
-      var Info = require_info();
-      var data = "data";
-      module.exports = find;
-      var valid = /^data[-\w.:]+$/i;
-      var dash = /-[a-z]/g;
-      var cap = /[A-Z]/g;
-      function find(schema, value) {
-        var normal = normalize(value);
-        var prop = value;
-        var Type = Info;
-        if (normal in schema.normal) {
-          return schema.property[schema.normal[normal]];
-        }
-        if (normal.length > 4 && normal.slice(0, 4) === data && valid.test(value)) {
-          if (value.charAt(4) === "-") {
-            prop = datasetToProperty(value);
-          } else {
-            value = datasetToAttribute(value);
-          }
-          Type = DefinedInfo;
-        }
-        return new Type(prop, value);
-      }
-      function datasetToProperty(attribute) {
-        var value = attribute.slice(5).replace(dash, camelcase);
-        return data + value.charAt(0).toUpperCase() + value.slice(1);
-      }
-      function datasetToAttribute(property) {
-        var value = property.slice(4);
-        if (dash.test(value)) {
-          return property;
-        }
-        value = value.replace(cap, kebab);
-        if (value.charAt(0) !== "-") {
-          value = "-" + value;
-        }
-        return data + value;
-      }
-      function kebab($0) {
-        return "-" + $0.toLowerCase();
-      }
-      function camelcase($0) {
-        return $0.charAt(1).toUpperCase();
-      }
-    }
-  });
-
-  // node_modules/hast-util-parse-selector/index.js
-  var require_hast_util_parse_selector = __commonJS({
-    "node_modules/hast-util-parse-selector/index.js"(exports, module) {
-      "use strict";
-      module.exports = parse;
-      var search = /[#.]/g;
-      function parse(selector, defaultTagName) {
-        var value = selector || "";
-        var name = defaultTagName || "div";
-        var props = {};
-        var start = 0;
-        var subvalue;
-        var previous;
-        var match;
-        while (start < value.length) {
-          search.lastIndex = start;
-          match = search.exec(value);
-          subvalue = value.slice(start, match ? match.index : value.length);
-          if (subvalue) {
-            if (!previous) {
-              name = subvalue;
-            } else if (previous === "#") {
-              props.id = subvalue;
-            } else if (props.className) {
-              props.className.push(subvalue);
-            } else {
-              props.className = [subvalue];
-            }
-            start += subvalue.length;
-          }
-          if (match) {
-            previous = match[0];
-            start++;
-          }
-        }
-        return {type: "element", tagName: name, properties: props, children: []};
-      }
-    }
-  });
-
-  // node_modules/space-separated-tokens/index.js
-  var require_space_separated_tokens = __commonJS({
-    "node_modules/space-separated-tokens/index.js"(exports) {
-      "use strict";
-      exports.parse = parse;
-      exports.stringify = stringify2;
-      var empty = "";
-      var space = " ";
-      var whiteSpace = /[ \t\n\r\f]+/g;
-      function parse(value) {
-        var input = String(value || empty).trim();
-        return input === empty ? [] : input.split(whiteSpace);
-      }
-      function stringify2(values) {
-        return values.join(space).trim();
-      }
-    }
-  });
-
-  // node_modules/comma-separated-tokens/index.js
-  var require_comma_separated_tokens = __commonJS({
-    "node_modules/comma-separated-tokens/index.js"(exports) {
-      "use strict";
-      exports.parse = parse;
-      exports.stringify = stringify2;
-      var comma = ",";
-      var space = " ";
-      var empty = "";
-      function parse(value) {
-        var values = [];
-        var input = String(value || empty);
-        var index = input.indexOf(comma);
-        var lastIndex = 0;
-        var end = false;
-        var val;
-        while (!end) {
-          if (index === -1) {
-            index = input.length;
-            end = true;
-          }
-          val = input.slice(lastIndex, index).trim();
-          if (val || !end) {
-            values.push(val);
-          }
-          lastIndex = index + 1;
-          index = input.indexOf(comma, lastIndex);
-        }
-        return values;
-      }
-      function stringify2(values, options) {
-        var settings = options || {};
-        var left = settings.padLeft === false ? empty : space;
-        var right = settings.padRight ? space : empty;
-        if (values[values.length - 1] === empty) {
-          values = values.concat(empty);
-        }
-        return values.join(right + comma + left).trim();
-      }
-    }
-  });
-
-  // node_modules/hastscript/factory.js
-  var require_factory = __commonJS({
-    "node_modules/hastscript/factory.js"(exports, module) {
-      "use strict";
-      var find = require_find();
-      var normalize = require_normalize();
-      var parseSelector = require_hast_util_parse_selector();
-      var spaces = require_space_separated_tokens().parse;
-      var commas = require_comma_separated_tokens().parse;
-      module.exports = factory;
-      var own = {}.hasOwnProperty;
-      function factory(schema, defaultTagName, caseSensitive) {
-        var adjust = caseSensitive ? createAdjustMap(caseSensitive) : null;
-        return h;
-        function h(selector, properties) {
-          var node = parseSelector(selector, defaultTagName);
-          var children = Array.prototype.slice.call(arguments, 2);
-          var name = node.tagName.toLowerCase();
-          var property;
-          node.tagName = adjust && own.call(adjust, name) ? adjust[name] : name;
-          if (properties && isChildren(properties, node)) {
-            children.unshift(properties);
-            properties = null;
-          }
-          if (properties) {
-            for (property in properties) {
-              addProperty(node.properties, property, properties[property]);
-            }
-          }
-          addChild(node.children, children);
-          if (node.tagName === "template") {
-            node.content = {type: "root", children: node.children};
-            node.children = [];
-          }
-          return node;
-        }
-        function addProperty(properties, key, value) {
-          var info;
-          var property;
-          var result;
-          if (value === null || value === void 0 || value !== value) {
-            return;
-          }
-          info = find(schema, key);
-          property = info.property;
-          result = value;
-          if (typeof result === "string") {
-            if (info.spaceSeparated) {
-              result = spaces(result);
-            } else if (info.commaSeparated) {
-              result = commas(result);
-            } else if (info.commaOrSpaceSeparated) {
-              result = spaces(commas(result).join(" "));
-            }
-          }
-          if (property === "style" && typeof value !== "string") {
-            result = style(result);
-          }
-          if (property === "className" && properties.className) {
-            result = properties.className.concat(result);
-          }
-          properties[property] = parsePrimitives(info, property, result);
-        }
-      }
-      function isChildren(value, node) {
-        return typeof value === "string" || "length" in value || isNode(node.tagName, value);
-      }
-      function isNode(tagName, value) {
-        var type = value.type;
-        if (tagName === "input" || !type || typeof type !== "string") {
-          return false;
-        }
-        if (typeof value.children === "object" && "length" in value.children) {
-          return true;
-        }
-        type = type.toLowerCase();
-        if (tagName === "button") {
-          return type !== "menu" && type !== "submit" && type !== "reset" && type !== "button";
-        }
-        return "value" in value;
-      }
-      function addChild(nodes, value) {
-        var index;
-        var length;
-        if (typeof value === "string" || typeof value === "number") {
-          nodes.push({type: "text", value: String(value)});
-          return;
-        }
-        if (typeof value === "object" && "length" in value) {
-          index = -1;
-          length = value.length;
-          while (++index < length) {
-            addChild(nodes, value[index]);
-          }
-          return;
-        }
-        if (typeof value !== "object" || !("type" in value)) {
-          throw new Error("Expected node, nodes, or string, got `" + value + "`");
-        }
-        nodes.push(value);
-      }
-      function parsePrimitives(info, name, value) {
-        var index;
-        var length;
-        var result;
-        if (typeof value !== "object" || !("length" in value)) {
-          return parsePrimitive(info, name, value);
-        }
-        length = value.length;
-        index = -1;
-        result = [];
-        while (++index < length) {
-          result[index] = parsePrimitive(info, name, value[index]);
-        }
-        return result;
-      }
-      function parsePrimitive(info, name, value) {
-        var result = value;
-        if (info.number || info.positiveNumber) {
-          if (!isNaN(result) && result !== "") {
-            result = Number(result);
-          }
-        } else if (info.boolean || info.overloadedBoolean) {
-          if (typeof result === "string" && (result === "" || normalize(value) === normalize(name))) {
-            result = true;
-          }
-        }
-        return result;
-      }
-      function style(value) {
-        var result = [];
-        var key;
-        for (key in value) {
-          result.push([key, value[key]].join(": "));
-        }
-        return result.join("; ");
-      }
-      function createAdjustMap(values) {
-        var length = values.length;
-        var index = -1;
-        var result = {};
-        var value;
-        while (++index < length) {
-          value = values[index];
-          result[value.toLowerCase()] = value;
-        }
-        return result;
-      }
-    }
-  });
-
-  // node_modules/hastscript/html.js
-  var require_html3 = __commonJS({
-    "node_modules/hastscript/html.js"(exports, module) {
-      "use strict";
-      var schema = require_html2();
-      var factory = require_factory();
-      var html = factory(schema, "div");
-      html.displayName = "html";
-      module.exports = html;
-    }
-  });
-
-  // node_modules/hastscript/index.js
-  var require_hastscript = __commonJS({
-    "node_modules/hastscript/index.js"(exports, module) {
-      "use strict";
-      module.exports = require_html3();
-    }
-  });
-
-  // node_modules/character-entities-legacy/index.json
-  var require_character_entities_legacy = __commonJS({
-    "node_modules/character-entities-legacy/index.json"(exports, module) {
-      module.exports = {
-        AElig: "\xC6",
-        AMP: "&",
-        Aacute: "\xC1",
-        Acirc: "\xC2",
-        Agrave: "\xC0",
-        Aring: "\xC5",
-        Atilde: "\xC3",
-        Auml: "\xC4",
-        COPY: "\xA9",
-        Ccedil: "\xC7",
-        ETH: "\xD0",
-        Eacute: "\xC9",
-        Ecirc: "\xCA",
-        Egrave: "\xC8",
-        Euml: "\xCB",
-        GT: ">",
-        Iacute: "\xCD",
-        Icirc: "\xCE",
-        Igrave: "\xCC",
-        Iuml: "\xCF",
-        LT: "<",
-        Ntilde: "\xD1",
-        Oacute: "\xD3",
-        Ocirc: "\xD4",
-        Ograve: "\xD2",
-        Oslash: "\xD8",
-        Otilde: "\xD5",
-        Ouml: "\xD6",
-        QUOT: '"',
-        REG: "\xAE",
-        THORN: "\xDE",
-        Uacute: "\xDA",
-        Ucirc: "\xDB",
-        Ugrave: "\xD9",
-        Uuml: "\xDC",
-        Yacute: "\xDD",
-        aacute: "\xE1",
-        acirc: "\xE2",
-        acute: "\xB4",
-        aelig: "\xE6",
-        agrave: "\xE0",
-        amp: "&",
-        aring: "\xE5",
-        atilde: "\xE3",
-        auml: "\xE4",
-        brvbar: "\xA6",
-        ccedil: "\xE7",
-        cedil: "\xB8",
-        cent: "\xA2",
-        copy: "\xA9",
-        curren: "\xA4",
-        deg: "\xB0",
-        divide: "\xF7",
-        eacute: "\xE9",
-        ecirc: "\xEA",
-        egrave: "\xE8",
-        eth: "\xF0",
-        euml: "\xEB",
-        frac12: "\xBD",
-        frac14: "\xBC",
-        frac34: "\xBE",
-        gt: ">",
-        iacute: "\xED",
-        icirc: "\xEE",
-        iexcl: "\xA1",
-        igrave: "\xEC",
-        iquest: "\xBF",
-        iuml: "\xEF",
-        laquo: "\xAB",
-        lt: "<",
-        macr: "\xAF",
-        micro: "\xB5",
-        middot: "\xB7",
-        nbsp: "\xA0",
-        not: "\xAC",
-        ntilde: "\xF1",
-        oacute: "\xF3",
-        ocirc: "\xF4",
-        ograve: "\xF2",
-        ordf: "\xAA",
-        ordm: "\xBA",
-        oslash: "\xF8",
-        otilde: "\xF5",
-        ouml: "\xF6",
-        para: "\xB6",
-        plusmn: "\xB1",
-        pound: "\xA3",
-        quot: '"',
-        raquo: "\xBB",
-        reg: "\xAE",
-        sect: "\xA7",
-        shy: "\xAD",
-        sup1: "\xB9",
-        sup2: "\xB2",
-        sup3: "\xB3",
-        szlig: "\xDF",
-        thorn: "\xFE",
-        times: "\xD7",
-        uacute: "\xFA",
-        ucirc: "\xFB",
-        ugrave: "\xF9",
-        uml: "\xA8",
-        uuml: "\xFC",
-        yacute: "\xFD",
-        yen: "\xA5",
-        yuml: "\xFF"
-      };
-    }
-  });
-
-  // node_modules/character-reference-invalid/index.json
-  var require_character_reference_invalid = __commonJS({
-    "node_modules/character-reference-invalid/index.json"(exports, module) {
-      module.exports = {
-        "0": "\uFFFD",
-        "128": "\u20AC",
-        "130": "\u201A",
-        "131": "\u0192",
-        "132": "\u201E",
-        "133": "\u2026",
-        "134": "\u2020",
-        "135": "\u2021",
-        "136": "\u02C6",
-        "137": "\u2030",
-        "138": "\u0160",
-        "139": "\u2039",
-        "140": "\u0152",
-        "142": "\u017D",
-        "145": "\u2018",
-        "146": "\u2019",
-        "147": "\u201C",
-        "148": "\u201D",
-        "149": "\u2022",
-        "150": "\u2013",
-        "151": "\u2014",
-        "152": "\u02DC",
-        "153": "\u2122",
-        "154": "\u0161",
-        "155": "\u203A",
-        "156": "\u0153",
-        "158": "\u017E",
-        "159": "\u0178"
-      };
-    }
-  });
-
-  // node_modules/is-decimal/index.js
-  var require_is_decimal = __commonJS({
-    "node_modules/is-decimal/index.js"(exports, module) {
-      "use strict";
-      module.exports = decimal;
-      function decimal(character) {
-        var code = typeof character === "string" ? character.charCodeAt(0) : character;
-        return code >= 48 && code <= 57;
-      }
-    }
-  });
-
-  // node_modules/is-hexadecimal/index.js
-  var require_is_hexadecimal = __commonJS({
-    "node_modules/is-hexadecimal/index.js"(exports, module) {
-      "use strict";
-      module.exports = hexadecimal;
-      function hexadecimal(character) {
-        var code = typeof character === "string" ? character.charCodeAt(0) : character;
-        return code >= 97 && code <= 102 || code >= 65 && code <= 70 || code >= 48 && code <= 57;
-      }
-    }
-  });
-
-  // node_modules/is-alphabetical/index.js
-  var require_is_alphabetical = __commonJS({
-    "node_modules/is-alphabetical/index.js"(exports, module) {
-      "use strict";
-      module.exports = alphabetical;
-      function alphabetical(character) {
-        var code = typeof character === "string" ? character.charCodeAt(0) : character;
-        return code >= 97 && code <= 122 || code >= 65 && code <= 90;
-      }
-    }
-  });
-
-  // node_modules/is-alphanumerical/index.js
-  var require_is_alphanumerical = __commonJS({
-    "node_modules/is-alphanumerical/index.js"(exports, module) {
-      "use strict";
-      var alphabetical = require_is_alphabetical();
-      var decimal = require_is_decimal();
-      module.exports = alphanumerical;
-      function alphanumerical(character) {
-        return alphabetical(character) || decimal(character);
-      }
-    }
-  });
-
-  // node_modules/parse-entities/decode-entity.browser.js
-  var require_decode_entity_browser = __commonJS({
-    "node_modules/parse-entities/decode-entity.browser.js"(exports, module) {
-      "use strict";
-      var el;
-      var semicolon = 59;
-      module.exports = decodeEntity;
-      function decodeEntity(characters) {
-        var entity = "&" + characters + ";";
-        var char;
-        el = el || document.createElement("i");
-        el.innerHTML = entity;
-        char = el.textContent;
-        if (char.charCodeAt(char.length - 1) === semicolon && characters !== "semi") {
-          return false;
-        }
-        return char === entity ? false : char;
-      }
-    }
-  });
-
-  // node_modules/parse-entities/index.js
-  var require_parse_entities = __commonJS({
-    "node_modules/parse-entities/index.js"(exports, module) {
-      "use strict";
-      var legacy = require_character_entities_legacy();
-      var invalid = require_character_reference_invalid();
-      var decimal = require_is_decimal();
-      var hexadecimal = require_is_hexadecimal();
-      var alphanumerical = require_is_alphanumerical();
-      var decodeEntity = require_decode_entity_browser();
-      module.exports = parseEntities;
-      var own = {}.hasOwnProperty;
-      var fromCharCode = String.fromCharCode;
-      var noop = Function.prototype;
-      var defaults = {
-        warning: null,
-        reference: null,
-        text: null,
-        warningContext: null,
-        referenceContext: null,
-        textContext: null,
-        position: {},
-        additional: null,
-        attribute: false,
-        nonTerminated: true
-      };
-      var tab = 9;
-      var lineFeed = 10;
-      var formFeed = 12;
-      var space = 32;
-      var ampersand = 38;
-      var semicolon = 59;
-      var lessThan = 60;
-      var equalsTo = 61;
-      var numberSign = 35;
-      var uppercaseX = 88;
-      var lowercaseX = 120;
-      var replacementCharacter = 65533;
-      var name = "named";
-      var hexa = "hexadecimal";
-      var deci = "decimal";
-      var bases = {};
-      bases[hexa] = 16;
-      bases[deci] = 10;
-      var tests = {};
-      tests[name] = alphanumerical;
-      tests[deci] = decimal;
-      tests[hexa] = hexadecimal;
-      var namedNotTerminated = 1;
-      var numericNotTerminated = 2;
-      var namedEmpty = 3;
-      var numericEmpty = 4;
-      var namedUnknown = 5;
-      var numericDisallowed = 6;
-      var numericProhibited = 7;
-      var messages = {};
-      messages[namedNotTerminated] = "Named character references must be terminated by a semicolon";
-      messages[numericNotTerminated] = "Numeric character references must be terminated by a semicolon";
-      messages[namedEmpty] = "Named character references cannot be empty";
-      messages[numericEmpty] = "Numeric character references cannot be empty";
-      messages[namedUnknown] = "Named character references must be known";
-      messages[numericDisallowed] = "Numeric character references cannot be disallowed";
-      messages[numericProhibited] = "Numeric character references cannot be outside the permissible Unicode range";
-      function parseEntities(value, options) {
-        var settings = {};
-        var option;
-        var key;
-        if (!options) {
-          options = {};
-        }
-        for (key in defaults) {
-          option = options[key];
-          settings[key] = option === null || option === void 0 ? defaults[key] : option;
-        }
-        if (settings.position.indent || settings.position.start) {
-          settings.indent = settings.position.indent || [];
-          settings.position = settings.position.start;
-        }
-        return parse(value, settings);
-      }
-      function parse(value, settings) {
-        var additional = settings.additional;
-        var nonTerminated = settings.nonTerminated;
-        var handleText = settings.text;
-        var handleReference = settings.reference;
-        var handleWarning = settings.warning;
-        var textContext = settings.textContext;
-        var referenceContext = settings.referenceContext;
-        var warningContext = settings.warningContext;
-        var pos = settings.position;
-        var indent = settings.indent || [];
-        var length = value.length;
-        var index = 0;
-        var lines = -1;
-        var column = pos.column || 1;
-        var line = pos.line || 1;
-        var queue = "";
-        var result = [];
-        var entityCharacters;
-        var namedEntity;
-        var terminated;
-        var characters;
-        var character;
-        var reference;
-        var following;
-        var warning;
-        var reason;
-        var output;
-        var entity;
-        var begin;
-        var start;
-        var type;
-        var test;
-        var prev;
-        var next;
-        var diff;
-        var end;
-        if (typeof additional === "string") {
-          additional = additional.charCodeAt(0);
-        }
-        prev = now();
-        warning = handleWarning ? parseError : noop;
-        index--;
-        length++;
-        while (++index < length) {
-          if (character === lineFeed) {
-            column = indent[lines] || 1;
-          }
-          character = value.charCodeAt(index);
-          if (character === ampersand) {
-            following = value.charCodeAt(index + 1);
-            if (following === tab || following === lineFeed || following === formFeed || following === space || following === ampersand || following === lessThan || following !== following || additional && following === additional) {
-              queue += fromCharCode(character);
-              column++;
-              continue;
-            }
-            start = index + 1;
-            begin = start;
-            end = start;
-            if (following === numberSign) {
-              end = ++begin;
-              following = value.charCodeAt(end);
-              if (following === uppercaseX || following === lowercaseX) {
-                type = hexa;
-                end = ++begin;
-              } else {
-                type = deci;
-              }
-            } else {
-              type = name;
-            }
-            entityCharacters = "";
-            entity = "";
-            characters = "";
-            test = tests[type];
-            end--;
-            while (++end < length) {
-              following = value.charCodeAt(end);
-              if (!test(following)) {
-                break;
-              }
-              characters += fromCharCode(following);
-              if (type === name && own.call(legacy, characters)) {
-                entityCharacters = characters;
-                entity = legacy[characters];
-              }
-            }
-            terminated = value.charCodeAt(end) === semicolon;
-            if (terminated) {
-              end++;
-              namedEntity = type === name ? decodeEntity(characters) : false;
-              if (namedEntity) {
-                entityCharacters = characters;
-                entity = namedEntity;
-              }
-            }
-            diff = 1 + end - start;
-            if (!terminated && !nonTerminated) {
-            } else if (!characters) {
-              if (type !== name) {
-                warning(numericEmpty, diff);
-              }
-            } else if (type === name) {
-              if (terminated && !entity) {
-                warning(namedUnknown, 1);
-              } else {
-                if (entityCharacters !== characters) {
-                  end = begin + entityCharacters.length;
-                  diff = 1 + end - begin;
-                  terminated = false;
-                }
-                if (!terminated) {
-                  reason = entityCharacters ? namedNotTerminated : namedEmpty;
-                  if (settings.attribute) {
-                    following = value.charCodeAt(end);
-                    if (following === equalsTo) {
-                      warning(reason, diff);
-                      entity = null;
-                    } else if (alphanumerical(following)) {
-                      entity = null;
-                    } else {
-                      warning(reason, diff);
-                    }
-                  } else {
-                    warning(reason, diff);
-                  }
-                }
-              }
-              reference = entity;
-            } else {
-              if (!terminated) {
-                warning(numericNotTerminated, diff);
-              }
-              reference = parseInt(characters, bases[type]);
-              if (prohibited(reference)) {
-                warning(numericProhibited, diff);
-                reference = fromCharCode(replacementCharacter);
-              } else if (reference in invalid) {
-                warning(numericDisallowed, diff);
-                reference = invalid[reference];
-              } else {
-                output = "";
-                if (disallowed(reference)) {
-                  warning(numericDisallowed, diff);
-                }
-                if (reference > 65535) {
-                  reference -= 65536;
-                  output += fromCharCode(reference >>> (10 & 1023) | 55296);
-                  reference = 56320 | reference & 1023;
-                }
-                reference = output + fromCharCode(reference);
-              }
-            }
-            if (reference) {
-              flush();
-              prev = now();
-              index = end - 1;
-              column += end - start + 1;
-              result.push(reference);
-              next = now();
-              next.offset++;
-              if (handleReference) {
-                handleReference.call(referenceContext, reference, {start: prev, end: next}, value.slice(start - 1, end));
-              }
-              prev = next;
-            } else {
-              characters = value.slice(start - 1, end);
-              queue += characters;
-              column += characters.length;
-              index = end - 1;
-            }
-          } else {
-            if (character === 10) {
-              line++;
-              lines++;
-              column = 0;
-            }
-            if (character === character) {
-              queue += fromCharCode(character);
-              column++;
-            } else {
-              flush();
-            }
-          }
-        }
-        return result.join("");
-        function now() {
-          return {
-            line,
-            column,
-            offset: index + (pos.offset || 0)
-          };
-        }
-        function parseError(code, offset) {
-          var position = now();
-          position.column += offset;
-          position.offset += offset;
-          handleWarning.call(warningContext, messages[code], position, code);
-        }
-        function flush() {
-          if (queue) {
-            result.push(queue);
-            if (handleText) {
-              handleText.call(textContext, queue, {start: prev, end: now()});
-            }
-            queue = "";
-          }
-        }
-      }
-      function prohibited(code) {
-        return code >= 55296 && code <= 57343 || code > 1114111;
-      }
-      function disallowed(code) {
-        return code >= 1 && code <= 8 || code === 11 || code >= 13 && code <= 31 || code >= 127 && code <= 159 || code >= 64976 && code <= 65007 || (code & 65535) === 65535 || (code & 65535) === 65534;
-      }
-    }
-  });
-
-  // node_modules/prismjs/components/prism-core.js
-  var require_prism_core = __commonJS({
-    "node_modules/prismjs/components/prism-core.js"(exports, module) {
-      var _self = typeof window !== "undefined" ? window : typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope ? self : {};
-      var Prism = function(_self2) {
-        var lang = /\blang(?:uage)?-([\w-]+)\b/i;
-        var uniqueId = 0;
-        var _ = {
-          manual: _self2.Prism && _self2.Prism.manual,
-          disableWorkerMessageHandler: _self2.Prism && _self2.Prism.disableWorkerMessageHandler,
-          util: {
-            encode: function encode(tokens) {
-              if (tokens instanceof Token) {
-                return new Token(tokens.type, encode(tokens.content), tokens.alias);
-              } else if (Array.isArray(tokens)) {
-                return tokens.map(encode);
-              } else {
-                return tokens.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\u00a0/g, " ");
-              }
-            },
-            type: function(o) {
-              return Object.prototype.toString.call(o).slice(8, -1);
-            },
-            objId: function(obj) {
-              if (!obj["__id"]) {
-                Object.defineProperty(obj, "__id", {value: ++uniqueId});
-              }
-              return obj["__id"];
-            },
-            clone: function deepClone(o, visited) {
-              visited = visited || {};
-              var clone, id;
-              switch (_.util.type(o)) {
-                case "Object":
-                  id = _.util.objId(o);
-                  if (visited[id]) {
-                    return visited[id];
-                  }
-                  clone = {};
-                  visited[id] = clone;
-                  for (var key in o) {
-                    if (o.hasOwnProperty(key)) {
-                      clone[key] = deepClone(o[key], visited);
-                    }
-                  }
-                  return clone;
-                case "Array":
-                  id = _.util.objId(o);
-                  if (visited[id]) {
-                    return visited[id];
-                  }
-                  clone = [];
-                  visited[id] = clone;
-                  o.forEach(function(v, i) {
-                    clone[i] = deepClone(v, visited);
-                  });
-                  return clone;
-                default:
-                  return o;
-              }
-            },
-            getLanguage: function(element) {
-              while (element && !lang.test(element.className)) {
-                element = element.parentElement;
-              }
-              if (element) {
-                return (element.className.match(lang) || [, "none"])[1].toLowerCase();
-              }
-              return "none";
-            },
-            currentScript: function() {
-              if (typeof document === "undefined") {
-                return null;
-              }
-              if ("currentScript" in document && 1 < 2) {
-                return document.currentScript;
-              }
-              try {
-                throw new Error();
-              } catch (err) {
-                var src = (/at [^(\r\n]*\((.*):.+:.+\)$/i.exec(err.stack) || [])[1];
-                if (src) {
-                  var scripts = document.getElementsByTagName("script");
-                  for (var i in scripts) {
-                    if (scripts[i].src == src) {
-                      return scripts[i];
-                    }
-                  }
-                }
-                return null;
-              }
-            },
-            isActive: function(element, className, defaultActivation) {
-              var no = "no-" + className;
-              while (element) {
-                var classList = element.classList;
-                if (classList.contains(className)) {
-                  return true;
-                }
-                if (classList.contains(no)) {
-                  return false;
-                }
-                element = element.parentElement;
-              }
-              return !!defaultActivation;
-            }
-          },
-          languages: {
-            extend: function(id, redef) {
-              var lang2 = _.util.clone(_.languages[id]);
-              for (var key in redef) {
-                lang2[key] = redef[key];
-              }
-              return lang2;
-            },
-            insertBefore: function(inside, before, insert, root) {
-              root = root || _.languages;
-              var grammar = root[inside];
-              var ret = {};
-              for (var token in grammar) {
-                if (grammar.hasOwnProperty(token)) {
-                  if (token == before) {
-                    for (var newToken in insert) {
-                      if (insert.hasOwnProperty(newToken)) {
-                        ret[newToken] = insert[newToken];
-                      }
-                    }
-                  }
-                  if (!insert.hasOwnProperty(token)) {
-                    ret[token] = grammar[token];
-                  }
-                }
-              }
-              var old = root[inside];
-              root[inside] = ret;
-              _.languages.DFS(_.languages, function(key, value) {
-                if (value === old && key != inside) {
-                  this[key] = ret;
-                }
-              });
-              return ret;
-            },
-            DFS: function DFS(o, callback, type, visited) {
-              visited = visited || {};
-              var objId = _.util.objId;
-              for (var i in o) {
-                if (o.hasOwnProperty(i)) {
-                  callback.call(o, i, o[i], type || i);
-                  var property = o[i], propertyType = _.util.type(property);
-                  if (propertyType === "Object" && !visited[objId(property)]) {
-                    visited[objId(property)] = true;
-                    DFS(property, callback, null, visited);
-                  } else if (propertyType === "Array" && !visited[objId(property)]) {
-                    visited[objId(property)] = true;
-                    DFS(property, callback, i, visited);
-                  }
-                }
-              }
-            }
-          },
-          plugins: {},
-          highlightAll: function(async, callback) {
-            _.highlightAllUnder(document, async, callback);
-          },
-          highlightAllUnder: function(container, async, callback) {
-            var env = {
-              callback,
-              container,
-              selector: 'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'
-            };
-            _.hooks.run("before-highlightall", env);
-            env.elements = Array.prototype.slice.apply(env.container.querySelectorAll(env.selector));
-            _.hooks.run("before-all-elements-highlight", env);
-            for (var i = 0, element; element = env.elements[i++]; ) {
-              _.highlightElement(element, async === true, env.callback);
-            }
-          },
-          highlightElement: function(element, async, callback) {
-            var language = _.util.getLanguage(element);
-            var grammar = _.languages[language];
-            element.className = element.className.replace(lang, "").replace(/\s+/g, " ") + " language-" + language;
-            var parent = element.parentElement;
-            if (parent && parent.nodeName.toLowerCase() === "pre") {
-              parent.className = parent.className.replace(lang, "").replace(/\s+/g, " ") + " language-" + language;
-            }
-            var code = element.textContent;
-            var env = {
-              element,
-              language,
-              grammar,
-              code
-            };
-            function insertHighlightedCode(highlightedCode) {
-              env.highlightedCode = highlightedCode;
-              _.hooks.run("before-insert", env);
-              env.element.innerHTML = env.highlightedCode;
-              _.hooks.run("after-highlight", env);
-              _.hooks.run("complete", env);
-              callback && callback.call(env.element);
-            }
-            _.hooks.run("before-sanity-check", env);
-            if (!env.code) {
-              _.hooks.run("complete", env);
-              callback && callback.call(env.element);
-              return;
-            }
-            _.hooks.run("before-highlight", env);
-            if (!env.grammar) {
-              insertHighlightedCode(_.util.encode(env.code));
-              return;
-            }
-            if (async && _self2.Worker) {
-              var worker = new Worker(_.filename);
-              worker.onmessage = function(evt) {
-                insertHighlightedCode(evt.data);
-              };
-              worker.postMessage(JSON.stringify({
-                language: env.language,
-                code: env.code,
-                immediateClose: true
-              }));
-            } else {
-              insertHighlightedCode(_.highlight(env.code, env.grammar, env.language));
-            }
-          },
-          highlight: function(text, grammar, language) {
-            var env = {
-              code: text,
-              grammar,
-              language
-            };
-            _.hooks.run("before-tokenize", env);
-            env.tokens = _.tokenize(env.code, env.grammar);
-            _.hooks.run("after-tokenize", env);
-            return Token.stringify(_.util.encode(env.tokens), env.language);
-          },
-          tokenize: function(text, grammar) {
-            var rest = grammar.rest;
-            if (rest) {
-              for (var token in rest) {
-                grammar[token] = rest[token];
-              }
-              delete grammar.rest;
-            }
-            var tokenList = new LinkedList();
-            addAfter(tokenList, tokenList.head, text);
-            matchGrammar(text, tokenList, grammar, tokenList.head, 0);
-            return toArray(tokenList);
-          },
-          hooks: {
-            all: {},
-            add: function(name, callback) {
-              var hooks = _.hooks.all;
-              hooks[name] = hooks[name] || [];
-              hooks[name].push(callback);
-            },
-            run: function(name, env) {
-              var callbacks = _.hooks.all[name];
-              if (!callbacks || !callbacks.length) {
-                return;
-              }
-              for (var i = 0, callback; callback = callbacks[i++]; ) {
-                callback(env);
-              }
-            }
-          },
-          Token
-        };
-        _self2.Prism = _;
-        function Token(type, content, alias, matchedStr) {
-          this.type = type;
-          this.content = content;
-          this.alias = alias;
-          this.length = (matchedStr || "").length | 0;
-        }
-        Token.stringify = function stringify2(o, language) {
-          if (typeof o == "string") {
-            return o;
-          }
-          if (Array.isArray(o)) {
-            var s = "";
-            o.forEach(function(e) {
-              s += stringify2(e, language);
-            });
-            return s;
-          }
-          var env = {
-            type: o.type,
-            content: stringify2(o.content, language),
-            tag: "span",
-            classes: ["token", o.type],
-            attributes: {},
-            language
-          };
-          var aliases = o.alias;
-          if (aliases) {
-            if (Array.isArray(aliases)) {
-              Array.prototype.push.apply(env.classes, aliases);
-            } else {
-              env.classes.push(aliases);
-            }
-          }
-          _.hooks.run("wrap", env);
-          var attributes = "";
-          for (var name in env.attributes) {
-            attributes += " " + name + '="' + (env.attributes[name] || "").replace(/"/g, "&quot;") + '"';
-          }
-          return "<" + env.tag + ' class="' + env.classes.join(" ") + '"' + attributes + ">" + env.content + "</" + env.tag + ">";
-        };
-        function matchPattern(pattern, pos, text, lookbehind) {
-          pattern.lastIndex = pos;
-          var match = pattern.exec(text);
-          if (match && lookbehind && match[1]) {
-            var lookbehindLength = match[1].length;
-            match.index += lookbehindLength;
-            match[0] = match[0].slice(lookbehindLength);
-          }
-          return match;
-        }
-        function matchGrammar(text, tokenList, grammar, startNode, startPos, rematch) {
-          for (var token in grammar) {
-            if (!grammar.hasOwnProperty(token) || !grammar[token]) {
-              continue;
-            }
-            var patterns = grammar[token];
-            patterns = Array.isArray(patterns) ? patterns : [patterns];
-            for (var j = 0; j < patterns.length; ++j) {
-              if (rematch && rematch.cause == token + "," + j) {
-                return;
-              }
-              var patternObj = patterns[j], inside = patternObj.inside, lookbehind = !!patternObj.lookbehind, greedy = !!patternObj.greedy, alias = patternObj.alias;
-              if (greedy && !patternObj.pattern.global) {
-                var flags = patternObj.pattern.toString().match(/[imsuy]*$/)[0];
-                patternObj.pattern = RegExp(patternObj.pattern.source, flags + "g");
-              }
-              var pattern = patternObj.pattern || patternObj;
-              for (var currentNode = startNode.next, pos = startPos; currentNode !== tokenList.tail; pos += currentNode.value.length, currentNode = currentNode.next) {
-                if (rematch && pos >= rematch.reach) {
-                  break;
-                }
-                var str = currentNode.value;
-                if (tokenList.length > text.length) {
-                  return;
-                }
-                if (str instanceof Token) {
-                  continue;
-                }
-                var removeCount = 1;
-                var match;
-                if (greedy) {
-                  match = matchPattern(pattern, pos, text, lookbehind);
-                  if (!match) {
-                    break;
-                  }
-                  var from = match.index;
-                  var to = match.index + match[0].length;
-                  var p = pos;
-                  p += currentNode.value.length;
-                  while (from >= p) {
-                    currentNode = currentNode.next;
-                    p += currentNode.value.length;
-                  }
-                  p -= currentNode.value.length;
-                  pos = p;
-                  if (currentNode.value instanceof Token) {
-                    continue;
-                  }
-                  for (var k = currentNode; k !== tokenList.tail && (p < to || typeof k.value === "string"); k = k.next) {
-                    removeCount++;
-                    p += k.value.length;
-                  }
-                  removeCount--;
-                  str = text.slice(pos, p);
-                  match.index -= pos;
-                } else {
-                  match = matchPattern(pattern, 0, str, lookbehind);
-                  if (!match) {
-                    continue;
-                  }
-                }
-                var from = match.index, matchStr = match[0], before = str.slice(0, from), after = str.slice(from + matchStr.length);
-                var reach = pos + str.length;
-                if (rematch && reach > rematch.reach) {
-                  rematch.reach = reach;
-                }
-                var removeFrom = currentNode.prev;
-                if (before) {
-                  removeFrom = addAfter(tokenList, removeFrom, before);
-                  pos += before.length;
-                }
-                removeRange(tokenList, removeFrom, removeCount);
-                var wrapped = new Token(token, inside ? _.tokenize(matchStr, inside) : matchStr, alias, matchStr);
-                currentNode = addAfter(tokenList, removeFrom, wrapped);
-                if (after) {
-                  addAfter(tokenList, currentNode, after);
-                }
-                if (removeCount > 1) {
-                  matchGrammar(text, tokenList, grammar, currentNode.prev, pos, {
-                    cause: token + "," + j,
-                    reach
-                  });
-                }
-              }
-            }
-          }
-        }
-        function LinkedList() {
-          var head = {value: null, prev: null, next: null};
-          var tail = {value: null, prev: head, next: null};
-          head.next = tail;
-          this.head = head;
-          this.tail = tail;
-          this.length = 0;
-        }
-        function addAfter(list, node, value) {
-          var next = node.next;
-          var newNode = {value, prev: node, next};
-          node.next = newNode;
-          next.prev = newNode;
-          list.length++;
-          return newNode;
-        }
-        function removeRange(list, node, count) {
-          var next = node.next;
-          for (var i = 0; i < count && next !== list.tail; i++) {
-            next = next.next;
-          }
-          node.next = next;
-          next.prev = node;
-          list.length -= i;
-        }
-        function toArray(list) {
-          var array = [];
-          var node = list.head.next;
-          while (node !== list.tail) {
-            array.push(node.value);
-            node = node.next;
-          }
-          return array;
-        }
-        if (!_self2.document) {
-          if (!_self2.addEventListener) {
-            return _;
-          }
-          if (!_.disableWorkerMessageHandler) {
-            _self2.addEventListener("message", function(evt) {
-              var message = JSON.parse(evt.data), lang2 = message.language, code = message.code, immediateClose = message.immediateClose;
-              _self2.postMessage(_.highlight(code, _.languages[lang2], lang2));
-              if (immediateClose) {
-                _self2.close();
-              }
-            }, false);
-          }
-          return _;
-        }
-        var script = _.util.currentScript();
-        if (script) {
-          _.filename = script.src;
-          if (script.hasAttribute("data-manual")) {
-            _.manual = true;
-          }
-        }
-        function highlightAutomaticallyCallback() {
-          if (!_.manual) {
-            _.highlightAll();
-          }
-        }
-        if (!_.manual) {
-          var readyState = document.readyState;
-          if (readyState === "loading" || readyState === "interactive" && script && script.defer) {
-            document.addEventListener("DOMContentLoaded", highlightAutomaticallyCallback);
-          } else {
-            if (window.requestAnimationFrame) {
-              window.requestAnimationFrame(highlightAutomaticallyCallback);
-            } else {
-              window.setTimeout(highlightAutomaticallyCallback, 16);
-            }
-          }
-        }
-        return _;
-      }(_self);
-      if (typeof module !== "undefined" && module.exports) {
-        module.exports = Prism;
-      }
-      if (typeof global !== "undefined") {
-        global.Prism = Prism;
-      }
-    }
-  });
-
-  // node_modules/refractor/lang/markup.js
-  var require_markup = __commonJS({
-    "node_modules/refractor/lang/markup.js"(exports, module) {
-      "use strict";
-      module.exports = markup;
-      markup.displayName = "markup";
-      markup.aliases = ["html", "mathml", "svg", "xml", "ssml", "atom", "rss"];
-      function markup(Prism) {
-        Prism.languages.markup = {
-          comment: /<!--[\s\S]*?-->/,
-          prolog: /<\?[\s\S]+?\?>/,
-          doctype: {
-            pattern: /<!DOCTYPE(?:[^>"'[\]]|"[^"]*"|'[^']*')+(?:\[(?:[^<"'\]]|"[^"]*"|'[^']*'|<(?!!--)|<!--(?:[^-]|-(?!->))*-->)*\]\s*)?>/i,
-            greedy: true,
-            inside: {
-              "internal-subset": {
-                pattern: /(\[)[\s\S]+(?=\]>$)/,
-                lookbehind: true,
-                greedy: true,
-                inside: null
-              },
-              string: {
-                pattern: /"[^"]*"|'[^']*'/,
-                greedy: true
-              },
-              punctuation: /^<!|>$|[[\]]/,
-              "doctype-tag": /^DOCTYPE/,
-              name: /[^\s<>'"]+/
-            }
-          },
-          cdata: /<!\[CDATA\[[\s\S]*?]]>/i,
-          tag: {
-            pattern: /<\/?(?!\d)[^\s>\/=$<%]+(?:\s(?:\s*[^\s>\/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+(?=[\s>]))|(?=[\s/>])))+)?\s*\/?>/,
-            greedy: true,
-            inside: {
-              tag: {
-                pattern: /^<\/?[^\s>\/]+/,
-                inside: {
-                  punctuation: /^<\/?/,
-                  namespace: /^[^\s>\/:]+:/
-                }
-              },
-              "attr-value": {
-                pattern: /=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+)/,
-                inside: {
-                  punctuation: [
-                    {
-                      pattern: /^=/,
-                      alias: "attr-equals"
-                    },
-                    /"|'/
-                  ]
-                }
-              },
-              punctuation: /\/?>/,
-              "attr-name": {
-                pattern: /[^\s>\/]+/,
-                inside: {
-                  namespace: /^[^\s>\/:]+:/
-                }
-              }
-            }
-          },
-          entity: [
-            {
-              pattern: /&[\da-z]{1,8};/i,
-              alias: "named-entity"
-            },
-            /&#x?[\da-f]{1,8};/i
-          ]
-        };
-        Prism.languages.markup["tag"].inside["attr-value"].inside["entity"] = Prism.languages.markup["entity"];
-        Prism.languages.markup["doctype"].inside["internal-subset"].inside = Prism.languages.markup;
-        Prism.hooks.add("wrap", function(env) {
-          if (env.type === "entity") {
-            env.attributes["title"] = env.content.value.replace(/&amp;/, "&");
-          }
-        });
-        Object.defineProperty(Prism.languages.markup.tag, "addInlined", {
-          value: function addInlined(tagName, lang) {
-            var includedCdataInside = {};
-            includedCdataInside["language-" + lang] = {
-              pattern: /(^<!\[CDATA\[)[\s\S]+?(?=\]\]>$)/i,
-              lookbehind: true,
-              inside: Prism.languages[lang]
-            };
-            includedCdataInside["cdata"] = /^<!\[CDATA\[|\]\]>$/i;
-            var inside = {
-              "included-cdata": {
-                pattern: /<!\[CDATA\[[\s\S]*?\]\]>/i,
-                inside: includedCdataInside
-              }
-            };
-            inside["language-" + lang] = {
-              pattern: /[\s\S]+/,
-              inside: Prism.languages[lang]
-            };
-            var def = {};
-            def[tagName] = {
-              pattern: RegExp(/(<__[^>]*>)(?:<!\[CDATA\[(?:[^\]]|\](?!\]>))*\]\]>|(?!<!\[CDATA\[)[\s\S])*?(?=<\/__>)/.source.replace(/__/g, function() {
-                return tagName;
-              }), "i"),
-              lookbehind: true,
-              greedy: true,
-              inside
-            };
-            Prism.languages.insertBefore("markup", "cdata", def);
-          }
-        });
-        Prism.languages.html = Prism.languages.markup;
-        Prism.languages.mathml = Prism.languages.markup;
-        Prism.languages.svg = Prism.languages.markup;
-        Prism.languages.xml = Prism.languages.extend("markup", {});
-        Prism.languages.ssml = Prism.languages.xml;
-        Prism.languages.atom = Prism.languages.xml;
-        Prism.languages.rss = Prism.languages.xml;
-      }
-    }
-  });
-
-  // node_modules/refractor/lang/css.js
-  var require_css = __commonJS({
-    "node_modules/refractor/lang/css.js"(exports, module) {
-      "use strict";
-      module.exports = css;
-      css.displayName = "css";
-      css.aliases = [];
-      function css(Prism) {
-        ;
-        (function(Prism2) {
-          var string = /("|')(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/;
-          Prism2.languages.css = {
-            comment: /\/\*[\s\S]*?\*\//,
-            atrule: {
-              pattern: /@[\w-](?:[^;{\s]|\s+(?![\s{]))*(?:;|(?=\s*\{))/,
-              inside: {
-                rule: /^@[\w-]+/,
-                "selector-function-argument": {
-                  pattern: /(\bselector\s*\(\s*(?![\s)]))(?:[^()\s]|\s+(?![\s)])|\((?:[^()]|\([^()]*\))*\))+(?=\s*\))/,
-                  lookbehind: true,
-                  alias: "selector"
-                },
-                keyword: {
-                  pattern: /(^|[^\w-])(?:and|not|only|or)(?![\w-])/,
-                  lookbehind: true
-                }
-              }
-            },
-            url: {
-              pattern: RegExp("\\burl\\((?:" + string.source + "|" + /(?:[^\\\r\n()"']|\\[\s\S])*/.source + ")\\)", "i"),
-              greedy: true,
-              inside: {
-                function: /^url/i,
-                punctuation: /^\(|\)$/,
-                string: {
-                  pattern: RegExp("^" + string.source + "$"),
-                  alias: "url"
-                }
-              }
-            },
-            selector: RegExp(`[^{}\\s](?:[^{};"'\\s]|\\s+(?![\\s{])|` + string.source + ")*(?=\\s*\\{)"),
-            string: {
-              pattern: string,
-              greedy: true
-            },
-            property: /(?!\s)[-_a-z\xA0-\uFFFF](?:(?!\s)[-\w\xA0-\uFFFF])*(?=\s*:)/i,
-            important: /!important\b/i,
-            function: /[-a-z0-9]+(?=\()/i,
-            punctuation: /[(){};:,]/
-          };
-          Prism2.languages.css["atrule"].inside.rest = Prism2.languages.css;
-          var markup = Prism2.languages.markup;
-          if (markup) {
-            markup.tag.addInlined("style", "css");
-            Prism2.languages.insertBefore("inside", "attr-value", {
-              "style-attr": {
-                pattern: /(^|["'\s])style\s*=\s*(?:"[^"]*"|'[^']*')/i,
-                lookbehind: true,
-                inside: {
-                  "attr-value": {
-                    pattern: /=\s*(?:"[^"]*"|'[^']*'|[^\s'">=]+)/,
-                    inside: {
-                      style: {
-                        pattern: /(["'])[\s\S]+(?=["']$)/,
-                        lookbehind: true,
-                        alias: "language-css",
-                        inside: Prism2.languages.css
-                      },
-                      punctuation: [
-                        {
-                          pattern: /^=/,
-                          alias: "attr-equals"
-                        },
-                        /"|'/
-                      ]
-                    }
-                  },
-                  "attr-name": /^style/i
-                }
-              }
-            }, markup.tag);
-          }
-        })(Prism);
-      }
-    }
-  });
-
-  // node_modules/refractor/lang/clike.js
-  var require_clike = __commonJS({
-    "node_modules/refractor/lang/clike.js"(exports, module) {
-      "use strict";
-      module.exports = clike;
-      clike.displayName = "clike";
-      clike.aliases = [];
-      function clike(Prism) {
-        Prism.languages.clike = {
-          comment: [
-            {
-              pattern: /(^|[^\\])\/\*[\s\S]*?(?:\*\/|$)/,
-              lookbehind: true,
-              greedy: true
-            },
-            {
-              pattern: /(^|[^\\:])\/\/.*/,
-              lookbehind: true,
-              greedy: true
-            }
-          ],
-          string: {
-            pattern: /(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
-            greedy: true
-          },
-          "class-name": {
-            pattern: /(\b(?:class|interface|extends|implements|trait|instanceof|new)\s+|\bcatch\s+\()[\w.\\]+/i,
-            lookbehind: true,
-            inside: {
-              punctuation: /[.\\]/
-            }
-          },
-          keyword: /\b(?:if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
-          boolean: /\b(?:true|false)\b/,
-          function: /\w+(?=\()/,
-          number: /\b0x[\da-f]+\b|(?:\b\d+(?:\.\d*)?|\B\.\d+)(?:e[+-]?\d+)?/i,
-          operator: /[<>]=?|[!=]=?=?|--?|\+\+?|&&?|\|\|?|[?*/~^%]/,
-          punctuation: /[{}[\];(),.:]/
-        };
-      }
-    }
-  });
-
-  // node_modules/refractor/lang/javascript.js
-  var require_javascript = __commonJS({
-    "node_modules/refractor/lang/javascript.js"(exports, module) {
-      "use strict";
-      module.exports = javascript;
-      javascript.displayName = "javascript";
-      javascript.aliases = ["js"];
-      function javascript(Prism) {
-        Prism.languages.javascript = Prism.languages.extend("clike", {
-          "class-name": [
-            Prism.languages.clike["class-name"],
-            {
-              pattern: /(^|[^$\w\xA0-\uFFFF])(?!\s)[_$A-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\.(?:prototype|constructor))/,
-              lookbehind: true
-            }
-          ],
-          keyword: [
-            {
-              pattern: /((?:^|})\s*)(?:catch|finally)\b/,
-              lookbehind: true
-            },
-            {
-              pattern: /(^|[^.]|\.\.\.\s*)\b(?:as|async(?=\s*(?:function\b|\(|[$\w\xA0-\uFFFF]|$))|await|break|case|class|const|continue|debugger|default|delete|do|else|enum|export|extends|for|from|function|(?:get|set)(?=\s*[\[$\w\xA0-\uFFFF])|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|undefined|var|void|while|with|yield)\b/,
-              lookbehind: true
-            }
-          ],
-          function: /#?(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*(?:\.\s*(?:apply|bind|call)\s*)?\()/,
-          number: /\b(?:(?:0[xX](?:[\dA-Fa-f](?:_[\dA-Fa-f])?)+|0[bB](?:[01](?:_[01])?)+|0[oO](?:[0-7](?:_[0-7])?)+)n?|(?:\d(?:_\d)?)+n|NaN|Infinity)\b|(?:\b(?:\d(?:_\d)?)+\.?(?:\d(?:_\d)?)*|\B\.(?:\d(?:_\d)?)+)(?:[Ee][+-]?(?:\d(?:_\d)?)+)?/,
-          operator: /--|\+\+|\*\*=?|=>|&&=?|\|\|=?|[!=]==|<<=?|>>>?=?|[-+*/%&|^!=<>]=?|\.{3}|\?\?=?|\?\.?|[~:]/
-        });
-        Prism.languages.javascript["class-name"][0].pattern = /(\b(?:class|interface|extends|implements|instanceof|new)\s+)[\w.\\]+/;
-        Prism.languages.insertBefore("javascript", "keyword", {
-          regex: {
-            pattern: /((?:^|[^$\w\xA0-\uFFFF."'\])\s]|\b(?:return|yield))\s*)\/(?:\[(?:[^\]\\\r\n]|\\.)*]|\\.|[^/\\\[\r\n])+\/[gimyus]{0,6}(?=(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/)*(?:$|[\r\n,.;:})\]]|\/\/))/,
-            lookbehind: true,
-            greedy: true,
-            inside: {
-              "regex-source": {
-                pattern: /^(\/)[\s\S]+(?=\/[a-z]*$)/,
-                lookbehind: true,
-                alias: "language-regex",
-                inside: Prism.languages.regex
-              },
-              "regex-flags": /[a-z]+$/,
-              "regex-delimiter": /^\/|\/$/
-            }
-          },
-          "function-variable": {
-            pattern: /#?(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*[=:]\s*(?:async\s*)?(?:\bfunction\b|(?:\((?:[^()]|\([^()]*\))*\)|(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*)\s*=>))/,
-            alias: "function"
-          },
-          parameter: [
-            {
-              pattern: /(function(?:\s+(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*)?\s*\(\s*)(?!\s)(?:[^()\s]|\s+(?![\s)])|\([^()]*\))+(?=\s*\))/,
-              lookbehind: true,
-              inside: Prism.languages.javascript
-            },
-            {
-              pattern: /(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*=>)/i,
-              inside: Prism.languages.javascript
-            },
-            {
-              pattern: /(\(\s*)(?!\s)(?:[^()\s]|\s+(?![\s)])|\([^()]*\))+(?=\s*\)\s*=>)/,
-              lookbehind: true,
-              inside: Prism.languages.javascript
-            },
-            {
-              pattern: /((?:\b|\s|^)(?!(?:as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|undefined|var|void|while|with|yield)(?![$\w\xA0-\uFFFF]))(?:(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*\s*)\(\s*|\]\s*\(\s*)(?!\s)(?:[^()\s]|\s+(?![\s)])|\([^()]*\))+(?=\s*\)\s*\{)/,
-              lookbehind: true,
-              inside: Prism.languages.javascript
-            }
-          ],
-          constant: /\b[A-Z](?:[A-Z_]|\dx?)*\b/
-        });
-        Prism.languages.insertBefore("javascript", "string", {
-          "template-string": {
-            pattern: /`(?:\\[\s\S]|\${(?:[^{}]|{(?:[^{}]|{[^}]*})*})+}|(?!\${)[^\\`])*`/,
-            greedy: true,
-            inside: {
-              "template-punctuation": {
-                pattern: /^`|`$/,
-                alias: "string"
-              },
-              interpolation: {
-                pattern: /((?:^|[^\\])(?:\\{2})*)\${(?:[^{}]|{(?:[^{}]|{[^}]*})*})+}/,
-                lookbehind: true,
-                inside: {
-                  "interpolation-punctuation": {
-                    pattern: /^\${|}$/,
-                    alias: "punctuation"
-                  },
-                  rest: Prism.languages.javascript
-                }
-              },
-              string: /[\s\S]+/
-            }
-          }
-        });
-        if (Prism.languages.markup) {
-          Prism.languages.markup.tag.addInlined("script", "javascript");
-        }
-        Prism.languages.js = Prism.languages.javascript;
-      }
-    }
-  });
-
-  // node_modules/refractor/core.js
-  var require_core = __commonJS({
-    "node_modules/refractor/core.js"(exports, module) {
-      "use strict";
-      var ctx = typeof globalThis === "object" ? globalThis : typeof self === "object" ? self : typeof window === "object" ? window : typeof global === "object" ? global : {};
-      var restore = capture();
-      ctx.Prism = {manual: true, disableWorkerMessageHandler: true};
-      var h = require_hastscript();
-      var decode = require_parse_entities();
-      var Prism = require_prism_core();
-      var markup = require_markup();
-      var css = require_css();
-      var clike = require_clike();
-      var js = require_javascript();
-      restore();
-      var own = {}.hasOwnProperty;
-      function Refractor() {
-      }
-      Refractor.prototype = Prism;
-      var refract = new Refractor();
-      module.exports = refract;
-      refract.highlight = highlight;
-      refract.register = register;
-      refract.alias = alias;
-      refract.registered = registered;
-      refract.listLanguages = listLanguages;
-      register(markup);
-      register(css);
-      register(clike);
-      register(js);
-      refract.util.encode = encode;
-      refract.Token.stringify = stringify2;
-      function register(grammar) {
-        if (typeof grammar !== "function" || !grammar.displayName) {
-          throw new Error("Expected `function` for `grammar`, got `" + grammar + "`");
-        }
-        if (refract.languages[grammar.displayName] === void 0) {
-          grammar(refract);
-        }
-      }
-      function alias(name, alias2) {
-        var languages = refract.languages;
-        var map = name;
-        var key;
-        var list;
-        var length;
-        var index;
-        if (alias2) {
-          map = {};
-          map[name] = alias2;
-        }
-        for (key in map) {
-          list = map[key];
-          list = typeof list === "string" ? [list] : list;
-          length = list.length;
-          index = -1;
-          while (++index < length) {
-            languages[list[index]] = languages[key];
-          }
-        }
-      }
-      function highlight(value, name) {
-        var sup = Prism.highlight;
-        var grammar;
-        if (typeof value !== "string") {
-          throw new Error("Expected `string` for `value`, got `" + value + "`");
-        }
-        if (refract.util.type(name) === "Object") {
-          grammar = name;
-          name = null;
-        } else {
-          if (typeof name !== "string") {
-            throw new Error("Expected `string` for `name`, got `" + name + "`");
-          }
-          if (own.call(refract.languages, name)) {
-            grammar = refract.languages[name];
-          } else {
-            throw new Error("Unknown language: `" + name + "` is not registered");
-          }
-        }
-        return sup.call(this, value, grammar, name);
-      }
-      function registered(language) {
-        if (typeof language !== "string") {
-          throw new Error("Expected `string` for `language`, got `" + language + "`");
-        }
-        return own.call(refract.languages, language);
-      }
-      function listLanguages() {
-        var languages = refract.languages;
-        var list = [];
-        var language;
-        for (language in languages) {
-          if (own.call(languages, language) && typeof languages[language] === "object") {
-            list.push(language);
-          }
-        }
-        return list;
-      }
-      function stringify2(value, language, parent) {
-        var env;
-        if (typeof value === "string") {
-          return {type: "text", value};
-        }
-        if (refract.util.type(value) === "Array") {
-          return stringifyAll(value, language);
-        }
-        env = {
-          type: value.type,
-          content: refract.Token.stringify(value.content, language, parent),
-          tag: "span",
-          classes: ["token", value.type],
-          attributes: {},
-          language,
-          parent
-        };
-        if (value.alias) {
-          env.classes = env.classes.concat(value.alias);
-        }
-        refract.hooks.run("wrap", env);
-        return h(env.tag + "." + env.classes.join("."), attributes(env.attributes), env.content);
-      }
-      function stringifyAll(values, language) {
-        var result = [];
-        var length = values.length;
-        var index = -1;
-        var value;
-        while (++index < length) {
-          value = values[index];
-          if (value !== "" && value !== null && value !== void 0) {
-            result.push(value);
-          }
-        }
-        index = -1;
-        length = result.length;
-        while (++index < length) {
-          value = result[index];
-          result[index] = refract.Token.stringify(value, language, result);
-        }
-        return result;
-      }
-      function encode(tokens) {
-        return tokens;
-      }
-      function attributes(attrs) {
-        var key;
-        for (key in attrs) {
-          attrs[key] = decode(attrs[key]);
-        }
-        return attrs;
-      }
-      function capture() {
-        var defined = "Prism" in ctx;
-        var current = defined ? ctx.Prism : void 0;
-        return restore2;
-        function restore2() {
-          if (defined) {
-            ctx.Prism = current;
-          } else {
-            delete ctx.Prism;
-          }
-          defined = void 0;
-          current = void 0;
-        }
-      }
-    }
-  });
-
-  // node_modules/refractor/lang/jsx.js
-  var require_jsx = __commonJS({
-    "node_modules/refractor/lang/jsx.js"(exports, module) {
-      "use strict";
-      module.exports = jsx2;
-      jsx2.displayName = "jsx";
-      jsx2.aliases = [];
-      function jsx2(Prism) {
-        ;
-        (function(Prism2) {
-          var javascript = Prism2.util.clone(Prism2.languages.javascript);
-          Prism2.languages.jsx = Prism2.languages.extend("markup", javascript);
-          Prism2.languages.jsx.tag.pattern = /<\/?(?:[\w.:-]+(?:\s+(?:[\w.:$-]+(?:=(?:"(?:\\[^]|[^\\"])*"|'(?:\\[^]|[^\\'])*'|[^\s{'">=]+|\{(?:\{(?:\{[^{}]*\}|[^{}])*\}|[^{}])+\}))?|\{\s*\.{3}\s*[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)*\s*\}))*\s*\/?)?>/i;
-          Prism2.languages.jsx.tag.inside["tag"].pattern = /^<\/?[^\s>\/]*/i;
-          Prism2.languages.jsx.tag.inside["attr-value"].pattern = /=(?!\{)(?:"(?:\\[^]|[^\\"])*"|'(?:\\[^]|[^\\'])*'|[^\s'">]+)/i;
-          Prism2.languages.jsx.tag.inside["tag"].inside["class-name"] = /^[A-Z]\w*(?:\.[A-Z]\w*)*$/;
-          Prism2.languages.insertBefore("inside", "attr-name", {
-            spread: {
-              pattern: /\{\s*\.{3}\s*[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)*\s*\}/,
-              inside: {
-                punctuation: /\.{3}|[{}.]/,
-                "attr-value": /\w+/
-              }
-            }
-          }, Prism2.languages.jsx.tag);
-          Prism2.languages.insertBefore("inside", "attr-value", {
-            script: {
-              pattern: /=(?:\{(?:\{(?:\{[^{}]*\}|[^{}])*\}|[^{}])+\})/i,
-              inside: {
-                "script-punctuation": {
-                  pattern: /^=(?={)/,
-                  alias: "punctuation"
-                },
-                rest: Prism2.languages.jsx
-              },
-              alias: "language-javascript"
-            }
-          }, Prism2.languages.jsx.tag);
-          var stringifyToken = function(token) {
-            if (!token) {
-              return "";
-            }
-            if (typeof token === "string") {
-              return token;
-            }
-            if (typeof token.content === "string") {
-              return token.content;
-            }
-            return token.content.map(stringifyToken).join("");
-          };
-          var walkTokens = function(tokens) {
-            var openedTags = [];
-            for (var i = 0; i < tokens.length; i++) {
-              var token = tokens[i];
-              var notTagNorBrace = false;
-              if (typeof token !== "string") {
-                if (token.type === "tag" && token.content[0] && token.content[0].type === "tag") {
-                  if (token.content[0].content[0].content === "</") {
-                    if (openedTags.length > 0 && openedTags[openedTags.length - 1].tagName === stringifyToken(token.content[0].content[1])) {
-                      openedTags.pop();
-                    }
-                  } else {
-                    if (token.content[token.content.length - 1].content === "/>") {
-                    } else {
-                      openedTags.push({
-                        tagName: stringifyToken(token.content[0].content[1]),
-                        openedBraces: 0
-                      });
-                    }
-                  }
-                } else if (openedTags.length > 0 && token.type === "punctuation" && token.content === "{") {
-                  openedTags[openedTags.length - 1].openedBraces++;
-                } else if (openedTags.length > 0 && openedTags[openedTags.length - 1].openedBraces > 0 && token.type === "punctuation" && token.content === "}") {
-                  openedTags[openedTags.length - 1].openedBraces--;
-                } else {
-                  notTagNorBrace = true;
-                }
-              }
-              if (notTagNorBrace || typeof token === "string") {
-                if (openedTags.length > 0 && openedTags[openedTags.length - 1].openedBraces === 0) {
-                  var plainText = stringifyToken(token);
-                  if (i < tokens.length - 1 && (typeof tokens[i + 1] === "string" || tokens[i + 1].type === "plain-text")) {
-                    plainText += stringifyToken(tokens[i + 1]);
-                    tokens.splice(i + 1, 1);
-                  }
-                  if (i > 0 && (typeof tokens[i - 1] === "string" || tokens[i - 1].type === "plain-text")) {
-                    plainText = stringifyToken(tokens[i - 1]) + plainText;
-                    tokens.splice(i - 1, 1);
-                    i--;
-                  }
-                  tokens[i] = new Prism2.Token("plain-text", plainText, null, plainText);
-                }
-              }
-              if (token.content && typeof token.content !== "string") {
-                walkTokens(token.content);
-              }
-            }
-          };
-          Prism2.hooks.add("after-tokenize", function(env) {
-            if (env.language !== "jsx" && env.language !== "tsx") {
-              return;
-            }
-            walkTokens(env.tokens);
-          });
-        })(Prism);
-      }
-    }
-  });
-
   // node_modules/react-is/cjs/react-is.development.js
   var require_react_is_development = __commonJS({
     "node_modules/react-is/cjs/react-is.development.js"(exports) {
@@ -41290,8 +41290,761 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var import_react12 = __toModule(require_react());
   var import_react_dom = __toModule(require_react_dom());
 
-  // components/city-landscape.jsx
+  // components/Code.jsx
+  var import_react3 = __toModule(require_react());
+
+  // node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
+  function _objectWithoutPropertiesLoose(source, excluded) {
+    if (source == null)
+      return {};
+    var target = {};
+    var sourceKeys = Object.keys(source);
+    var key, i;
+    for (i = 0; i < sourceKeys.length; i++) {
+      key = sourceKeys[i];
+      if (excluded.indexOf(key) >= 0)
+        continue;
+      target[key] = source[key];
+    }
+    return target;
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
+  function _objectWithoutProperties(source, excluded) {
+    if (source == null)
+      return {};
+    var target = _objectWithoutPropertiesLoose(source, excluded);
+    var key, i;
+    if (Object.getOwnPropertySymbols) {
+      var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+      for (i = 0; i < sourceSymbolKeys.length; i++) {
+        key = sourceSymbolKeys[i];
+        if (excluded.indexOf(key) >= 0)
+          continue;
+        if (!Object.prototype.propertyIsEnumerable.call(source, key))
+          continue;
+        target[key] = source[key];
+      }
+    }
+    return target;
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
+  function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length)
+      len = arr.length;
+    for (var i = 0, arr2 = new Array(len); i < len; i++) {
+      arr2[i] = arr[i];
+    }
+    return arr2;
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/arrayWithoutHoles.js
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr))
+      return _arrayLikeToArray(arr);
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/iterableToArray.js
+  function _iterableToArray(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null)
+      return Array.from(iter);
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
+  function _unsupportedIterableToArray(o, minLen) {
+    if (!o)
+      return;
+    if (typeof o === "string")
+      return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor)
+      n = o.constructor.name;
+    if (n === "Map" || n === "Set")
+      return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n))
+      return _arrayLikeToArray(o, minLen);
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/nonIterableSpread.js
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/toConsumableArray.js
+  function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/defineProperty.js
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+    return obj;
+  }
+
+  // node_modules/@babel/runtime/helpers/esm/objectSpread.js
+  function _objectSpread(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? Object(arguments[i]) : {};
+      var ownKeys = Object.keys(source);
+      if (typeof Object.getOwnPropertySymbols === "function") {
+        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function(sym) {
+          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+        }));
+      }
+      ownKeys.forEach(function(key) {
+        _defineProperty(target, key, source[key]);
+      });
+    }
+    return target;
+  }
+
+  // node_modules/react-syntax-highlighter/dist/esm/highlight.js
+  var import_react2 = __toModule(require_react());
+
+  // node_modules/@babel/runtime/helpers/esm/extends.js
+  function _extends() {
+    _extends = Object.assign || function(target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    };
+    return _extends.apply(this, arguments);
+  }
+
+  // node_modules/react-syntax-highlighter/dist/esm/create-element.js
   var import_react = __toModule(require_react());
+  function powerSetPermutations(arr) {
+    var arrLength = arr.length;
+    if (arrLength === 0 || arrLength === 1)
+      return arr;
+    if (arrLength === 2) {
+      return [arr[0], arr[1], "".concat(arr[0], ".").concat(arr[1]), "".concat(arr[1], ".").concat(arr[0])];
+    }
+    if (arrLength === 3) {
+      return [arr[0], arr[1], arr[2], "".concat(arr[0], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[2]), "".concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[0])];
+    }
+    if (arrLength >= 4) {
+      return [arr[0], arr[1], arr[2], arr[3], "".concat(arr[0], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[3]), "".concat(arr[3], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[1], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[1], ".").concat(arr[0])];
+    }
+  }
+  var classNameCombinations = {};
+  function getClassNameCombinations(classNames) {
+    if (classNames.length === 0 || classNames.length === 1)
+      return classNames;
+    var key = classNames.join(".");
+    if (!classNameCombinations[key]) {
+      classNameCombinations[key] = powerSetPermutations(classNames);
+    }
+    return classNameCombinations[key];
+  }
+  function createStyleObject(classNames) {
+    var elementStyle = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+    var stylesheet = arguments.length > 2 ? arguments[2] : void 0;
+    var nonTokenClassNames = classNames.filter(function(className) {
+      return className !== "token";
+    });
+    var classNamesCombinations = getClassNameCombinations(nonTokenClassNames);
+    return classNamesCombinations.reduce(function(styleObject, className) {
+      return _objectSpread({}, styleObject, stylesheet[className]);
+    }, elementStyle);
+  }
+  function createClassNameString(classNames) {
+    return classNames.join(" ");
+  }
+  function createChildren(stylesheet, useInlineStyles) {
+    var childrenCount = 0;
+    return function(children) {
+      childrenCount += 1;
+      return children.map(function(child, i) {
+        return createElement({
+          node: child,
+          stylesheet,
+          useInlineStyles,
+          key: "code-segment-".concat(childrenCount, "-").concat(i)
+        });
+      });
+    };
+  }
+  function createElement(_ref) {
+    var node = _ref.node, stylesheet = _ref.stylesheet, _ref$style = _ref.style, style = _ref$style === void 0 ? {} : _ref$style, useInlineStyles = _ref.useInlineStyles, key = _ref.key;
+    var properties = node.properties, type = node.type, TagName = node.tagName, value = node.value;
+    if (type === "text") {
+      return value;
+    } else if (TagName) {
+      var childrenCreator = createChildren(stylesheet, useInlineStyles);
+      var props;
+      if (!useInlineStyles) {
+        props = _objectSpread({}, properties, {
+          className: createClassNameString(properties.className)
+        });
+      } else {
+        var allStylesheetSelectors = Object.keys(stylesheet).reduce(function(classes, selector) {
+          selector.split(".").forEach(function(className2) {
+            if (!classes.includes(className2))
+              classes.push(className2);
+          });
+          return classes;
+        }, []);
+        var startingClassName = properties.className && properties.className.includes("token") ? ["token"] : [];
+        var className = properties.className && startingClassName.concat(properties.className.filter(function(className2) {
+          return !allStylesheetSelectors.includes(className2);
+        }));
+        props = _objectSpread({}, properties, {
+          className: createClassNameString(className) || void 0,
+          style: createStyleObject(properties.className, Object.assign({}, properties.style, style), stylesheet)
+        });
+      }
+      var children = childrenCreator(node.children);
+      return import_react.default.createElement(TagName, _extends({
+        key
+      }, props), children);
+    }
+  }
+
+  // node_modules/react-syntax-highlighter/dist/esm/checkForListedLanguage.js
+  var checkForListedLanguage_default = function(astGenerator, language) {
+    var langs = astGenerator.listLanguages();
+    return langs.indexOf(language) !== -1;
+  };
+
+  // node_modules/react-syntax-highlighter/dist/esm/highlight.js
+  var newLineRegex = /\n/g;
+  function getNewLines(str) {
+    return str.match(newLineRegex);
+  }
+  function getAllLineNumbers(_ref) {
+    var lines = _ref.lines, startingLineNumber = _ref.startingLineNumber, style = _ref.style;
+    return lines.map(function(_, i) {
+      var number = i + startingLineNumber;
+      return import_react2.default.createElement("span", {
+        key: "line-".concat(i),
+        className: "react-syntax-highlighter-line-number",
+        style: typeof style === "function" ? style(number) : style
+      }, "".concat(number, "\n"));
+    });
+  }
+  function AllLineNumbers(_ref2) {
+    var codeString = _ref2.codeString, codeStyle = _ref2.codeStyle, _ref2$containerStyle = _ref2.containerStyle, containerStyle = _ref2$containerStyle === void 0 ? {
+      float: "left",
+      paddingRight: "10px"
+    } : _ref2$containerStyle, _ref2$numberStyle = _ref2.numberStyle, numberStyle = _ref2$numberStyle === void 0 ? {} : _ref2$numberStyle, startingLineNumber = _ref2.startingLineNumber;
+    return import_react2.default.createElement("code", {
+      style: Object.assign({}, codeStyle, containerStyle)
+    }, getAllLineNumbers({
+      lines: codeString.replace(/\n$/, "").split("\n"),
+      style: numberStyle,
+      startingLineNumber
+    }));
+  }
+  function getEmWidthOfNumber(num) {
+    return "".concat(num.toString().length, ".25em");
+  }
+  function getInlineLineNumber(lineNumber, inlineLineNumberStyle) {
+    return {
+      type: "element",
+      tagName: "span",
+      properties: {
+        key: "line-number--".concat(lineNumber),
+        className: ["comment", "linenumber", "react-syntax-highlighter-line-number"],
+        style: inlineLineNumberStyle
+      },
+      children: [{
+        type: "text",
+        value: lineNumber
+      }]
+    };
+  }
+  function assembleLineNumberStyles(lineNumberStyle, lineNumber, largestLineNumber) {
+    var defaultLineNumberStyle = {
+      display: "inline-block",
+      minWidth: getEmWidthOfNumber(largestLineNumber),
+      paddingRight: "1em",
+      textAlign: "right",
+      userSelect: "none"
+    };
+    var customLineNumberStyle = typeof lineNumberStyle === "function" ? lineNumberStyle(lineNumber) : lineNumberStyle;
+    var assembledStyle = _objectSpread({}, defaultLineNumberStyle, customLineNumberStyle);
+    return assembledStyle;
+  }
+  function createLineElement(_ref3) {
+    var children = _ref3.children, lineNumber = _ref3.lineNumber, lineNumberStyle = _ref3.lineNumberStyle, largestLineNumber = _ref3.largestLineNumber, showInlineLineNumbers = _ref3.showInlineLineNumbers, _ref3$lineProps = _ref3.lineProps, lineProps = _ref3$lineProps === void 0 ? {} : _ref3$lineProps, _ref3$className = _ref3.className, className = _ref3$className === void 0 ? [] : _ref3$className, showLineNumbers = _ref3.showLineNumbers, wrapLongLines = _ref3.wrapLongLines;
+    var properties = typeof lineProps === "function" ? lineProps(lineNumber) : lineProps;
+    properties["className"] = className;
+    if (lineNumber && showInlineLineNumbers) {
+      var inlineLineNumberStyle = assembleLineNumberStyles(lineNumberStyle, lineNumber, largestLineNumber);
+      children.unshift(getInlineLineNumber(lineNumber, inlineLineNumberStyle));
+    }
+    if (wrapLongLines & showLineNumbers) {
+      properties.style = _objectSpread({}, properties.style, {
+        display: "flex"
+      });
+    }
+    return {
+      type: "element",
+      tagName: "span",
+      properties,
+      children
+    };
+  }
+  function flattenCodeTree(tree) {
+    var className = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : [];
+    var newTree = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+    for (var i = 0; i < tree.length; i++) {
+      var node = tree[i];
+      if (node.type === "text") {
+        newTree.push(createLineElement({
+          children: [node],
+          className: _toConsumableArray(new Set(className))
+        }));
+      } else if (node.children) {
+        var classNames = className.concat(node.properties.className);
+        newTree = newTree.concat(flattenCodeTree(node.children, classNames));
+      }
+    }
+    return newTree;
+  }
+  function processLines(codeTree, wrapLines, lineProps, showLineNumbers, showInlineLineNumbers, startingLineNumber, largestLineNumber, lineNumberStyle, wrapLongLines) {
+    var _ref4;
+    var tree = flattenCodeTree(codeTree.value);
+    var newTree = [];
+    var lastLineBreakIndex = -1;
+    var index = 0;
+    function createWrappedLine(children2, lineNumber2) {
+      var className = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+      return createLineElement({
+        children: children2,
+        lineNumber: lineNumber2,
+        lineNumberStyle,
+        largestLineNumber,
+        showInlineLineNumbers,
+        lineProps,
+        className,
+        showLineNumbers,
+        wrapLongLines
+      });
+    }
+    function createUnwrappedLine(children2, lineNumber2) {
+      if (showLineNumbers && lineNumber2 && showInlineLineNumbers) {
+        var inlineLineNumberStyle = assembleLineNumberStyles(lineNumberStyle, lineNumber2, largestLineNumber);
+        children2.unshift(getInlineLineNumber(lineNumber2, inlineLineNumberStyle));
+      }
+      return children2;
+    }
+    function createLine(children2, lineNumber2) {
+      var className = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+      return wrapLines || className.length > 0 ? createWrappedLine(children2, lineNumber2, className) : createUnwrappedLine(children2, lineNumber2);
+    }
+    var _loop = function _loop2() {
+      var node = tree[index];
+      var value = node.children[0].value;
+      var newLines = getNewLines(value);
+      if (newLines) {
+        var splitValue = value.split("\n");
+        splitValue.forEach(function(text, i) {
+          var lineNumber2 = showLineNumbers && newTree.length + startingLineNumber;
+          var newChild = {
+            type: "text",
+            value: "".concat(text, "\n")
+          };
+          if (i === 0) {
+            var _children = tree.slice(lastLineBreakIndex + 1, index).concat(createLineElement({
+              children: [newChild],
+              className: node.properties.className
+            }));
+            var _line = createLine(_children, lineNumber2);
+            newTree.push(_line);
+          } else if (i === splitValue.length - 1) {
+            var stringChild = tree[index + 1] && tree[index + 1].children && tree[index + 1].children[0];
+            if (stringChild) {
+              var lastLineInPreviousSpan = {
+                type: "text",
+                value: "".concat(text)
+              };
+              var newElem = createLineElement({
+                children: [lastLineInPreviousSpan],
+                className: node.properties.className
+              });
+              tree.splice(index + 1, 0, newElem);
+            } else {
+              var _children2 = [newChild];
+              var _line2 = createLine(_children2, lineNumber2, node.properties.className);
+              newTree.push(_line2);
+            }
+          } else {
+            var _children3 = [newChild];
+            var _line3 = createLine(_children3, lineNumber2, node.properties.className);
+            newTree.push(_line3);
+          }
+        });
+        lastLineBreakIndex = index;
+      }
+      index++;
+    };
+    while (index < tree.length) {
+      _loop();
+    }
+    if (lastLineBreakIndex !== tree.length - 1) {
+      var children = tree.slice(lastLineBreakIndex + 1, tree.length);
+      if (children && children.length) {
+        var lineNumber = showLineNumbers && newTree.length + startingLineNumber;
+        var line = createLine(children, lineNumber);
+        newTree.push(line);
+      }
+    }
+    return wrapLines ? newTree : (_ref4 = []).concat.apply(_ref4, newTree);
+  }
+  function defaultRenderer(_ref5) {
+    var rows = _ref5.rows, stylesheet = _ref5.stylesheet, useInlineStyles = _ref5.useInlineStyles;
+    return rows.map(function(node, i) {
+      return createElement({
+        node,
+        stylesheet,
+        useInlineStyles,
+        key: "code-segement".concat(i)
+      });
+    });
+  }
+  function isHighlightJs(astGenerator) {
+    return astGenerator && typeof astGenerator.highlightAuto !== "undefined";
+  }
+  function getCodeTree(_ref6) {
+    var astGenerator = _ref6.astGenerator, language = _ref6.language, code = _ref6.code, defaultCodeValue = _ref6.defaultCodeValue;
+    if (isHighlightJs(astGenerator)) {
+      var hasLanguage = checkForListedLanguage_default(astGenerator, language);
+      if (language === "text") {
+        return {
+          value: defaultCodeValue,
+          language: "text"
+        };
+      } else if (hasLanguage) {
+        return astGenerator.highlight(language, code);
+      } else {
+        return astGenerator.highlightAuto(code);
+      }
+    }
+    try {
+      return language && language !== "text" ? {
+        value: astGenerator.highlight(code, language)
+      } : {
+        value: defaultCodeValue
+      };
+    } catch (e) {
+      return {
+        value: defaultCodeValue
+      };
+    }
+  }
+  function highlight_default(defaultAstGenerator, defaultStyle) {
+    return function SyntaxHighlighter2(_ref7) {
+      var language = _ref7.language, children = _ref7.children, _ref7$style = _ref7.style, style = _ref7$style === void 0 ? defaultStyle : _ref7$style, _ref7$customStyle = _ref7.customStyle, customStyle = _ref7$customStyle === void 0 ? {} : _ref7$customStyle, _ref7$codeTagProps = _ref7.codeTagProps, codeTagProps = _ref7$codeTagProps === void 0 ? {
+        className: language ? "language-".concat(language) : void 0,
+        style: _objectSpread({}, style['code[class*="language-"]'], style['code[class*="language-'.concat(language, '"]')])
+      } : _ref7$codeTagProps, _ref7$useInlineStyles = _ref7.useInlineStyles, useInlineStyles = _ref7$useInlineStyles === void 0 ? true : _ref7$useInlineStyles, _ref7$showLineNumbers = _ref7.showLineNumbers, showLineNumbers = _ref7$showLineNumbers === void 0 ? false : _ref7$showLineNumbers, _ref7$showInlineLineN = _ref7.showInlineLineNumbers, showInlineLineNumbers = _ref7$showInlineLineN === void 0 ? true : _ref7$showInlineLineN, _ref7$startingLineNum = _ref7.startingLineNumber, startingLineNumber = _ref7$startingLineNum === void 0 ? 1 : _ref7$startingLineNum, lineNumberContainerStyle = _ref7.lineNumberContainerStyle, _ref7$lineNumberStyle = _ref7.lineNumberStyle, lineNumberStyle = _ref7$lineNumberStyle === void 0 ? {} : _ref7$lineNumberStyle, wrapLines = _ref7.wrapLines, _ref7$wrapLongLines = _ref7.wrapLongLines, wrapLongLines = _ref7$wrapLongLines === void 0 ? false : _ref7$wrapLongLines, _ref7$lineProps = _ref7.lineProps, lineProps = _ref7$lineProps === void 0 ? {} : _ref7$lineProps, renderer = _ref7.renderer, _ref7$PreTag = _ref7.PreTag, PreTag = _ref7$PreTag === void 0 ? "pre" : _ref7$PreTag, _ref7$CodeTag = _ref7.CodeTag, CodeTag = _ref7$CodeTag === void 0 ? "code" : _ref7$CodeTag, _ref7$code = _ref7.code, code = _ref7$code === void 0 ? Array.isArray(children) ? children[0] : children : _ref7$code, astGenerator = _ref7.astGenerator, rest = _objectWithoutProperties(_ref7, ["language", "children", "style", "customStyle", "codeTagProps", "useInlineStyles", "showLineNumbers", "showInlineLineNumbers", "startingLineNumber", "lineNumberContainerStyle", "lineNumberStyle", "wrapLines", "wrapLongLines", "lineProps", "renderer", "PreTag", "CodeTag", "code", "astGenerator"]);
+      astGenerator = astGenerator || defaultAstGenerator;
+      var allLineNumbers = showLineNumbers ? import_react2.default.createElement(AllLineNumbers, {
+        containerStyle: lineNumberContainerStyle,
+        codeStyle: codeTagProps.style || {},
+        numberStyle: lineNumberStyle,
+        startingLineNumber,
+        codeString: code
+      }) : null;
+      var defaultPreStyle = style.hljs || style['pre[class*="language-"]'] || {
+        backgroundColor: "#fff"
+      };
+      var generatorClassName = isHighlightJs(astGenerator) ? "hljs" : "prismjs";
+      var preProps = useInlineStyles ? Object.assign({}, rest, {
+        style: Object.assign({}, defaultPreStyle, customStyle)
+      }) : Object.assign({}, rest, {
+        className: rest.className ? "".concat(generatorClassName, " ").concat(rest.className) : generatorClassName,
+        style: Object.assign({}, customStyle)
+      });
+      if (!astGenerator) {
+        return import_react2.default.createElement(PreTag, preProps, allLineNumbers, import_react2.default.createElement(CodeTag, codeTagProps, code));
+      }
+      if (wrapLines === void 0 && renderer || wrapLongLines)
+        wrapLines = true;
+      renderer = renderer || defaultRenderer;
+      var defaultCodeValue = [{
+        type: "text",
+        value: code
+      }];
+      var codeTree = getCodeTree({
+        astGenerator,
+        language,
+        code,
+        defaultCodeValue
+      });
+      if (codeTree.language === null) {
+        codeTree.value = defaultCodeValue;
+      }
+      var largestLineNumber = codeTree.value.length + startingLineNumber;
+      var rows = processLines(codeTree, wrapLines, lineProps, showLineNumbers, showInlineLineNumbers, startingLineNumber, largestLineNumber, lineNumberStyle, wrapLongLines);
+      if (wrapLongLines) {
+        codeTagProps.style = _objectSpread({}, codeTagProps.style, {
+          whiteSpace: "pre-wrap"
+        });
+      } else {
+        codeTagProps.style = _objectSpread({}, codeTagProps.style, {
+          whiteSpace: "pre"
+        });
+      }
+      return import_react2.default.createElement(PreTag, preProps, import_react2.default.createElement(CodeTag, codeTagProps, !showInlineLineNumbers && allLineNumbers, renderer({
+        rows,
+        stylesheet: style,
+        useInlineStyles
+      })));
+    };
+  }
+
+  // node_modules/react-syntax-highlighter/dist/esm/prism-light.js
+  var import_core = __toModule(require_core());
+  var SyntaxHighlighter = highlight_default(import_core.default, {});
+  SyntaxHighlighter.registerLanguage = function(_, language) {
+    return import_core.default.register(language);
+  };
+  var prism_light_default = SyntaxHighlighter;
+
+  // node_modules/react-syntax-highlighter/dist/esm/styles/prism/prism.js
+  var prism_default = {
+    'code[class*="language-"]': {
+      "color": "black",
+      "background": "none",
+      "textShadow": "0 1px white",
+      "fontFamily": "Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
+      "fontSize": "1em",
+      "textAlign": "left",
+      "whiteSpace": "pre",
+      "wordSpacing": "normal",
+      "wordBreak": "normal",
+      "wordWrap": "normal",
+      "lineHeight": "1.5",
+      "MozTabSize": "4",
+      "OTabSize": "4",
+      "tabSize": "4",
+      "WebkitHyphens": "none",
+      "MozHyphens": "none",
+      "msHyphens": "none",
+      "hyphens": "none"
+    },
+    'pre[class*="language-"]': {
+      "color": "black",
+      "background": "#f5f2f0",
+      "textShadow": "0 1px white",
+      "fontFamily": "Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
+      "fontSize": "1em",
+      "textAlign": "left",
+      "whiteSpace": "pre",
+      "wordSpacing": "normal",
+      "wordBreak": "normal",
+      "wordWrap": "normal",
+      "lineHeight": "1.5",
+      "MozTabSize": "4",
+      "OTabSize": "4",
+      "tabSize": "4",
+      "WebkitHyphens": "none",
+      "MozHyphens": "none",
+      "msHyphens": "none",
+      "hyphens": "none",
+      "padding": "1em",
+      "margin": ".5em 0",
+      "overflow": "auto"
+    },
+    'pre[class*="language-"]::-moz-selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'pre[class*="language-"] ::-moz-selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'code[class*="language-"]::-moz-selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'code[class*="language-"] ::-moz-selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'pre[class*="language-"]::selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'pre[class*="language-"] ::selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'code[class*="language-"]::selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    'code[class*="language-"] ::selection': {
+      "textShadow": "none",
+      "background": "#b3d4fc"
+    },
+    ':not(pre) > code[class*="language-"]': {
+      "background": "#f5f2f0",
+      "padding": ".1em",
+      "borderRadius": ".3em",
+      "whiteSpace": "normal"
+    },
+    "comment": {
+      "color": "slategray"
+    },
+    "prolog": {
+      "color": "slategray"
+    },
+    "doctype": {
+      "color": "slategray"
+    },
+    "cdata": {
+      "color": "slategray"
+    },
+    "punctuation": {
+      "color": "#999"
+    },
+    "namespace": {
+      "Opacity": ".7"
+    },
+    "property": {
+      "color": "#905"
+    },
+    "tag": {
+      "color": "#905"
+    },
+    "boolean": {
+      "color": "#905"
+    },
+    "number": {
+      "color": "#905"
+    },
+    "constant": {
+      "color": "#905"
+    },
+    "symbol": {
+      "color": "#905"
+    },
+    "deleted": {
+      "color": "#905"
+    },
+    "selector": {
+      "color": "#690"
+    },
+    "attr-name": {
+      "color": "#690"
+    },
+    "string": {
+      "color": "#690"
+    },
+    "char": {
+      "color": "#690"
+    },
+    "builtin": {
+      "color": "#690"
+    },
+    "inserted": {
+      "color": "#690"
+    },
+    "operator": {
+      "color": "#9a6e3a",
+      "background": "hsla(0, 0%, 100%, .5)"
+    },
+    "entity": {
+      "color": "#9a6e3a",
+      "background": "hsla(0, 0%, 100%, .5)",
+      "cursor": "help"
+    },
+    "url": {
+      "color": "#9a6e3a",
+      "background": "hsla(0, 0%, 100%, .5)"
+    },
+    ".language-css .token.string": {
+      "color": "#9a6e3a",
+      "background": "hsla(0, 0%, 100%, .5)"
+    },
+    ".style .token.string": {
+      "color": "#9a6e3a",
+      "background": "hsla(0, 0%, 100%, .5)"
+    },
+    "atrule": {
+      "color": "#07a"
+    },
+    "attr-value": {
+      "color": "#07a"
+    },
+    "keyword": {
+      "color": "#07a"
+    },
+    "function": {
+      "color": "#DD4A68"
+    },
+    "class-name": {
+      "color": "#DD4A68"
+    },
+    "regex": {
+      "color": "#e90"
+    },
+    "important": {
+      "color": "#e90",
+      "fontWeight": "bold"
+    },
+    "variable": {
+      "color": "#e90"
+    },
+    "bold": {
+      "fontWeight": "bold"
+    },
+    "italic": {
+      "fontStyle": "italic"
+    }
+  };
+
+  // node_modules/react-syntax-highlighter/dist/esm/languages/prism/jsx.js
+  var import_jsx = __toModule(require_jsx());
+  var jsx_default = import_jsx.default;
+
+  // components/Code.jsx
+  prism_light_default.registerLanguage("jsx", jsx_default);
+  function padLevel(body) {
+    const lines = body.split("\n").filter((l) => l.trim().length > 0);
+    const levels = lines.map((l) => {
+      const match = l.match(/^\s+/);
+      if (match) {
+        return match[0].length;
+      }
+      return 0;
+    });
+    const padLevel2 = Math.min(...levels);
+    const regex = new RegExp(`^ {${padLevel2}}`, "gm");
+    return body.replace(regex, "").trim();
+  }
+  function Code(props) {
+    const body = padLevel(String(props.children));
+    const customStyle = {fontSize: "0.9em", borderRadius: "0.25em", color: "#333 !important"};
+    return /* @__PURE__ */ import_react3.default.createElement(prism_light_default, {
+      language: props.lang,
+      style: prism_default,
+      customStyle
+    }, body);
+  }
+
+  // components/city-landscape.jsx
+  var import_react4 = __toModule(require_react());
   var import_p5 = __toModule(require_p5_min());
 
   // components/js/vector.js
@@ -41698,10 +42451,10 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   };
 
   // components/city-landscape.jsx
-  var CityLandscape2 = class extends import_react.default.Component {
+  var CityLandscape2 = class extends import_react4.default.Component {
     constructor(props) {
       super(props);
-      this.canvasRef = import_react.default.createRef();
+      this.canvasRef = import_react4.default.createRef();
     }
     componentDidMount() {
       const width = this.canvasRef.current.clientWidth;
@@ -41709,9 +42462,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       new import_p5.default((p) => new city_landscape_default(width, height, p), "canvas");
     }
     render() {
-      return /* @__PURE__ */ import_react.default.createElement("div", {
+      return /* @__PURE__ */ import_react4.default.createElement("div", {
         id: "city-landscape"
-      }, /* @__PURE__ */ import_react.default.createElement("div", {
+      }, /* @__PURE__ */ import_react4.default.createElement("div", {
         id: "canvas",
         width: "100%",
         ref: this.canvasRef
@@ -41723,759 +42476,6 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     width: 100,
     height: 100
   };
-
-  // components/code.jsx
-  var import_react4 = __toModule(require_react());
-
-  // node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
-  function _objectWithoutPropertiesLoose(source, excluded) {
-    if (source == null)
-      return {};
-    var target = {};
-    var sourceKeys = Object.keys(source);
-    var key, i;
-    for (i = 0; i < sourceKeys.length; i++) {
-      key = sourceKeys[i];
-      if (excluded.indexOf(key) >= 0)
-        continue;
-      target[key] = source[key];
-    }
-    return target;
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
-  function _objectWithoutProperties(source, excluded) {
-    if (source == null)
-      return {};
-    var target = _objectWithoutPropertiesLoose(source, excluded);
-    var key, i;
-    if (Object.getOwnPropertySymbols) {
-      var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-      for (i = 0; i < sourceSymbolKeys.length; i++) {
-        key = sourceSymbolKeys[i];
-        if (excluded.indexOf(key) >= 0)
-          continue;
-        if (!Object.prototype.propertyIsEnumerable.call(source, key))
-          continue;
-        target[key] = source[key];
-      }
-    }
-    return target;
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
-  function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length)
-      len = arr.length;
-    for (var i = 0, arr2 = new Array(len); i < len; i++) {
-      arr2[i] = arr[i];
-    }
-    return arr2;
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/arrayWithoutHoles.js
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr))
-      return _arrayLikeToArray(arr);
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/iterableToArray.js
-  function _iterableToArray(iter) {
-    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null)
-      return Array.from(iter);
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
-  function _unsupportedIterableToArray(o, minLen) {
-    if (!o)
-      return;
-    if (typeof o === "string")
-      return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor)
-      n = o.constructor.name;
-    if (n === "Map" || n === "Set")
-      return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n))
-      return _arrayLikeToArray(o, minLen);
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/nonIterableSpread.js
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/toConsumableArray.js
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/defineProperty.js
-  function _defineProperty(obj, key, value) {
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
-        value,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    } else {
-      obj[key] = value;
-    }
-    return obj;
-  }
-
-  // node_modules/@babel/runtime/helpers/esm/objectSpread.js
-  function _objectSpread(target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i] != null ? Object(arguments[i]) : {};
-      var ownKeys = Object.keys(source);
-      if (typeof Object.getOwnPropertySymbols === "function") {
-        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function(sym) {
-          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-        }));
-      }
-      ownKeys.forEach(function(key) {
-        _defineProperty(target, key, source[key]);
-      });
-    }
-    return target;
-  }
-
-  // node_modules/react-syntax-highlighter/dist/esm/highlight.js
-  var import_react3 = __toModule(require_react());
-
-  // node_modules/@babel/runtime/helpers/esm/extends.js
-  function _extends() {
-    _extends = Object.assign || function(target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-
-  // node_modules/react-syntax-highlighter/dist/esm/create-element.js
-  var import_react2 = __toModule(require_react());
-  function powerSetPermutations(arr) {
-    var arrLength = arr.length;
-    if (arrLength === 0 || arrLength === 1)
-      return arr;
-    if (arrLength === 2) {
-      return [arr[0], arr[1], "".concat(arr[0], ".").concat(arr[1]), "".concat(arr[1], ".").concat(arr[0])];
-    }
-    if (arrLength === 3) {
-      return [arr[0], arr[1], arr[2], "".concat(arr[0], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[2]), "".concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[0])];
-    }
-    if (arrLength >= 4) {
-      return [arr[0], arr[1], arr[2], arr[3], "".concat(arr[0], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[3]), "".concat(arr[3], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[1], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[0], ".").concat(arr[2], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[0], ".").concat(arr[3], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[2], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[0], ".").concat(arr[3], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[1], ".").concat(arr[2], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[1], ".").concat(arr[3], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[1], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[0], ".").concat(arr[3], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[0], ".").concat(arr[3]), "".concat(arr[2], ".").concat(arr[1], ".").concat(arr[3], ".").concat(arr[0]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[2], ".").concat(arr[3], ".").concat(arr[1], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[1], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[0], ".").concat(arr[2], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[0], ".").concat(arr[2]), "".concat(arr[3], ".").concat(arr[1], ".").concat(arr[2], ".").concat(arr[0]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[0], ".").concat(arr[1]), "".concat(arr[3], ".").concat(arr[2], ".").concat(arr[1], ".").concat(arr[0])];
-    }
-  }
-  var classNameCombinations = {};
-  function getClassNameCombinations(classNames) {
-    if (classNames.length === 0 || classNames.length === 1)
-      return classNames;
-    var key = classNames.join(".");
-    if (!classNameCombinations[key]) {
-      classNameCombinations[key] = powerSetPermutations(classNames);
-    }
-    return classNameCombinations[key];
-  }
-  function createStyleObject(classNames) {
-    var elementStyle = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
-    var stylesheet = arguments.length > 2 ? arguments[2] : void 0;
-    var nonTokenClassNames = classNames.filter(function(className) {
-      return className !== "token";
-    });
-    var classNamesCombinations = getClassNameCombinations(nonTokenClassNames);
-    return classNamesCombinations.reduce(function(styleObject, className) {
-      return _objectSpread({}, styleObject, stylesheet[className]);
-    }, elementStyle);
-  }
-  function createClassNameString(classNames) {
-    return classNames.join(" ");
-  }
-  function createChildren(stylesheet, useInlineStyles) {
-    var childrenCount = 0;
-    return function(children) {
-      childrenCount += 1;
-      return children.map(function(child, i) {
-        return createElement({
-          node: child,
-          stylesheet,
-          useInlineStyles,
-          key: "code-segment-".concat(childrenCount, "-").concat(i)
-        });
-      });
-    };
-  }
-  function createElement(_ref) {
-    var node = _ref.node, stylesheet = _ref.stylesheet, _ref$style = _ref.style, style = _ref$style === void 0 ? {} : _ref$style, useInlineStyles = _ref.useInlineStyles, key = _ref.key;
-    var properties = node.properties, type = node.type, TagName = node.tagName, value = node.value;
-    if (type === "text") {
-      return value;
-    } else if (TagName) {
-      var childrenCreator = createChildren(stylesheet, useInlineStyles);
-      var props;
-      if (!useInlineStyles) {
-        props = _objectSpread({}, properties, {
-          className: createClassNameString(properties.className)
-        });
-      } else {
-        var allStylesheetSelectors = Object.keys(stylesheet).reduce(function(classes, selector) {
-          selector.split(".").forEach(function(className2) {
-            if (!classes.includes(className2))
-              classes.push(className2);
-          });
-          return classes;
-        }, []);
-        var startingClassName = properties.className && properties.className.includes("token") ? ["token"] : [];
-        var className = properties.className && startingClassName.concat(properties.className.filter(function(className2) {
-          return !allStylesheetSelectors.includes(className2);
-        }));
-        props = _objectSpread({}, properties, {
-          className: createClassNameString(className) || void 0,
-          style: createStyleObject(properties.className, Object.assign({}, properties.style, style), stylesheet)
-        });
-      }
-      var children = childrenCreator(node.children);
-      return import_react2.default.createElement(TagName, _extends({
-        key
-      }, props), children);
-    }
-  }
-
-  // node_modules/react-syntax-highlighter/dist/esm/checkForListedLanguage.js
-  var checkForListedLanguage_default = function(astGenerator, language) {
-    var langs = astGenerator.listLanguages();
-    return langs.indexOf(language) !== -1;
-  };
-
-  // node_modules/react-syntax-highlighter/dist/esm/highlight.js
-  var newLineRegex = /\n/g;
-  function getNewLines(str) {
-    return str.match(newLineRegex);
-  }
-  function getAllLineNumbers(_ref) {
-    var lines = _ref.lines, startingLineNumber = _ref.startingLineNumber, style = _ref.style;
-    return lines.map(function(_, i) {
-      var number = i + startingLineNumber;
-      return import_react3.default.createElement("span", {
-        key: "line-".concat(i),
-        className: "react-syntax-highlighter-line-number",
-        style: typeof style === "function" ? style(number) : style
-      }, "".concat(number, "\n"));
-    });
-  }
-  function AllLineNumbers(_ref2) {
-    var codeString = _ref2.codeString, codeStyle = _ref2.codeStyle, _ref2$containerStyle = _ref2.containerStyle, containerStyle = _ref2$containerStyle === void 0 ? {
-      float: "left",
-      paddingRight: "10px"
-    } : _ref2$containerStyle, _ref2$numberStyle = _ref2.numberStyle, numberStyle = _ref2$numberStyle === void 0 ? {} : _ref2$numberStyle, startingLineNumber = _ref2.startingLineNumber;
-    return import_react3.default.createElement("code", {
-      style: Object.assign({}, codeStyle, containerStyle)
-    }, getAllLineNumbers({
-      lines: codeString.replace(/\n$/, "").split("\n"),
-      style: numberStyle,
-      startingLineNumber
-    }));
-  }
-  function getEmWidthOfNumber(num) {
-    return "".concat(num.toString().length, ".25em");
-  }
-  function getInlineLineNumber(lineNumber, inlineLineNumberStyle) {
-    return {
-      type: "element",
-      tagName: "span",
-      properties: {
-        key: "line-number--".concat(lineNumber),
-        className: ["comment", "linenumber", "react-syntax-highlighter-line-number"],
-        style: inlineLineNumberStyle
-      },
-      children: [{
-        type: "text",
-        value: lineNumber
-      }]
-    };
-  }
-  function assembleLineNumberStyles(lineNumberStyle, lineNumber, largestLineNumber) {
-    var defaultLineNumberStyle = {
-      display: "inline-block",
-      minWidth: getEmWidthOfNumber(largestLineNumber),
-      paddingRight: "1em",
-      textAlign: "right",
-      userSelect: "none"
-    };
-    var customLineNumberStyle = typeof lineNumberStyle === "function" ? lineNumberStyle(lineNumber) : lineNumberStyle;
-    var assembledStyle = _objectSpread({}, defaultLineNumberStyle, customLineNumberStyle);
-    return assembledStyle;
-  }
-  function createLineElement(_ref3) {
-    var children = _ref3.children, lineNumber = _ref3.lineNumber, lineNumberStyle = _ref3.lineNumberStyle, largestLineNumber = _ref3.largestLineNumber, showInlineLineNumbers = _ref3.showInlineLineNumbers, _ref3$lineProps = _ref3.lineProps, lineProps = _ref3$lineProps === void 0 ? {} : _ref3$lineProps, _ref3$className = _ref3.className, className = _ref3$className === void 0 ? [] : _ref3$className, showLineNumbers = _ref3.showLineNumbers, wrapLongLines = _ref3.wrapLongLines;
-    var properties = typeof lineProps === "function" ? lineProps(lineNumber) : lineProps;
-    properties["className"] = className;
-    if (lineNumber && showInlineLineNumbers) {
-      var inlineLineNumberStyle = assembleLineNumberStyles(lineNumberStyle, lineNumber, largestLineNumber);
-      children.unshift(getInlineLineNumber(lineNumber, inlineLineNumberStyle));
-    }
-    if (wrapLongLines & showLineNumbers) {
-      properties.style = _objectSpread({}, properties.style, {
-        display: "flex"
-      });
-    }
-    return {
-      type: "element",
-      tagName: "span",
-      properties,
-      children
-    };
-  }
-  function flattenCodeTree(tree) {
-    var className = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : [];
-    var newTree = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
-    for (var i = 0; i < tree.length; i++) {
-      var node = tree[i];
-      if (node.type === "text") {
-        newTree.push(createLineElement({
-          children: [node],
-          className: _toConsumableArray(new Set(className))
-        }));
-      } else if (node.children) {
-        var classNames = className.concat(node.properties.className);
-        newTree = newTree.concat(flattenCodeTree(node.children, classNames));
-      }
-    }
-    return newTree;
-  }
-  function processLines(codeTree, wrapLines, lineProps, showLineNumbers, showInlineLineNumbers, startingLineNumber, largestLineNumber, lineNumberStyle, wrapLongLines) {
-    var _ref4;
-    var tree = flattenCodeTree(codeTree.value);
-    var newTree = [];
-    var lastLineBreakIndex = -1;
-    var index = 0;
-    function createWrappedLine(children2, lineNumber2) {
-      var className = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
-      return createLineElement({
-        children: children2,
-        lineNumber: lineNumber2,
-        lineNumberStyle,
-        largestLineNumber,
-        showInlineLineNumbers,
-        lineProps,
-        className,
-        showLineNumbers,
-        wrapLongLines
-      });
-    }
-    function createUnwrappedLine(children2, lineNumber2) {
-      if (showLineNumbers && lineNumber2 && showInlineLineNumbers) {
-        var inlineLineNumberStyle = assembleLineNumberStyles(lineNumberStyle, lineNumber2, largestLineNumber);
-        children2.unshift(getInlineLineNumber(lineNumber2, inlineLineNumberStyle));
-      }
-      return children2;
-    }
-    function createLine(children2, lineNumber2) {
-      var className = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
-      return wrapLines || className.length > 0 ? createWrappedLine(children2, lineNumber2, className) : createUnwrappedLine(children2, lineNumber2);
-    }
-    var _loop = function _loop2() {
-      var node = tree[index];
-      var value = node.children[0].value;
-      var newLines = getNewLines(value);
-      if (newLines) {
-        var splitValue = value.split("\n");
-        splitValue.forEach(function(text, i) {
-          var lineNumber2 = showLineNumbers && newTree.length + startingLineNumber;
-          var newChild = {
-            type: "text",
-            value: "".concat(text, "\n")
-          };
-          if (i === 0) {
-            var _children = tree.slice(lastLineBreakIndex + 1, index).concat(createLineElement({
-              children: [newChild],
-              className: node.properties.className
-            }));
-            var _line = createLine(_children, lineNumber2);
-            newTree.push(_line);
-          } else if (i === splitValue.length - 1) {
-            var stringChild = tree[index + 1] && tree[index + 1].children && tree[index + 1].children[0];
-            if (stringChild) {
-              var lastLineInPreviousSpan = {
-                type: "text",
-                value: "".concat(text)
-              };
-              var newElem = createLineElement({
-                children: [lastLineInPreviousSpan],
-                className: node.properties.className
-              });
-              tree.splice(index + 1, 0, newElem);
-            } else {
-              var _children2 = [newChild];
-              var _line2 = createLine(_children2, lineNumber2, node.properties.className);
-              newTree.push(_line2);
-            }
-          } else {
-            var _children3 = [newChild];
-            var _line3 = createLine(_children3, lineNumber2, node.properties.className);
-            newTree.push(_line3);
-          }
-        });
-        lastLineBreakIndex = index;
-      }
-      index++;
-    };
-    while (index < tree.length) {
-      _loop();
-    }
-    if (lastLineBreakIndex !== tree.length - 1) {
-      var children = tree.slice(lastLineBreakIndex + 1, tree.length);
-      if (children && children.length) {
-        var lineNumber = showLineNumbers && newTree.length + startingLineNumber;
-        var line = createLine(children, lineNumber);
-        newTree.push(line);
-      }
-    }
-    return wrapLines ? newTree : (_ref4 = []).concat.apply(_ref4, newTree);
-  }
-  function defaultRenderer(_ref5) {
-    var rows = _ref5.rows, stylesheet = _ref5.stylesheet, useInlineStyles = _ref5.useInlineStyles;
-    return rows.map(function(node, i) {
-      return createElement({
-        node,
-        stylesheet,
-        useInlineStyles,
-        key: "code-segement".concat(i)
-      });
-    });
-  }
-  function isHighlightJs(astGenerator) {
-    return astGenerator && typeof astGenerator.highlightAuto !== "undefined";
-  }
-  function getCodeTree(_ref6) {
-    var astGenerator = _ref6.astGenerator, language = _ref6.language, code = _ref6.code, defaultCodeValue = _ref6.defaultCodeValue;
-    if (isHighlightJs(astGenerator)) {
-      var hasLanguage = checkForListedLanguage_default(astGenerator, language);
-      if (language === "text") {
-        return {
-          value: defaultCodeValue,
-          language: "text"
-        };
-      } else if (hasLanguage) {
-        return astGenerator.highlight(language, code);
-      } else {
-        return astGenerator.highlightAuto(code);
-      }
-    }
-    try {
-      return language && language !== "text" ? {
-        value: astGenerator.highlight(code, language)
-      } : {
-        value: defaultCodeValue
-      };
-    } catch (e) {
-      return {
-        value: defaultCodeValue
-      };
-    }
-  }
-  function highlight_default(defaultAstGenerator, defaultStyle) {
-    return function SyntaxHighlighter2(_ref7) {
-      var language = _ref7.language, children = _ref7.children, _ref7$style = _ref7.style, style = _ref7$style === void 0 ? defaultStyle : _ref7$style, _ref7$customStyle = _ref7.customStyle, customStyle = _ref7$customStyle === void 0 ? {} : _ref7$customStyle, _ref7$codeTagProps = _ref7.codeTagProps, codeTagProps = _ref7$codeTagProps === void 0 ? {
-        className: language ? "language-".concat(language) : void 0,
-        style: _objectSpread({}, style['code[class*="language-"]'], style['code[class*="language-'.concat(language, '"]')])
-      } : _ref7$codeTagProps, _ref7$useInlineStyles = _ref7.useInlineStyles, useInlineStyles = _ref7$useInlineStyles === void 0 ? true : _ref7$useInlineStyles, _ref7$showLineNumbers = _ref7.showLineNumbers, showLineNumbers = _ref7$showLineNumbers === void 0 ? false : _ref7$showLineNumbers, _ref7$showInlineLineN = _ref7.showInlineLineNumbers, showInlineLineNumbers = _ref7$showInlineLineN === void 0 ? true : _ref7$showInlineLineN, _ref7$startingLineNum = _ref7.startingLineNumber, startingLineNumber = _ref7$startingLineNum === void 0 ? 1 : _ref7$startingLineNum, lineNumberContainerStyle = _ref7.lineNumberContainerStyle, _ref7$lineNumberStyle = _ref7.lineNumberStyle, lineNumberStyle = _ref7$lineNumberStyle === void 0 ? {} : _ref7$lineNumberStyle, wrapLines = _ref7.wrapLines, _ref7$wrapLongLines = _ref7.wrapLongLines, wrapLongLines = _ref7$wrapLongLines === void 0 ? false : _ref7$wrapLongLines, _ref7$lineProps = _ref7.lineProps, lineProps = _ref7$lineProps === void 0 ? {} : _ref7$lineProps, renderer = _ref7.renderer, _ref7$PreTag = _ref7.PreTag, PreTag = _ref7$PreTag === void 0 ? "pre" : _ref7$PreTag, _ref7$CodeTag = _ref7.CodeTag, CodeTag = _ref7$CodeTag === void 0 ? "code" : _ref7$CodeTag, _ref7$code = _ref7.code, code = _ref7$code === void 0 ? Array.isArray(children) ? children[0] : children : _ref7$code, astGenerator = _ref7.astGenerator, rest = _objectWithoutProperties(_ref7, ["language", "children", "style", "customStyle", "codeTagProps", "useInlineStyles", "showLineNumbers", "showInlineLineNumbers", "startingLineNumber", "lineNumberContainerStyle", "lineNumberStyle", "wrapLines", "wrapLongLines", "lineProps", "renderer", "PreTag", "CodeTag", "code", "astGenerator"]);
-      astGenerator = astGenerator || defaultAstGenerator;
-      var allLineNumbers = showLineNumbers ? import_react3.default.createElement(AllLineNumbers, {
-        containerStyle: lineNumberContainerStyle,
-        codeStyle: codeTagProps.style || {},
-        numberStyle: lineNumberStyle,
-        startingLineNumber,
-        codeString: code
-      }) : null;
-      var defaultPreStyle = style.hljs || style['pre[class*="language-"]'] || {
-        backgroundColor: "#fff"
-      };
-      var generatorClassName = isHighlightJs(astGenerator) ? "hljs" : "prismjs";
-      var preProps = useInlineStyles ? Object.assign({}, rest, {
-        style: Object.assign({}, defaultPreStyle, customStyle)
-      }) : Object.assign({}, rest, {
-        className: rest.className ? "".concat(generatorClassName, " ").concat(rest.className) : generatorClassName,
-        style: Object.assign({}, customStyle)
-      });
-      if (!astGenerator) {
-        return import_react3.default.createElement(PreTag, preProps, allLineNumbers, import_react3.default.createElement(CodeTag, codeTagProps, code));
-      }
-      if (wrapLines === void 0 && renderer || wrapLongLines)
-        wrapLines = true;
-      renderer = renderer || defaultRenderer;
-      var defaultCodeValue = [{
-        type: "text",
-        value: code
-      }];
-      var codeTree = getCodeTree({
-        astGenerator,
-        language,
-        code,
-        defaultCodeValue
-      });
-      if (codeTree.language === null) {
-        codeTree.value = defaultCodeValue;
-      }
-      var largestLineNumber = codeTree.value.length + startingLineNumber;
-      var rows = processLines(codeTree, wrapLines, lineProps, showLineNumbers, showInlineLineNumbers, startingLineNumber, largestLineNumber, lineNumberStyle, wrapLongLines);
-      if (wrapLongLines) {
-        codeTagProps.style = _objectSpread({}, codeTagProps.style, {
-          whiteSpace: "pre-wrap"
-        });
-      } else {
-        codeTagProps.style = _objectSpread({}, codeTagProps.style, {
-          whiteSpace: "pre"
-        });
-      }
-      return import_react3.default.createElement(PreTag, preProps, import_react3.default.createElement(CodeTag, codeTagProps, !showInlineLineNumbers && allLineNumbers, renderer({
-        rows,
-        stylesheet: style,
-        useInlineStyles
-      })));
-    };
-  }
-
-  // node_modules/react-syntax-highlighter/dist/esm/prism-light.js
-  var import_core = __toModule(require_core());
-  var SyntaxHighlighter = highlight_default(import_core.default, {});
-  SyntaxHighlighter.registerLanguage = function(_, language) {
-    return import_core.default.register(language);
-  };
-  var prism_light_default = SyntaxHighlighter;
-
-  // node_modules/react-syntax-highlighter/dist/esm/styles/prism/prism.js
-  var prism_default = {
-    'code[class*="language-"]': {
-      "color": "black",
-      "background": "none",
-      "textShadow": "0 1px white",
-      "fontFamily": "Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
-      "fontSize": "1em",
-      "textAlign": "left",
-      "whiteSpace": "pre",
-      "wordSpacing": "normal",
-      "wordBreak": "normal",
-      "wordWrap": "normal",
-      "lineHeight": "1.5",
-      "MozTabSize": "4",
-      "OTabSize": "4",
-      "tabSize": "4",
-      "WebkitHyphens": "none",
-      "MozHyphens": "none",
-      "msHyphens": "none",
-      "hyphens": "none"
-    },
-    'pre[class*="language-"]': {
-      "color": "black",
-      "background": "#f5f2f0",
-      "textShadow": "0 1px white",
-      "fontFamily": "Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
-      "fontSize": "1em",
-      "textAlign": "left",
-      "whiteSpace": "pre",
-      "wordSpacing": "normal",
-      "wordBreak": "normal",
-      "wordWrap": "normal",
-      "lineHeight": "1.5",
-      "MozTabSize": "4",
-      "OTabSize": "4",
-      "tabSize": "4",
-      "WebkitHyphens": "none",
-      "MozHyphens": "none",
-      "msHyphens": "none",
-      "hyphens": "none",
-      "padding": "1em",
-      "margin": ".5em 0",
-      "overflow": "auto"
-    },
-    'pre[class*="language-"]::-moz-selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'pre[class*="language-"] ::-moz-selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'code[class*="language-"]::-moz-selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'code[class*="language-"] ::-moz-selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'pre[class*="language-"]::selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'pre[class*="language-"] ::selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'code[class*="language-"]::selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    'code[class*="language-"] ::selection': {
-      "textShadow": "none",
-      "background": "#b3d4fc"
-    },
-    ':not(pre) > code[class*="language-"]': {
-      "background": "#f5f2f0",
-      "padding": ".1em",
-      "borderRadius": ".3em",
-      "whiteSpace": "normal"
-    },
-    "comment": {
-      "color": "slategray"
-    },
-    "prolog": {
-      "color": "slategray"
-    },
-    "doctype": {
-      "color": "slategray"
-    },
-    "cdata": {
-      "color": "slategray"
-    },
-    "punctuation": {
-      "color": "#999"
-    },
-    "namespace": {
-      "Opacity": ".7"
-    },
-    "property": {
-      "color": "#905"
-    },
-    "tag": {
-      "color": "#905"
-    },
-    "boolean": {
-      "color": "#905"
-    },
-    "number": {
-      "color": "#905"
-    },
-    "constant": {
-      "color": "#905"
-    },
-    "symbol": {
-      "color": "#905"
-    },
-    "deleted": {
-      "color": "#905"
-    },
-    "selector": {
-      "color": "#690"
-    },
-    "attr-name": {
-      "color": "#690"
-    },
-    "string": {
-      "color": "#690"
-    },
-    "char": {
-      "color": "#690"
-    },
-    "builtin": {
-      "color": "#690"
-    },
-    "inserted": {
-      "color": "#690"
-    },
-    "operator": {
-      "color": "#9a6e3a",
-      "background": "hsla(0, 0%, 100%, .5)"
-    },
-    "entity": {
-      "color": "#9a6e3a",
-      "background": "hsla(0, 0%, 100%, .5)",
-      "cursor": "help"
-    },
-    "url": {
-      "color": "#9a6e3a",
-      "background": "hsla(0, 0%, 100%, .5)"
-    },
-    ".language-css .token.string": {
-      "color": "#9a6e3a",
-      "background": "hsla(0, 0%, 100%, .5)"
-    },
-    ".style .token.string": {
-      "color": "#9a6e3a",
-      "background": "hsla(0, 0%, 100%, .5)"
-    },
-    "atrule": {
-      "color": "#07a"
-    },
-    "attr-value": {
-      "color": "#07a"
-    },
-    "keyword": {
-      "color": "#07a"
-    },
-    "function": {
-      "color": "#DD4A68"
-    },
-    "class-name": {
-      "color": "#DD4A68"
-    },
-    "regex": {
-      "color": "#e90"
-    },
-    "important": {
-      "color": "#e90",
-      "fontWeight": "bold"
-    },
-    "variable": {
-      "color": "#e90"
-    },
-    "bold": {
-      "fontWeight": "bold"
-    },
-    "italic": {
-      "fontStyle": "italic"
-    }
-  };
-
-  // node_modules/react-syntax-highlighter/dist/esm/languages/prism/jsx.js
-  var import_jsx = __toModule(require_jsx());
-  var jsx_default = import_jsx.default;
-
-  // components/code.jsx
-  prism_light_default.registerLanguage("jsx", jsx_default);
-  function padLevel(body) {
-    const lines = body.split("\n").filter((l) => l.trim().length > 0);
-    const levels = lines.map((l) => {
-      const match = l.match(/^\s+/);
-      if (match) {
-        return match[0].length;
-      }
-      return 0;
-    });
-    const padLevel2 = Math.min(...levels);
-    const regex = new RegExp(`^ {${padLevel2}}`, "gm");
-    return body.replace(regex, "").trim();
-  }
-  function Code(props) {
-    const body = padLevel(String(props.children));
-    const customStyle = {fontSize: "0.9em", borderRadius: "0.25em", color: "#333 !important"};
-    return /* @__PURE__ */ import_react4.default.createElement(prism_light_default, {
-      language: props.lang,
-      style: prism_default,
-      customStyle
-    }, body);
-  }
 
   // components/helmet.jsx
   var import_react6 = __toModule(require_react());
@@ -43358,7 +43358,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       return /* @__PURE__ */ import_react11.default.createElement("div", {
         id: "p5-canvas",
         width: w,
-        height: h
+        height: h,
+        style: {background: "black"}
       });
     }
   };
@@ -43425,7 +43426,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         className: "spc-n-zero"
       }, "Gesture Detection Using Tensorflow.js"), /* @__PURE__ */ import_react12.default.createElement("p", null, "I started this project to create an end-to-end training tool for gesture recognition using deep learning. You can view the code ", /* @__PURE__ */ import_react12.default.createElement("a", {
         href: "https://github.com/choxi/rune"
-      }, "here"), " and try the demo", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "here"), " and try the demo ", /* @__PURE__ */ import_react12.default.createElement("a", {
         href: "https://priceless-jones-bef040.netlify.com/"
       }, "here"), "."), /* @__PURE__ */ import_react12.default.createElement("img", {
         src: "/assets/gesture-detection-overview.gif"
@@ -43452,15 +43453,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       }, "$1 Recognizer"), ' written by researchers at Microsoft and the University of Washington. The $1 Recognizer constructs a "geometric template" from each gesture and feeds those features into a nearest-neighbor algorithm for classification. The comparison is illustrative of the pros and cons of deep learning: the $1 Recognizer requires some specialized knowledge of geometry to pull out the relevant features of a shape and classify them, but the deep learning model can figure out those features directly from bitmaps of gestures. The downside of the deep learning model is that it requires thousands of training samples, whereas the $1 Recognizer only requires a handful of samples per shape.'), /* @__PURE__ */ import_react12.default.createElement("p", null, "But the main benefit of deep learning might be its accessibility to software engineers with no specialized training. I doubt I would be able to re-implement the $1 Recognizer, it requires a lot of prerequisite math and geometry that would have been too high of a barrier for me. The CNN does require significantly more training data, but it was conceptually simpler for a software engineer like myself to implement. I'm excited to follow the branch of deep learning where you can automatically learn and optimize neural network architectures and parameters**. It would be a very powerful tool if one day we're able to plug in a neural net in places that previously required a handcrafted algorithm."), /* @__PURE__ */ import_react12.default.createElement("h2", null, "Footnotes"), /* @__PURE__ */ import_react12.default.createElement("p", null, "* I used a mouse instead of touch to draw gestures and created all of them myself instead of sampling from various people. The detector could be improved by using touch inputs and getting samples from more users."), /* @__PURE__ */ import_react12.default.createElement("p", null, "** https://autokeras.com/")));
     }
   };
-  document.addEventListener("DOMContentLoaded", (event) => {
+  function initGestureDetectionUsingTensorflowjs() {
     const container = document.getElementById("GestureDetectionUsingTensorflowjs");
     if (container && container.children.length === 0) {
       import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(GestureDetectionUsingTensorflowjs, null), container);
+      return;
     }
     if (container && container.children.length > 0) {
       import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(GestureDetectionUsingTensorflowjs, null), container);
+      return;
     }
-  });
+    console.log(`container: GestureDetectionUsingTensorflowjs not found `);
+  }
+  if (document.readyState !== "loading") {
+    initGestureDetectionUsingTensorflowjs();
+  } else {
+    document.addEventListener("DOMContentLoaded", function() {
+      initGestureDetectionUsingTensorflowjs();
+    });
+  }
   var IdiomStaticSiteGenerator = class extends import_react12.default.Component {
     render() {
       return /* @__PURE__ */ import_react12.default.createElement(PostLayout, null, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, " choxi | Idiom: A Simple Static Site Generator for React ")), /* @__PURE__ */ import_react12.default.createElement("div", {
@@ -43496,15 +43507,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       }, "view the source code here"), ".")));
     }
   };
-  document.addEventListener("DOMContentLoaded", (event) => {
+  function initIdiomStaticSiteGenerator() {
     const container = document.getElementById("IdiomStaticSiteGenerator");
     if (container && container.children.length === 0) {
       import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(IdiomStaticSiteGenerator, null), container);
+      return;
     }
     if (container && container.children.length > 0) {
       import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(IdiomStaticSiteGenerator, null), container);
+      return;
     }
-  });
+    console.log(`container: IdiomStaticSiteGenerator not found `);
+  }
+  if (document.readyState !== "loading") {
+    initIdiomStaticSiteGenerator();
+  } else {
+    document.addEventListener("DOMContentLoaded", function() {
+      initIdiomStaticSiteGenerator();
+    });
+  }
   var Index = class extends import_react12.default.Component {
     render() {
       return /* @__PURE__ */ import_react12.default.createElement("div", {
@@ -43517,7 +43538,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
         className: "text-center"
       }, /* @__PURE__ */ import_react12.default.createElement("h2", null, "Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science, technology, and design."), /* @__PURE__ */ import_react12.default.createElement("h3", {
         className: "spc-n-l"
-      }, "Posts"), /* @__PURE__ */ import_react12.default.createElement("ul", {
+      }, "Recent Posts"), /* @__PURE__ */ import_react12.default.createElement("ul", {
         className: "no-format"
       }, /* @__PURE__ */ import_react12.default.createElement("li", null, /* @__PURE__ */ import_react12.default.createElement("a", {
         href: "/idiom-static-site-generator.html"
@@ -43528,15 +43549,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       }, "Gesture Detection Using Tensorflow.js")))))));
     }
   };
-  document.addEventListener("DOMContentLoaded", (event) => {
+  function initIndex() {
     const container = document.getElementById("Index");
     if (container && container.children.length === 0) {
       import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(Index, null), container);
+      return;
     }
     if (container && container.children.length > 0) {
       import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(Index, null), container);
+      return;
     }
-  });
+    console.log(`container: Index not found `);
+  }
+  if (document.readyState !== "loading") {
+    initIndex();
+  } else {
+    document.addEventListener("DOMContentLoaded", function() {
+      initIndex();
+    });
+  }
   var ProceduralLandscapes = class extends import_react12.default.Component {
     render() {
       return /* @__PURE__ */ import_react12.default.createElement(PostLayout, null, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, "choxi | Procedural Landscapes")), /* @__PURE__ */ import_react12.default.createElement("div", {
@@ -43559,15 +43590,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       }, "source code here"), "."), /* @__PURE__ */ import_react12.default.createElement("p", null, "Most graphics tools emulate the physical experience of drawing and painting, but that misses some interesting opportunities to approach art differently. I like these infinitely scrolling landscapes as an example of a form of art that couldn\u2019t be done by hand, and maybe wasn\u2019t even imaginable, without computers.")));
     }
   };
-  document.addEventListener("DOMContentLoaded", (event) => {
+  function initProceduralLandscapes() {
     const container = document.getElementById("ProceduralLandscapes");
     if (container && container.children.length === 0) {
       import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(ProceduralLandscapes, null), container);
+      return;
     }
     if (container && container.children.length > 0) {
       import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(ProceduralLandscapes, null), container);
+      return;
     }
-  });
+    console.log(`container: ProceduralLandscapes not found `);
+  }
+  if (document.readyState !== "loading") {
+    initProceduralLandscapes();
+  } else {
+    document.addEventListener("DOMContentLoaded", function() {
+      initProceduralLandscapes();
+    });
+  }
 })();
 /*
 object-assign
