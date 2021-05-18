@@ -18,6 +18,7 @@ export default function PostLayout(props) {
           gtag('config', 'UA-86991778-1');
           `}
         </script>
+        <title>choxi</title>
       </Helmet>
 
       <div className="layout-sidebar--sidebar pad-l sm-hide lg-show">

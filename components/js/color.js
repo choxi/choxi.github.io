@@ -42,6 +42,10 @@ class Color {
 //     })
 //     colors
 
+Color.red = new Color(255, 0, 0)
+Color.green = new Color(0, 255, 0)
+Color.blue = new Color(0, 0, 255)
+
 Color.palettes = {
   tron: {
     blue: new Color(95, 212, 230),

@@ -11,7 +11,7 @@
   }
 
   p {
-    line-height: 150%;
+    line-height: 1.6em;
   }
 
   ul {
@@ -20,5 +20,14 @@
     li {
       margin: 0.5em 0;
     }
+  }
+
+  blockquote {
+    line-height: 1.6em;
+    background: #F5F5F5;
+    font-style: italic;
+    padding: 1.5em 2em;
+    margin: 0;
+    border-radius: 0.25em;
   }
 }
