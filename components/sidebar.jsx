@@ -3,7 +3,7 @@ import React from "react"
 export default function Sidebar() {
   return (
     <div>
-      <a href="/index.html" className="reset">
+      <a href="/" className="reset">
         <h1 className="spc-n-zero"> roshan choxi </h1>
       </a>
       <p>
@@ -25,22 +25,22 @@ export default function Sidebar() {
       <h3 className="spc-n-l">Posts</h3>
       <ul className="no-format">
         <li>
-          <a href="/three-body-problems.html">
+          <a href="/three-body-problems">
             Three Body Problems
           </a>
         </li>
         <li>
-          <a href="/idiom-static-site-generator.html">
+          <a href="/idiom-static-site-generator">
             Idiom: A Simple Static Site Generator in React
           </a>
         </li>
         <li>
-          <a href="/procedural-landscapes.html">
+          <a href="/procedural-landscapes">
             Procedurally Generated Landscapes
           </a>
         </li>
         <li>
-          <a href="/gesture-detection-using-tensorflowjs.html">
+          <a href="/gesture-detection-using-tensorflowjs">
             Gesture Detection Using Tensorflow.js
           </a>
         </li>

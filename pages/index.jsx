@@ -15,14 +15,14 @@
 
         <h3 className="spc-n-l">Recent Posts</h3>
         <ul className="no-format">
-          <li><a href="/idiom-static-site-generator.html">Idiom: A Simple Static Site Generator in React</a></li>
+          <li><a href="/idiom-static-site-generator">Idiom: A Simple Static Site Generator in React</a></li>
           <li>
-            <a href="/procedural-landscapes.html">
+            <a href="/procedural-landscapes">
               Procedurally Generated Landscapes
             </a>
           </li>
           <li>
-            <a href="/gesture-detection-using-tensorflowjs.html">
+            <a href="/gesture-detection-using-tensorflowjs">
               Gesture Detection Using Tensorflow.js
             </a>
           </li>
