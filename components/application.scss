@@ -93,6 +93,18 @@ ul.no-format {
   margin-bottom: 0.25em;
 }
 
+.spc-n {
+  margin-top: 1em;
+}
+
+.spc-n-sm {
+  margin-top: 0.5em;
+}
+
+.spc-n-tiny {
+  margin-top: 0.25em;
+}
+
 .spc-n-l {
   margin-top: 2em;
 }
@@ -120,9 +132,8 @@ ul.no-format {
   font-size: 0.75em;
   color: $color-text-light;
   text-align: center;
-  margin-bottom: 2em;
   max-width: 75%;
-  margin: 0 auto;
+  margin: 1em auto 2em;
   line-height: 150%
 }
 
