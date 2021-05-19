@@ -1,7 +1,14 @@
 <PostLayout>
   <Helmet>
     <title>Three Body Problems | choxi</title>
+    <meta property="og:url" content="https://choxi.github.io/three-body-problems" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Three Body Problems | choxi" />
+    <meta property="og:description"
+          content="The Three Body Problem is a great example of a system that follows very basic rules individually (there's only one rule, the law of gravitation), but explodes in complexity when we add more units. How many problems are there like the Three Body Problem?" />
+    <meta property="og:image" content="https://choxi.github.io/assets/unfurls/three-body-problems.png" />
   </Helmet>
+
   <div className="post">
     <h1 className="spc-n-zero"> Three Body Problems </h1>
 
