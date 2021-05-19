@@ -14,7 +14,7 @@
 
 
     <p>
-      The <a href="https://en.wikipedia.org/wiki/Three-body_problem">Three Body Problem</a> is a famous problem in physics. For any two orbiting bodies, we can predict their exact position and trajectory at any time in the future using Newton's Law of Gravitation. But if we introduce a third body, there is no known formula to predict the trajectory of each body into the future. We can still figure it out, but not formulaically. The only way to do it is to run a simulation where we start with the initial mass and velocity of each body, calculate the forces on each, move them one step forward, and repeat.
+      The <a href="https://en.wikipedia.org/wiki/Three-body_problem">Three Body Problem</a> is a famous problem in physics. For any two orbiting bodies, we can predict their exact position and trajectory at any time in the future using Newton's Law of Gravitation. But if we introduce a third body, there is no known formula to predict the trajectory of each body. We can still figure it out, but not formulaically. The only way to do it is to run a simulation where we start with the initial mass and velocity of each body, calculate the forces on each, move them one step forward, and repeat.
     </p>
 
     <Orbits />
