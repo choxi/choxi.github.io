@@ -12,10 +12,6 @@
 
     <Orbits />
 
-    <div className="caption">
-      While there are no general solutions to the three body problem, there are a few for specific cases. This is a simulation of the "Figure 8", one of the few known stable three body orbits.
-    </div>
-
     <p>
       Newton published his law of gravitation and effectively solved the "Two Body Problem" in 1686, but the problem takes such a leap in difficulty with any more bodies that we haven't solved it in the ~350 years since then. The challenge is well described in the plot of <a href="https://en.wikipedia.org/wiki/The_Three-Body_Problem_(novel)">The Three-Body Problem</a>, where an advanced alien civilization goes through repeated near-extinction events because of their inability to predict their planet's chaotic orbit in a system with three stars.
     </p>

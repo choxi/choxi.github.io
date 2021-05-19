@@ -20,8 +20,8 @@ export default class P5 extends React.Component {
   }
 
   render() {
-    const { width, height } = this.props
-    return <div id="p5-canvas" ref={ this.canvasRef } width="100%"></div>
+    const { renderID } = this.props
+    return <div id="p5-canvas" ref={ this.canvasRef } width="100%" data-render-id={ renderID }></div>
   }
 }
 
