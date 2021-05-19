@@ -43393,7 +43393,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var import_react11 = __toModule(require_react());
   function Sidebar() {
     return /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("a", {
-      href: "/index.html",
+      href: "/",
       className: "reset"
     }, /* @__PURE__ */ import_react11.default.createElement("h1", {
       className: "spc-n-zero"
@@ -43419,13 +43419,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }, "Posts"), /* @__PURE__ */ import_react11.default.createElement("ul", {
       className: "no-format"
     }, /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
-      href: "/three-body-problems.html"
+      href: "/three-body-problems"
     }, "Three Body Problems")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
-      href: "/idiom-static-site-generator.html"
+      href: "/idiom-static-site-generator"
     }, "Idiom: A Simple Static Site Generator in React")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
-      href: "/procedural-landscapes.html"
+      href: "/procedural-landscapes"
     }, "Procedurally Generated Landscapes")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
-      href: "/gesture-detection-using-tensorflowjs.html"
+      href: "/gesture-detection-using-tensorflowjs"
     }, "Gesture Detection Using Tensorflow.js"))));
   }
 
@@ -43708,11 +43708,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       }, "Recent Posts"), /* @__PURE__ */ import_react14.default.createElement("ul", {
         className: "no-format"
       }, /* @__PURE__ */ import_react14.default.createElement("li", null, /* @__PURE__ */ import_react14.default.createElement("a", {
-        href: "/idiom-static-site-generator.html"
+        href: "/idiom-static-site-generator"
       }, "Idiom: A Simple Static Site Generator in React")), /* @__PURE__ */ import_react14.default.createElement("li", null, /* @__PURE__ */ import_react14.default.createElement("a", {
-        href: "/procedural-landscapes.html"
+        href: "/procedural-landscapes"
       }, "Procedurally Generated Landscapes")), /* @__PURE__ */ import_react14.default.createElement("li", null, /* @__PURE__ */ import_react14.default.createElement("a", {
-        href: "/gesture-detection-using-tensorflowjs.html"
+        href: "/gesture-detection-using-tensorflowjs"
       }, "Gesture Detection Using Tensorflow.js")))))));
     }
   };
