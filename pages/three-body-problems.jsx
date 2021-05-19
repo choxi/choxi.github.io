@@ -13,7 +13,7 @@
     <Orbits />
 
     <p>
-      Newton published his law of gravitation and effectively solved the "Two Body Problem" in 1686, but the problem takes such a leap in difficulty with any more bodies that we haven't solved it in the ~350 years since then. The challenge is well described in the plot of <a href="https://en.wikipedia.org/wiki/The_Three-Body_Problem_(novel)">The Three-Body Problem</a>, where an advanced alien civilization goes through repeated near-extinction events because of their inability to predict their planet's chaotic orbit in a system with three stars.
+      Newton published his law of gravitation and effectively solved the "Two Body Problem" in 1686, but the problem takes such a leap in difficulty with any more bodies that we haven't solved it for > 2 bodies in the ~350 years since then. The challenge is well described in the plot of <a href="https://en.wikipedia.org/wiki/The_Three-Body_Problem_(novel)">The Three-Body Problem</a>, where an advanced alien civilization goes through repeated near-extinction events because of their inability to predict their planet's chaotic orbit in a system with three stars.
     </p>
 
     <p>
@@ -21,7 +21,7 @@
     </p>
 
     <p>
-      Genetics is one example that comes to mind. We sequenced the full human genome in 2003 and have some understanding of the rules of individual gene expression, but we still have no predictive understanding of the genome as a whole. In economics, we can predict the behavior of prototypical consumers in one market, but we know very little about how different markets interact on the macro scale. We could fully catalogue the trillions of bacteria in our guts, but would we understand how the entire microbiome behaves? You can imagine the same problem in predicting the behavior of a biosphere, climate change, condensed matter, or any other situation where we have that follow simple rules individually but result in complex behavior when taken as a whole.
+      Genetics is one example that comes to mind. We sequenced the full human genome in 2003 and have some understanding of the rules of individual gene expression, but we still have no predictive understanding of the genome as a whole. In economics, we can predict the behavior of prototypical consumers in one market, but we know very little about how different markets interact on the macro scale. We could fully catalogue the trillions of bacteria in our guts, but would we understand how the entire microbiome behaves? You can imagine the same problem in predicting the behavior of a biosphere, climate change, condensed matter, or any other scenario that follows simple rules at a unit level but results in complex behavior when taken as a whole.
     </p>
 
     <p>
@@ -33,7 +33,7 @@
     </blockquote>
 
     <p>
-      Stephen Wolfram calls them <a href="https://en.wikipedia.org/wiki/Computational_irreducibility">computationally irreducible problems </a> and believes they might imply the future is fundamentally unpredictable. Imagine that one day we did discover a Universal Theory of Everything. It’s just one simple rule, and with it we can explain the emergence of every particle, field, or force from the very beginning of the Big Bang. How much would we actually be able to <i>predict</i> though? If we knew the state of every atom in the galaxy, we may still have to simulate it to predict how its stars and planets will evolve.
+      Stephen Wolfram calls them <a href="https://en.wikipedia.org/wiki/Computational_irreducibility">computationally irreducible problems </a> and believes they might imply the future is fundamentally unpredictable if we can't find "pockets of reducibility" that give us shortcuts to a full simulation. Imagine that one day we did discover a Universal Theory of Everything: it’s just one simple rule, and with it we can explain the emergence of every particle, field, or force from the very beginning of the Big Bang. How much would we actually be able to <i>predict</i> though? If we knew the state of every atom in the galaxy, we may still have to simulate it to predict how its stars and planets will evolve.
     </p>
 
     <p>
