@@ -13,7 +13,7 @@
     <Orbits />
 
     <div className="caption">
-      A simulation of the "Figure 8", one of the few known stable three body orbits.
+      While there are no general solutions to the three body problem, there are a few for specific cases. This is a simulation of the "Figure 8", one of the few known stable three body orbits.
     </div>
 
     <p>
