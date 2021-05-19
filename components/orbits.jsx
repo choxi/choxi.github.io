@@ -53,9 +53,9 @@ export default class Orbits extends React.Component {
           const v1 = v2
 
           let bodies = [
-            new Body(1, x1, v1, 1, Color.palettes.flat.alizarin),
+            new Body(1, x1, v1, 1, Color.palettes.flat.emerald),
             new Body(2, x2, v2, 1, Color.palettes.flat.amethyst),
-            new Body(3, x3, v3, 1, Color.palettes.flat.asbestos)
+            new Body(3, x3, v3, 1, Color.palettes.flat.peterRiver)
           ]
 
           let points = []
