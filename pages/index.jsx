@@ -15,7 +15,16 @@
 
         <h3 className="spc-n-l">Recent Posts</h3>
         <ul className="no-format">
-          <li><a href="/idiom-static-site-generator">Idiom: A Simple Static Site Generator in React</a></li>
+          <li>
+            <a href="/three-body-problems">
+              Three Body Problems
+            </a>
+          </li>
+          <li>
+            <a href="/idiom-static-site-generator">
+              Idiom: A Simple Static Site Generator in React
+            </a>
+          </li>
           <li>
             <a href="/procedural-landscapes">
               Procedurally Generated Landscapes
