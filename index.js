@@ -2440,11 +2440,11 @@
       if (true) {
         (function() {
           "use strict";
-          var React13 = require_react();
+          var React15 = require_react();
           var _assign = require_object_assign();
           var Scheduler = require_scheduler();
           var tracing = require_tracing();
-          var ReactSharedInternals = React13.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+          var ReactSharedInternals = React15.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
           function warn3(format) {
             {
               for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -2476,7 +2476,7 @@
               Function.prototype.apply.call(console[level], console, argsWithFormat);
             }
           }
-          if (!React13) {
+          if (!React15) {
             {
               throw Error("ReactDOM was loaded before React. Make sure you load the React package before loading ReactDOM.");
             }
@@ -3692,7 +3692,7 @@
           var didWarnInvalidChild = false;
           function flattenChildren(children) {
             var content = "";
-            React13.Children.forEach(children, function(child) {
+            React15.Children.forEach(children, function(child) {
               if (child == null) {
                 return;
               }
@@ -3703,7 +3703,7 @@
           function validateProps(element, props) {
             {
               if (typeof props.children === "object" && props.children !== null) {
-                React13.Children.forEach(props.children, function(child) {
+                React15.Children.forEach(props.children, function(child) {
                   if (child == null) {
                     return;
                   }
@@ -10896,7 +10896,7 @@
           }
           var fakeInternalInstance = {};
           var isArray = Array.isArray;
-          var emptyRefsObject = new React13.Component().refs;
+          var emptyRefsObject = new React15.Component().refs;
           var didWarnAboutStateAssignmentForComponent;
           var didWarnAboutUninitializedState;
           var didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
@@ -41097,8 +41097,8 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       function _interopDefault(ex) {
         return ex && typeof ex === "object" && "default" in ex ? ex["default"] : ex;
       }
-      var React13 = require_react();
-      var React__default = _interopDefault(React13);
+      var React15 = require_react();
+      var React__default = _interopDefault(React15);
       function _defineProperty2(obj, key, value) {
         if (key in obj) {
           Object.defineProperty(obj, key, {
@@ -41181,7 +41181,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
               return /* @__PURE__ */ React__default.createElement(WrappedComponent, this.props);
             };
             return SideEffect2;
-          }(React13.PureComponent);
+          }(React15.PureComponent);
           _defineProperty2(SideEffect, "displayName", "SideEffect(" + getDisplayName(WrappedComponent) + ")");
           _defineProperty2(SideEffect, "canUseDOM", canUseDOM);
           return SideEffect;
@@ -41287,7 +41287,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   });
 
   // dist/_index.jsx
-  var import_react12 = __toModule(require_react());
+  var import_react14 = __toModule(require_react());
   var import_react_dom = __toModule(require_react_dom());
 
   // components/Code.jsx
@@ -42131,6 +42131,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       return new Color(newR, newG, newB, newA);
     }
   };
+  Color.red = new Color(255, 0, 0);
+  Color.green = new Color(0, 255, 0);
+  Color.blue = new Color(0, 0, 255);
   Color.palettes = {
     tron: {
       blue: new Color(95, 212, 230),
@@ -43194,12 +43197,160 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }, props.children);
   }
 
-  // components/p5-canvas.jsx
+  // components/orbits.jsx
+  var import_react9 = __toModule(require_react());
+
+  // components/p5.jsx
   var import_react8 = __toModule(require_react());
   var import_p52 = __toModule(require_p5_min());
-  var P5Canvas = class extends import_react8.default.Component {
+  var P5 = class extends import_react8.default.Component {
+    constructor(props) {
+      super(props);
+      this.canvasRef = import_react8.default.createRef();
+    }
     componentDidMount() {
-      window.p5 = import_p52.default;
+      const {children, width, height} = this.props;
+      const w = parseInt(width.replace("px", ""));
+      const h = parseInt(height.replace("px", ""));
+      const pageWidth = this.canvasRef.current.clientWidth;
+      const pageHeight = pageWidth * h / w;
+      new import_p52.default((p) => children(p, pageWidth, pageHeight), "p5-canvas");
+    }
+    render() {
+      return /* @__PURE__ */ import_react8.default.createElement("div", {
+        id: "p5-canvas",
+        ref: this.canvasRef,
+        width: "100%"
+      });
+    }
+  };
+  var p5_default = P5;
+  P5.defaultProps = {
+    width: 100,
+    height: 100
+  };
+
+  // components/orbits.jsx
+  var Orbits = class extends import_react9.default.Component {
+    constructor(props) {
+      super(props);
+      this.state = {mass: 1};
+    }
+    handleSlider(event) {
+      const mass = parseFloat(event.target.value);
+      this.setState({mass});
+    }
+    render() {
+      const {mass, renderID} = this.state;
+      return /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement(p5_default, {
+        width: "2",
+        height: "1"
+      }, (p, width, height) => {
+        class Point {
+          constructor(location2, color) {
+            this.location = location2;
+            this.color = color;
+          }
+          render(p2) {
+            const {x, y} = this.location;
+            p2.fill(this.color.toP5(p2));
+            p2.ellipse(x, y, 3);
+          }
+        }
+        class Body {
+          constructor(id, position, velocity, mass2, color) {
+            this.id = id;
+            this.position = position;
+            this.mass = mass2;
+            this.velocity = velocity;
+            this.color = color;
+          }
+          render(p2) {
+            const {x, y} = this.position;
+            const {color, mass: mass2} = this;
+            const size = Math.sqrt(mass2) * 15;
+            const newX = x * 200;
+            const newY = y * 200;
+            p2.fill(color.toP5(p2));
+            p2.ellipse(newX, newY, size);
+          }
+        }
+        const scale = 1;
+        const x1 = new vector_default(0.97, 0.243).multiply(scale);
+        const x2 = x1.multiply(-1);
+        const x3 = new vector_default(0, 0);
+        const v3 = new vector_default(-0.932, 0.864);
+        const v2 = v3.multiply(-0.5);
+        const v1 = v2;
+        let bodies = [
+          new Body(1, x1, v1, 1, color_default.palettes.flat.emerald),
+          new Body(2, x2, v2, 1, color_default.palettes.flat.amethyst),
+          new Body(3, x3, v3, 1, color_default.palettes.flat.peterRiver)
+        ];
+        let points = [];
+        let t = -1;
+        const deltaT = 0.01;
+        p.setup = () => {
+          p.createCanvas(width, height, p.WEBGL);
+          p.fill(255, 0, 0);
+          p.noStroke();
+        };
+        p.draw = () => {
+          t += 1;
+          p.clear(0);
+          points.forEach((point) => point.render(p));
+          bodies.forEach((body) => body.render(p));
+          const newBodies = [];
+          bodies.forEach((body) => {
+            let totalForce = new vector_default(0, 0);
+            bodies.forEach((otherBody) => {
+              if (body.id === otherBody.id) {
+                return;
+              }
+              const vector = otherBody.position.subtract(body.position);
+              const distance = vector.magnitude();
+              const force = vector.unit().multiply(body.mass * otherBody.mass / Math.pow(distance, 2));
+              totalForce = totalForce.add(force);
+            });
+            const newVelocity = body.velocity.add(totalForce.multiply(deltaT));
+            const newPosition = body.position.add(newVelocity.multiply(deltaT));
+            if (body.id === 1) {
+              newBodies.push(new Body(body.id, newPosition, newVelocity, this.state.mass, body.color));
+            } else {
+              newBodies.push(new Body(body.id, newPosition, newVelocity, body.mass, body.color));
+            }
+            if (t % 5 === 0) {
+              points.push(new Point(newPosition.multiply(200), body.color));
+            }
+          });
+          bodies = newBodies;
+          if (points.length > 1e3) {
+            points = points.slice(1, points.length);
+          }
+        };
+      }), /* @__PURE__ */ import_react9.default.createElement("div", {
+        className: "caption"
+      }, 'While there are no general solutions to the three body problem, there are a few for specific cases. This is a simulation of the "Figure 8", one of the few known stable three body orbits. Try changing the mass of the green body below to see how chaotic the orbits become.', /* @__PURE__ */ import_react9.default.createElement("div", {
+        className: "spc-n"
+      }, /* @__PURE__ */ import_react9.default.createElement("input", {
+        type: "range",
+        min: 0.5,
+        max: 1.5,
+        step: 0.1,
+        defaultValue: mass,
+        onChange: (e) => this.handleSlider(e),
+        style: {verticalAlign: "bottom"}
+      }), /* @__PURE__ */ import_react9.default.createElement("span", null, mass))));
+    }
+  };
+  var orbits_default = Orbits;
+
+  // components/p5-canvas.jsx
+  var import_react10 = __toModule(require_react());
+  var import_p54 = __toModule(require_p5_min());
+  var P5Canvas = class extends import_react10.default.Component {
+    componentDidMount() {
+      window.p5 = import_p54.default;
       window.eval(`
       const app = new p5(p => {
         ${this.props.children}
@@ -43208,7 +43359,7 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
     }
     render() {
       const {width, height} = this.props;
-      return /* @__PURE__ */ import_react8.default.createElement("div", {
+      return /* @__PURE__ */ import_react10.default.createElement("div", {
         id: "p5-canvas",
         width,
         height
@@ -43222,71 +43373,73 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   };
 
   // components/post-layout.jsx
-  var import_react10 = __toModule(require_react());
+  var import_react12 = __toModule(require_react());
 
   // components/sidebar.jsx
-  var import_react9 = __toModule(require_react());
+  var import_react11 = __toModule(require_react());
   function Sidebar() {
-    return /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    return /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "/index.html",
       className: "reset"
-    }, /* @__PURE__ */ import_react9.default.createElement("h1", {
+    }, /* @__PURE__ */ import_react11.default.createElement("h1", {
       className: "spc-n-zero"
-    }, " roshan choxi ")), /* @__PURE__ */ import_react9.default.createElement("p", null, "Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science, technology, and design."), /* @__PURE__ */ import_react9.default.createElement("ul", {
+    }, " roshan choxi ")), /* @__PURE__ */ import_react11.default.createElement("p", null, "Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science, technology, and design."), /* @__PURE__ */ import_react11.default.createElement("ul", {
       className: "no-format"
-    }, /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "https://twitter.com/choxi",
       target: "_blank"
-    }, "Twitter")), /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, "Twitter")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "https://github.com/choxi",
       target: "_blank"
-    }, "GitHub")), /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, "GitHub")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "https://www.linkedin.com/in/choxi",
       target: "_blank"
-    }, "LinkedIn"))), /* @__PURE__ */ import_react9.default.createElement("h3", {
+    }, "LinkedIn"))), /* @__PURE__ */ import_react11.default.createElement("h3", {
       className: "spc-n-l"
-    }, "Projects"), /* @__PURE__ */ import_react9.default.createElement("ul", {
+    }, "Projects"), /* @__PURE__ */ import_react11.default.createElement("ul", {
       className: "no-format"
-    }, /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "https://pixel.gl"
-    }, "Pixel"))), /* @__PURE__ */ import_react9.default.createElement("h3", {
+    }, "Pixel"))), /* @__PURE__ */ import_react11.default.createElement("h3", {
       className: "spc-n-l"
-    }, "Posts"), /* @__PURE__ */ import_react9.default.createElement("ul", {
+    }, "Posts"), /* @__PURE__ */ import_react11.default.createElement("ul", {
       className: "no-format"
-    }, /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
+      href: "/three-body-problems.html"
+    }, "Three Body Problems")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "/idiom-static-site-generator.html"
-    }, "Idiom: A Simple Static Site Generator in React")), /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, "Idiom: A Simple Static Site Generator in React")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "/procedural-landscapes.html"
-    }, "Procedurally Generated Landscapes")), /* @__PURE__ */ import_react9.default.createElement("li", null, /* @__PURE__ */ import_react9.default.createElement("a", {
+    }, "Procedurally Generated Landscapes")), /* @__PURE__ */ import_react11.default.createElement("li", null, /* @__PURE__ */ import_react11.default.createElement("a", {
       href: "/gesture-detection-using-tensorflowjs.html"
     }, "Gesture Detection Using Tensorflow.js"))));
   }
 
   // components/post-layout.jsx
   function PostLayout(props) {
-    return /* @__PURE__ */ import_react10.default.createElement("div", {
+    return /* @__PURE__ */ import_react12.default.createElement("div", {
       className: "layout-sidebar"
-    }, /* @__PURE__ */ import_react10.default.createElement(Helmet_default, null, /* @__PURE__ */ import_react10.default.createElement("script", {
+    }, /* @__PURE__ */ import_react12.default.createElement(Helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("script", {
       async: true,
       src: "https://www.googletagmanager.com/gtag/js?id=UA-86991778-1"
-    }), /* @__PURE__ */ import_react10.default.createElement("script", null, `
+    }), /* @__PURE__ */ import_react12.default.createElement("script", null, `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
 
           gtag('config', 'UA-86991778-1');
-          `)), /* @__PURE__ */ import_react10.default.createElement("div", {
+          `), /* @__PURE__ */ import_react12.default.createElement("title", null, "choxi")), /* @__PURE__ */ import_react12.default.createElement("div", {
       className: "layout-sidebar--sidebar pad-l sm-hide lg-show"
-    }, /* @__PURE__ */ import_react10.default.createElement(Sidebar, null)), /* @__PURE__ */ import_react10.default.createElement("div", {
+    }, /* @__PURE__ */ import_react12.default.createElement(Sidebar, null)), /* @__PURE__ */ import_react12.default.createElement("div", {
       className: "layout-sidebar--content pad-l"
-    }, /* @__PURE__ */ import_react10.default.createElement("div", null, props.children), /* @__PURE__ */ import_react10.default.createElement("div", {
+    }, /* @__PURE__ */ import_react12.default.createElement("div", null, props.children), /* @__PURE__ */ import_react12.default.createElement("div", {
       className: "sm-show lg-hide"
-    }, /* @__PURE__ */ import_react10.default.createElement("hr", null), /* @__PURE__ */ import_react10.default.createElement(Sidebar, null))));
+    }, /* @__PURE__ */ import_react12.default.createElement("hr", null), /* @__PURE__ */ import_react12.default.createElement(Sidebar, null))));
   }
 
   // components/raindrops.jsx
-  var import_react11 = __toModule(require_react());
-  var import_p53 = __toModule(require_p5_min());
+  var import_react13 = __toModule(require_react());
+  var import_p55 = __toModule(require_p5_min());
 
   // node_modules/uuid/dist/esm-browser/rng.js
   var getRandomValues;
@@ -43343,19 +43496,19 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   var v4_default = v4;
 
   // components/raindrops.jsx
-  var Raindrops = class extends import_react11.default.Component {
+  var Raindrops = class extends import_react13.default.Component {
     componentDidMount() {
       const {width, height} = this.props;
       const w = width ? width : window.innerWidth;
       const h = height ? height : window.innerHeight;
       console.log("starting playground");
-      const app = new import_p53.default((p) => sketch(w, h, p), "p5-canvas");
+      const app = new import_p55.default((p) => sketch(w, h, p), "p5-canvas");
     }
     render() {
       const {width, height} = this.props;
       const w = width ? width : window.innerWidth;
       const h = height ? height : window.innerHeight;
-      return /* @__PURE__ */ import_react11.default.createElement("div", {
+      return /* @__PURE__ */ import_react13.default.createElement("div", {
         id: "p5-canvas",
         width: w,
         height: h,
@@ -43418,49 +43571,49 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   };
 
   // dist/_index.jsx
-  var GestureDetectionUsingTensorflowjs = class extends import_react12.default.Component {
+  var GestureDetectionUsingTensorflowjs = class extends import_react14.default.Component {
     render() {
-      return /* @__PURE__ */ import_react12.default.createElement(PostLayout, null, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, "choxi | Gesture Detection Using TensorflowJS ")), /* @__PURE__ */ import_react12.default.createElement("div", {
+      return /* @__PURE__ */ import_react14.default.createElement(PostLayout, null, /* @__PURE__ */ import_react14.default.createElement(helmet_default, null, /* @__PURE__ */ import_react14.default.createElement("title", null, "choxi | Gesture Detection Using TensorflowJS ")), /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "post"
-      }, /* @__PURE__ */ import_react12.default.createElement("h1", {
+      }, /* @__PURE__ */ import_react14.default.createElement("h1", {
         className: "spc-n-zero"
-      }, "Gesture Detection Using Tensorflow.js"), /* @__PURE__ */ import_react12.default.createElement("p", null, "I started this project to create an end-to-end training tool for gesture recognition using deep learning. You can view the code ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "Gesture Detection Using Tensorflow.js"), /* @__PURE__ */ import_react14.default.createElement("p", null, "I started this project to create an end-to-end training tool for gesture recognition using deep learning. You can view the code ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://github.com/choxi/rune"
-      }, "here"), " and try the demo ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "here"), " and try the demo ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://priceless-jones-bef040.netlify.com/"
-      }, "here"), "."), /* @__PURE__ */ import_react12.default.createElement("img", {
+      }, "here"), "."), /* @__PURE__ */ import_react14.default.createElement("img", {
         src: "/assets/gesture-detection-overview.gif"
-      }), /* @__PURE__ */ import_react12.default.createElement("p", null, "The idea came from some of my work with the ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }), /* @__PURE__ */ import_react14.default.createElement("p", null, "The idea came from some of my work with the ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://inkandswitch.com/"
-      }, "Ink & Switch"), " lab. Our team was building a tablet application geared towards creators and found there were many unique challenges, one of which is the lack of input options."), /* @__PURE__ */ import_react12.default.createElement("p", null, 'Tablet devices lack input expressiveness and speed compared to a desktop computer. The basic building blocks of all mobile inputs are tap, double tap, and swipe. During one of our design sessions, our team lead suggested the idea of using "magic runes" or "advanced gestures" as user inputs. If a user could draw geometric shapes to trigger certain actions, it would allow for more expressive inputs and controls without taking up valuable screen real estate. Instead of tapping a "delete" button, you might draw an "X" to delete an object. To navigate between windows, draw an arrow in some direction or draw a star to bookmark a note.'), /* @__PURE__ */ import_react12.default.createElement("h2", null, "The Prototype"), /* @__PURE__ */ import_react12.default.createElement("p", null, 'As a starting point, you can approximate gesture detection as a similar problem to handwriting recognition. Fortunately, handwriting recognition is almost the "Hello World" of machine learning tutorials so I was able to use those tutorials as a blueprint.'), /* @__PURE__ */ import_react12.default.createElement("p", null, "The first step was to collect data. The ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "Ink & Switch"), " lab. Our team was building a tablet application geared towards creators and found there were many unique challenges, one of which is the lack of input options."), /* @__PURE__ */ import_react14.default.createElement("p", null, 'Tablet devices lack input expressiveness and speed compared to a desktop computer. The basic building blocks of all mobile inputs are tap, double tap, and swipe. During one of our design sessions, our team lead suggested the idea of using "magic runes" or "advanced gestures" as user inputs. If a user could draw geometric shapes to trigger certain actions, it would allow for more expressive inputs and controls without taking up valuable screen real estate. Instead of tapping a "delete" button, you might draw an "X" to delete an object. To navigate between windows, draw an arrow in some direction or draw a star to bookmark a note.'), /* @__PURE__ */ import_react14.default.createElement("h2", null, "The Prototype"), /* @__PURE__ */ import_react14.default.createElement("p", null, 'As a starting point, you can approximate gesture detection as a similar problem to handwriting recognition. Fortunately, handwriting recognition is almost the "Hello World" of machine learning tutorials so I was able to use those tutorials as a blueprint.'), /* @__PURE__ */ import_react14.default.createElement("p", null, "The first step was to collect data. The ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://en.wikipedia.org/wiki/MNIST_database"
-      }, "MNIST handwriting data set"), " commonly used in deep learning tutorials has 70,000 examples, so I assumed I'd need at least on the order of 1,000's to build a proof-of-concept. I started by building a simple React app with a canvas element that allows you to draw gestures using touch input and stored recorded gestures on Airtable."), /* @__PURE__ */ import_react12.default.createElement("img", {
+      }, "MNIST handwriting data set"), " commonly used in deep learning tutorials has 70,000 examples, so I assumed I'd need at least on the order of 1,000's to build a proof-of-concept. I started by building a simple React app with a canvas element that allows you to draw gestures using touch input and stored recorded gestures on Airtable."), /* @__PURE__ */ import_react14.default.createElement("img", {
         src: "/assets/gesture-detection-recording-gestures.gif"
-      }), /* @__PURE__ */ import_react12.default.createElement("p", null, "After manually generating a couple hundred gesture examples*, I started on the detector. ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }), /* @__PURE__ */ import_react14.default.createElement("p", null, "After manually generating a couple hundred gesture examples*, I started on the detector. ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://www.tensorflow.org/"
-      }, "TensorFlow"), " is one of the most popular libraries for building neural networks, and they conveniently have a client-side ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "TensorFlow"), " is one of the most popular libraries for building neural networks, and they conveniently have a client-side ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://js.tensorflow.org/"
-      }, "TensorFlowjs library"), ". I copied the Convolutional Neural Network (CNN) architecture they use in their ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "TensorFlowjs library"), ". I copied the Convolutional Neural Network (CNN) architecture they use in their ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://js.tensorflow.org/tutorials/mnist.html"
-      }, "MNIST recognizer tutorial"), " as a starting point, so the brunt of the work was now preprocessing the gestures to an input type that the neural net could understand. The MNIST model expects a 28x28 single-channel (i.e. grayscale) pixel input, so we have to scale the gesture down to that size."), /* @__PURE__ */ import_react12.default.createElement("h2", null, "Debugging the Gesture Detector"), /* @__PURE__ */ import_react12.default.createElement("p", null, "Having plugged it all together, I trained the model on the samples I had generated and the results were\u2026 disappointing. I was getting 10\u201320% accuracy, and creating more samples wasn't improving the model at all. The preprocessing code was my initial suspect, so I wrote a Bitmap component in React to inspect what the neural net was \u201Cseeing\u201D right after preprocessing. Here\u2019s what the neural network was receiving as inputs compared to the original gesture:"), /* @__PURE__ */ import_react12.default.createElement("img", {
+      }, "MNIST recognizer tutorial"), " as a starting point, so the brunt of the work was now preprocessing the gestures to an input type that the neural net could understand. The MNIST model expects a 28x28 single-channel (i.e. grayscale) pixel input, so we have to scale the gesture down to that size."), /* @__PURE__ */ import_react14.default.createElement("h2", null, "Debugging the Gesture Detector"), /* @__PURE__ */ import_react14.default.createElement("p", null, "Having plugged it all together, I trained the model on the samples I had generated and the results were\u2026 disappointing. I was getting 10\u201320% accuracy, and creating more samples wasn't improving the model at all. The preprocessing code was my initial suspect, so I wrote a Bitmap component in React to inspect what the neural net was \u201Cseeing\u201D right after preprocessing. Here\u2019s what the neural network was receiving as inputs compared to the original gesture:"), /* @__PURE__ */ import_react14.default.createElement("img", {
         src: "/assets/gesture-detection-debugging.png"
-      }), /* @__PURE__ */ import_react12.default.createElement("img", {
+      }), /* @__PURE__ */ import_react14.default.createElement("img", {
         src: "/assets/gesture-detection-debugging-2.png"
-      }), /* @__PURE__ */ import_react12.default.createElement("p", null, "The gestures are losing most of their information during preprocessing and look like a random scattering of pixels. I traced down the issue to the canvas web API, the scale transform was losing most of the relevant path information. There might be more elegant ways of scaling down the gesture without losing the important information, but I found that just increasing the stroke width of the gestures worked for my purposes. The CNN model immediately improved in accuracy, jumping up to ~70%. To make sure I wasn't just overfitting to the training data, I started to shuffle the data and split it into train/test sets before training."), /* @__PURE__ */ import_react12.default.createElement("h2", null, "Conclusions"), /* @__PURE__ */ import_react12.default.createElement("p", null, "After fixing the preprocessing, my model started to work as expected and improved in accuracy with more data samples. I was surprised to find that it performed with > 90% accuracy after just a few hundred examples, and reached > 95% after about 500 examples across a set of six different gestures. It was convenient to have the entire pipeline from data collection, training, and live testing built in one client-side JS app: as I found examples that confused the detector, I could just create a few dozen more of those examples, and add them to the training data."), /* @__PURE__ */ import_react12.default.createElement("img", {
+      }), /* @__PURE__ */ import_react14.default.createElement("p", null, "The gestures are losing most of their information during preprocessing and look like a random scattering of pixels. I traced down the issue to the canvas web API, the scale transform was losing most of the relevant path information. There might be more elegant ways of scaling down the gesture without losing the important information, but I found that just increasing the stroke width of the gestures worked for my purposes. The CNN model immediately improved in accuracy, jumping up to ~70%. To make sure I wasn't just overfitting to the training data, I started to shuffle the data and split it into train/test sets before training."), /* @__PURE__ */ import_react14.default.createElement("h2", null, "Conclusions"), /* @__PURE__ */ import_react14.default.createElement("p", null, "After fixing the preprocessing, my model started to work as expected and improved in accuracy with more data samples. I was surprised to find that it performed with > 90% accuracy after just a few hundred examples, and reached > 95% after about 500 examples across a set of six different gestures. It was convenient to have the entire pipeline from data collection, training, and live testing built in one client-side JS app: as I found examples that confused the detector, I could just create a few dozen more of those examples, and add them to the training data."), /* @__PURE__ */ import_react14.default.createElement("img", {
         src: "/assets/gesture-detection-final.gif"
-      }), /* @__PURE__ */ import_react12.default.createElement("p", null, "My model seems to perform on par with the ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }), /* @__PURE__ */ import_react14.default.createElement("p", null, "My model seems to perform on par with the ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "http://depts.washington.edu/madlab/proj/dollar/index.html"
-      }, "$1 Recognizer"), ' written by researchers at Microsoft and the University of Washington. The $1 Recognizer constructs a "geometric template" from each gesture and feeds those features into a nearest-neighbor algorithm for classification. The comparison is illustrative of the pros and cons of deep learning: the $1 Recognizer requires some specialized knowledge of geometry to pull out the relevant features of a shape and classify them, but the deep learning model can figure out those features directly from bitmaps of gestures. The downside of the deep learning model is that it requires thousands of training samples, whereas the $1 Recognizer only requires a handful of samples per shape.'), /* @__PURE__ */ import_react12.default.createElement("p", null, "But the main benefit of deep learning might be its accessibility to software engineers with no specialized training. I doubt I would be able to re-implement the $1 Recognizer, it requires a lot of prerequisite math and geometry that would have been too high of a barrier for me. The CNN does require significantly more training data, but it was conceptually simpler for a software engineer like myself to implement. I'm excited to follow the branch of deep learning where you can automatically learn and optimize neural network architectures and parameters**. It would be a very powerful tool if one day we're able to plug in a neural net in places that previously required a handcrafted algorithm."), /* @__PURE__ */ import_react12.default.createElement("h2", null, "Footnotes"), /* @__PURE__ */ import_react12.default.createElement("p", null, "* I used a mouse instead of touch to draw gestures and created all of them myself instead of sampling from various people. The detector could be improved by using touch inputs and getting samples from more users."), /* @__PURE__ */ import_react12.default.createElement("p", null, "** https://autokeras.com/")));
+      }, "$1 Recognizer"), ' written by researchers at Microsoft and the University of Washington. The $1 Recognizer constructs a "geometric template" from each gesture and feeds those features into a nearest-neighbor algorithm for classification. The comparison is illustrative of the pros and cons of deep learning: the $1 Recognizer requires some specialized knowledge of geometry to pull out the relevant features of a shape and classify them, but the deep learning model can figure out those features directly from bitmaps of gestures. The downside of the deep learning model is that it requires thousands of training samples, whereas the $1 Recognizer only requires a handful of samples per shape.'), /* @__PURE__ */ import_react14.default.createElement("p", null, "But the main benefit of deep learning might be its accessibility to software engineers with no specialized training. I doubt I would be able to re-implement the $1 Recognizer, it requires a lot of prerequisite math and geometry that would have been too high of a barrier for me. The CNN does require significantly more training data, but it was conceptually simpler for a software engineer like myself to implement. I'm excited to follow the branch of deep learning where you can automatically learn and optimize neural network architectures and parameters**. It would be a very powerful tool if one day we're able to plug in a neural net in places that previously required a handcrafted algorithm."), /* @__PURE__ */ import_react14.default.createElement("h2", null, "Footnotes"), /* @__PURE__ */ import_react14.default.createElement("p", null, "* I used a mouse instead of touch to draw gestures and created all of them myself instead of sampling from various people. The detector could be improved by using touch inputs and getting samples from more users."), /* @__PURE__ */ import_react14.default.createElement("p", null, "** https://autokeras.com/")));
     }
   };
   function initGestureDetectionUsingTensorflowjs() {
     const container = document.getElementById("GestureDetectionUsingTensorflowjs");
     if (container && container.children.length === 0) {
-      import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(GestureDetectionUsingTensorflowjs, null), container);
+      import_react_dom.default.render(/* @__PURE__ */ import_react14.default.createElement(GestureDetectionUsingTensorflowjs, null), container);
       return;
     }
     if (container && container.children.length > 0) {
-      import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(GestureDetectionUsingTensorflowjs, null), container);
+      import_react_dom.default.hydrate(/* @__PURE__ */ import_react14.default.createElement(GestureDetectionUsingTensorflowjs, null), container);
       return;
     }
     console.log(`container: GestureDetectionUsingTensorflowjs not found `);
@@ -43472,13 +43625,13 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       initGestureDetectionUsingTensorflowjs();
     });
   }
-  var IdiomStaticSiteGenerator = class extends import_react12.default.Component {
+  var IdiomStaticSiteGenerator = class extends import_react14.default.Component {
     render() {
-      return /* @__PURE__ */ import_react12.default.createElement(PostLayout, null, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, " choxi | Idiom: A Simple Static Site Generator for React ")), /* @__PURE__ */ import_react12.default.createElement("div", {
+      return /* @__PURE__ */ import_react14.default.createElement(PostLayout, null, /* @__PURE__ */ import_react14.default.createElement(helmet_default, null, /* @__PURE__ */ import_react14.default.createElement("title", null, " choxi | Idiom: A Simple Static Site Generator for React ")), /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "post"
-      }, /* @__PURE__ */ import_react12.default.createElement("h1", {
+      }, /* @__PURE__ */ import_react14.default.createElement("h1", {
         className: "spc-n-zero"
-      }, "Idiom: A Simple Static Site Generator in React"), /* @__PURE__ */ import_react12.default.createElement("p", null, "One of my favorite aspects of React is that it extends HTML and allows you to define your own elements to build up your own markup language. I wanted to do this for my personal site, so that I could write a post like this:"), /* @__PURE__ */ import_react12.default.createElement(Code, {
+      }, "Idiom: A Simple Static Site Generator in React"), /* @__PURE__ */ import_react14.default.createElement("p", null, "One of my favorite aspects of React is that it extends HTML and allows you to define your own elements to build up your own markup language. I wanted to do this for my personal site, so that I could write a post like this:"), /* @__PURE__ */ import_react14.default.createElement(Code, {
         lang: "jsx"
       }, `
         <Post>
@@ -43490,9 +43643,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
 
           <Subscribe newsletter="idiom" cta="Get updates on Idiom" />
         </Post>
-      `), /* @__PURE__ */ import_react12.default.createElement("p", null, /* @__PURE__ */ import_react12.default.createElement("a", {
+      `), /* @__PURE__ */ import_react14.default.createElement("p", null, /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://www.gatsbyjs.com"
-      }, "Gatsby"), " is a popular framework for this type of React-based static site. It's powerful but complex, requires a lot of configuration, and can be difficult to debug since it uses a lot of libraries like Webpack and GraphQL in its toolchain. This seems like overkill for a static site generator, I wanted something that:"), /* @__PURE__ */ import_react12.default.createElement("ul", null, /* @__PURE__ */ import_react12.default.createElement("li", null, "Has an extendable markup language"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Is search-engine friendly"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Has a simple toolchain with a minimal number of dependencies"), /* @__PURE__ */ import_react12.default.createElement("li", null, "Can easily be deployed to any static site host (e.g. GitHub Pages or S3)")), /* @__PURE__ */ import_react12.default.createElement("p", null, "Idiom is like a slimmed down version of Gatsby. It runs faster by using ", /* @__PURE__ */ import_react12.default.createElement("a", null, "esbuild"), " to compile your JS and ", /* @__PURE__ */ import_react12.default.createElement("a", null, "jsdom"), " for prerendering. It uses sensible defaults and favors convention over configuration, allowing you to write your pages as a pure JSX expression by autoloading your components."), /* @__PURE__ */ import_react12.default.createElement("p", null, "An Idiom site looks like this:"), /* @__PURE__ */ import_react12.default.createElement(Code, null, `
+      }, "Gatsby"), " is a popular framework for this type of React-based static site. It's powerful but complex, requires a lot of configuration, and can be difficult to debug since it uses a lot of libraries like Webpack and GraphQL in its toolchain. This seems like overkill for a static site generator, I wanted something that:"), /* @__PURE__ */ import_react14.default.createElement("ul", null, /* @__PURE__ */ import_react14.default.createElement("li", null, "Has an extendable markup language"), /* @__PURE__ */ import_react14.default.createElement("li", null, "Is search-engine friendly"), /* @__PURE__ */ import_react14.default.createElement("li", null, "Has a simple toolchain with a minimal number of dependencies"), /* @__PURE__ */ import_react14.default.createElement("li", null, "Can easily be deployed to any static site host (e.g. GitHub Pages or S3)")), /* @__PURE__ */ import_react14.default.createElement("p", null, "Idiom is like a slimmed down version of Gatsby. It runs faster by using ", /* @__PURE__ */ import_react14.default.createElement("a", null, "esbuild"), " to compile your JS and ", /* @__PURE__ */ import_react14.default.createElement("a", null, "jsdom"), " for prerendering. It uses sensible defaults and favors convention over configuration, allowing you to write your pages as a pure JSX expression by autoloading your components."), /* @__PURE__ */ import_react14.default.createElement("p", null, "An Idiom site looks like this:"), /* @__PURE__ */ import_react14.default.createElement(Code, null, `
         my-site/
           components/
             layout.jsx
@@ -43500,9 +43653,9 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
           pages/
             index.jsx
             second-page.jsx
-      `), /* @__PURE__ */ import_react12.default.createElement("p", null, "You can use React components to create shared partials like layouts, headers, or higlighted code snippets. Routes are automatically generated based on the page name, and components are automatically loaded into each page and can be referenced by the pascalcase version of their filename."), /* @__PURE__ */ import_react12.default.createElement("p", null, "Idiom is still a work in progress, but if you'd like to try it out or send along any feedback check out the ", /* @__PURE__ */ import_react12.default.createElement(Link, {
+      `), /* @__PURE__ */ import_react14.default.createElement("p", null, "You can use React components to create shared partials like layouts, headers, or higlighted code snippets. Routes are automatically generated based on the page name, and components are automatically loaded into each page and can be referenced by the pascalcase version of their filename."), /* @__PURE__ */ import_react14.default.createElement("p", null, "Idiom is still a work in progress, but if you'd like to try it out or send along any feedback check out the ", /* @__PURE__ */ import_react14.default.createElement(Link, {
         href: "https://github.com/choxi/idiomjs"
-      }, "GitHub repo"), ". This site is also built using Idiom, and you can ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "GitHub repo"), ". This site is also built using Idiom, and you can ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://github.com/choxi.github.io"
       }, "view the source code here"), ".")));
     }
@@ -43510,11 +43663,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   function initIdiomStaticSiteGenerator() {
     const container = document.getElementById("IdiomStaticSiteGenerator");
     if (container && container.children.length === 0) {
-      import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(IdiomStaticSiteGenerator, null), container);
+      import_react_dom.default.render(/* @__PURE__ */ import_react14.default.createElement(IdiomStaticSiteGenerator, null), container);
       return;
     }
     if (container && container.children.length > 0) {
-      import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(IdiomStaticSiteGenerator, null), container);
+      import_react_dom.default.hydrate(/* @__PURE__ */ import_react14.default.createElement(IdiomStaticSiteGenerator, null), container);
       return;
     }
     console.log(`container: IdiomStaticSiteGenerator not found `);
@@ -43526,25 +43679,25 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       initIdiomStaticSiteGenerator();
     });
   }
-  var Index = class extends import_react12.default.Component {
+  var Index = class extends import_react14.default.Component {
     render() {
-      return /* @__PURE__ */ import_react12.default.createElement("div", {
+      return /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "layout-absolute"
-      }, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, " choxi ")), /* @__PURE__ */ import_react12.default.createElement(raindrops_default, null), /* @__PURE__ */ import_react12.default.createElement("div", {
+      }, /* @__PURE__ */ import_react14.default.createElement(helmet_default, null, /* @__PURE__ */ import_react14.default.createElement("title", null, " choxi ")), /* @__PURE__ */ import_react14.default.createElement(raindrops_default, null), /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "layout-absolute--center"
-      }, /* @__PURE__ */ import_react12.default.createElement("div", {
+      }, /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "box box--frost"
-      }, /* @__PURE__ */ import_react12.default.createElement("div", {
+      }, /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "text-center"
-      }, /* @__PURE__ */ import_react12.default.createElement("h2", null, "Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science, technology, and design."), /* @__PURE__ */ import_react12.default.createElement("h3", {
+      }, /* @__PURE__ */ import_react14.default.createElement("h2", null, "Hi I'm Roshan, a software engineer in Chicago. This is my site where I write about science, technology, and design."), /* @__PURE__ */ import_react14.default.createElement("h3", {
         className: "spc-n-l"
-      }, "Recent Posts"), /* @__PURE__ */ import_react12.default.createElement("ul", {
+      }, "Recent Posts"), /* @__PURE__ */ import_react14.default.createElement("ul", {
         className: "no-format"
-      }, /* @__PURE__ */ import_react12.default.createElement("li", null, /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, /* @__PURE__ */ import_react14.default.createElement("li", null, /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "/idiom-static-site-generator.html"
-      }, "Idiom: A Simple Static Site Generator in React")), /* @__PURE__ */ import_react12.default.createElement("li", null, /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "Idiom: A Simple Static Site Generator in React")), /* @__PURE__ */ import_react14.default.createElement("li", null, /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "/procedural-landscapes.html"
-      }, "Procedurally Generated Landscapes")), /* @__PURE__ */ import_react12.default.createElement("li", null, /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "Procedurally Generated Landscapes")), /* @__PURE__ */ import_react14.default.createElement("li", null, /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "/gesture-detection-using-tensorflowjs.html"
       }, "Gesture Detection Using Tensorflow.js")))))));
     }
@@ -43552,11 +43705,11 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   function initIndex() {
     const container = document.getElementById("Index");
     if (container && container.children.length === 0) {
-      import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(Index, null), container);
+      import_react_dom.default.render(/* @__PURE__ */ import_react14.default.createElement(Index, null), container);
       return;
     }
     if (container && container.children.length > 0) {
-      import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(Index, null), container);
+      import_react_dom.default.hydrate(/* @__PURE__ */ import_react14.default.createElement(Index, null), container);
       return;
     }
     console.log(`container: Index not found `);
@@ -43568,36 +43721,36 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
       initIndex();
     });
   }
-  var ProceduralLandscapes = class extends import_react12.default.Component {
+  var ProceduralLandscapes = class extends import_react14.default.Component {
     render() {
-      return /* @__PURE__ */ import_react12.default.createElement(PostLayout, null, /* @__PURE__ */ import_react12.default.createElement(helmet_default, null, /* @__PURE__ */ import_react12.default.createElement("title", null, "choxi | Procedural Landscapes")), /* @__PURE__ */ import_react12.default.createElement("div", {
+      return /* @__PURE__ */ import_react14.default.createElement(PostLayout, null, /* @__PURE__ */ import_react14.default.createElement(helmet_default, null, /* @__PURE__ */ import_react14.default.createElement("title", null, "choxi | Procedural Landscapes")), /* @__PURE__ */ import_react14.default.createElement("div", {
         className: "post"
-      }, /* @__PURE__ */ import_react12.default.createElement("h1", {
+      }, /* @__PURE__ */ import_react14.default.createElement("h1", {
         className: "spc-n-zero"
-      }, "Procedurally Generated Landscapes"), /* @__PURE__ */ import_react12.default.createElement("p", null, "I've recenty been investigating the generative art field and came across this ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "Procedurally Generated Landscapes"), /* @__PURE__ */ import_react14.default.createElement("p", null, "I've recenty been investigating the generative art field and came across this ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://github.com/LingDong-/shan-shui-inf"
-      }, "Procedurally Generated Chinese Landscape"), "."), /* @__PURE__ */ import_react12.default.createElement("video", {
+      }, "Procedurally Generated Chinese Landscape"), "."), /* @__PURE__ */ import_react14.default.createElement("video", {
         src: "/assets/chinese-landscape.mov#t=0.001",
         controls: true
-      }), /* @__PURE__ */ import_react12.default.createElement("p", null, "You can view ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }), /* @__PURE__ */ import_react14.default.createElement("p", null, "You can view ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://lingdong-.github.io/shan-shui-inf/"
-      }, "the live project here"), " or the ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "the live project here"), " or the ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://github.com/LingDong-/shan-shui-inf"
-      }, "source code here"), ". The landscape is completely generated from geometric primitives, and scrolls infinitely. I wanted to explore some of the techniques used, so I made my own version inspired by the landscape in Chicago right now:"), /* @__PURE__ */ import_react12.default.createElement(city_landscape_default2, null), /* @__PURE__ */ import_react12.default.createElement("p", null, "I built it with ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "source code here"), ". The landscape is completely generated from geometric primitives, and scrolls infinitely. I wanted to explore some of the techniques used, so I made my own version inspired by the landscape in Chicago right now:"), /* @__PURE__ */ import_react14.default.createElement(city_landscape_default2, null), /* @__PURE__ */ import_react14.default.createElement("p", null, "I built it with ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "http://p5js.org"
-      }, "p5.js"), " to generate the graphics. The key techniques I used are the procedurally generated buildings and the infinite scrolling effect. Performance can be very slow if objects need to be re-rendered on each frame, so the scrolling effect is done by generating windows of the landscape offscreen and then stitching them together as the scroll moves horizontally. For more detail on the implementation, you can view the relatively short ", /* @__PURE__ */ import_react12.default.createElement("a", {
+      }, "p5.js"), " to generate the graphics. The key techniques I used are the procedurally generated buildings and the infinite scrolling effect. Performance can be very slow if objects need to be re-rendered on each frame, so the scrolling effect is done by generating windows of the landscape offscreen and then stitching them together as the scroll moves horizontally. For more detail on the implementation, you can view the relatively short ", /* @__PURE__ */ import_react14.default.createElement("a", {
         href: "https://github.com/choxi/generative-experiments"
-      }, "source code here"), "."), /* @__PURE__ */ import_react12.default.createElement("p", null, "Most graphics tools emulate the physical experience of drawing and painting, but that misses some interesting opportunities to approach art differently. I like these infinitely scrolling landscapes as an example of a form of art that couldn\u2019t be done by hand, and maybe wasn\u2019t even imaginable, without computers.")));
+      }, "source code here"), "."), /* @__PURE__ */ import_react14.default.createElement("p", null, "Most graphics tools emulate the physical experience of drawing and painting, but that misses some interesting opportunities to approach art differently. I like these infinitely scrolling landscapes as an example of a form of art that couldn\u2019t be done by hand, and maybe wasn\u2019t even imaginable, without computers.")));
     }
   };
   function initProceduralLandscapes() {
     const container = document.getElementById("ProceduralLandscapes");
     if (container && container.children.length === 0) {
-      import_react_dom.default.render(/* @__PURE__ */ import_react12.default.createElement(ProceduralLandscapes, null), container);
+      import_react_dom.default.render(/* @__PURE__ */ import_react14.default.createElement(ProceduralLandscapes, null), container);
       return;
     }
     if (container && container.children.length > 0) {
-      import_react_dom.default.hydrate(/* @__PURE__ */ import_react12.default.createElement(ProceduralLandscapes, null), container);
+      import_react_dom.default.hydrate(/* @__PURE__ */ import_react14.default.createElement(ProceduralLandscapes, null), container);
       return;
     }
     console.log(`container: ProceduralLandscapes not found `);
@@ -43607,6 +43760,46 @@ For more info, visit https://reactjs.org/link/mock-scheduler`);
   } else {
     document.addEventListener("DOMContentLoaded", function() {
       initProceduralLandscapes();
+    });
+  }
+  var ThreeBodyProblems = class extends import_react14.default.Component {
+    render() {
+      return /* @__PURE__ */ import_react14.default.createElement(PostLayout, null, /* @__PURE__ */ import_react14.default.createElement(helmet_default, null, /* @__PURE__ */ import_react14.default.createElement("title", null, "Three Body Problems | choxi")), /* @__PURE__ */ import_react14.default.createElement("div", {
+        className: "post"
+      }, /* @__PURE__ */ import_react14.default.createElement("h1", {
+        className: "spc-n-zero"
+      }, " Three Body Problems "), /* @__PURE__ */ import_react14.default.createElement("p", null, "The ", /* @__PURE__ */ import_react14.default.createElement("a", {
+        href: "https://en.wikipedia.org/wiki/Three-body_problem"
+      }, "Three Body Problem"), " is a famous problem in physics. For any two orbiting bodies, we can predict their exact position and trajectory at any time in the future using Newton's Law of Gravitation. But if we introduce a third body, there is no known formula to predict the trajectory of each body into the future. We can still figure it out, but not formulaically. The only way to do it is to run a simulation where we start with the initial mass and velocity of each body, calculate the forces on each, move them one step forward, and repeat."), /* @__PURE__ */ import_react14.default.createElement(orbits_default, null), /* @__PURE__ */ import_react14.default.createElement("p", null, `Newton published his law of gravitation and effectively solved the "Two Body Problem" in 1686, but the problem takes such a leap in difficulty with any more bodies that we haven't solved it in the ~350 years since then. The challenge is well described in the plot of `, /* @__PURE__ */ import_react14.default.createElement("a", {
+        href: "https://en.wikipedia.org/wiki/The_Three-Body_Problem_(novel)"
+      }, "The Three-Body Problem"), ", where an advanced alien civilization goes through repeated near-extinction events because of their inability to predict their planet's chaotic orbit in a system with three stars."), /* @__PURE__ */ import_react14.default.createElement("p", null, "The Three Body Problem is a great example of a system that follows very basic rules individually (there's only one rule, the law of gravitation), but explodes in complexity when we add more units. How many problems are there like the Three Body Problem?"), /* @__PURE__ */ import_react14.default.createElement("p", null, "Genetics is one example that comes to mind. We sequenced the full human genome in 2003 and have some understanding of the rules of individual gene expression, but we still have no predictive understanding of the a genome as a whole. In economics, we can predict the behavior of prototypical consumers in one market, but we know very little about how different markets interact on the macro scale. We could fully catalogue the trillions of bacteria in our guts, but would we understand how the entire microbiome behaves? You can imagine the same problem in predicting the behavior of a biosphere, climate change, condensed matter, or any other situation where we have that follow simple rules individually but result in complex behavior when taken as a whole."), /* @__PURE__ */ import_react14.default.createElement("p", null, "Understanding how many problems there are that fit into this category has important implications on scientific and technological progress. Patrick Collison has a similar concept he calls ", /* @__PURE__ */ import_react14.default.createElement("a", {
+        href: "https://noahpinion.substack.com/p/interview-patrick-collison-co-founder"
+      }, "Wicked Problems"), " and describes them as one possible factor in recent scientific stagnation:"), /* @__PURE__ */ import_react14.default.createElement("blockquote", null, `...the major open problems in many domains involve emergent phenomena and complex/unstable systems that often have lots of complex couplings and nonlinear effects and so on. In biology, cancer, autoimmune conditions, anything involving the microbiome... these are all just intrinsically harder problems than individual infectious diseases. In computing, modern machine learning is much more about experimentally figuring out what works in an emergent sense than, say, operating system or network protocol design, which are more about top-down architecture. ...You could probably extend the argument to materials science or condensed matter physics... these aren't as neatly characterizable in closed forms as, say, basic mechanics or thermodynamics. It's hard to say whether the proportion of important problems that are "wicked" has increased but I think it's plausible that it has.`), /* @__PURE__ */ import_react14.default.createElement("p", null, "Stephen Wolfram calls them ", /* @__PURE__ */ import_react14.default.createElement("a", {
+        href: "https://en.wikipedia.org/wiki/Computational_irreducibility"
+      }, "computationally irreducible problems "), " and believes they might imply the future is fundamentally unpredictable. Imagine that one day we did discover a Universal Theory of Everything. It\u2019s just one simple rule, and with it we can explain the emergence of every particle, field, or force from the very beginning of the Big Bang. How much would we actually be able to ", /* @__PURE__ */ import_react14.default.createElement("i", null, "predict"), " though? If we knew the state of every atom in the galaxy, we may still have to simulate it to predict how its stars and planets will evolve."), /* @__PURE__ */ import_react14.default.createElement("p", null, "Maybe understanding the basic rules of physics and mathematics isn't even the hard part, and advanced civilizations ultimately have to rely on simulations to make technological progress. In addition to ", /* @__PURE__ */ import_react14.default.createElement("a", {
+        href: "https://en.wikipedia.org/wiki/Simulation_hypothesis#The_simulation_hypothesis_in_physics"
+      }, "all the weird computer-like aspects of the universe"), ", I count this as one more point in favor of the ", /* @__PURE__ */ import_react14.default.createElement("a", {
+        href: "https://en.wikipedia.org/wiki/Simulation_hypothesis"
+      }, "Simulation Hypothesis"), ".")));
+    }
+  };
+  function initThreeBodyProblems() {
+    const container = document.getElementById("ThreeBodyProblems");
+    if (container && container.children.length === 0) {
+      import_react_dom.default.render(/* @__PURE__ */ import_react14.default.createElement(ThreeBodyProblems, null), container);
+      return;
+    }
+    if (container && container.children.length > 0) {
+      import_react_dom.default.hydrate(/* @__PURE__ */ import_react14.default.createElement(ThreeBodyProblems, null), container);
+      return;
+    }
+    console.log(`container: ThreeBodyProblems not found `);
+  }
+  if (document.readyState !== "loading") {
+    initThreeBodyProblems();
+  } else {
+    document.addEventListener("DOMContentLoaded", function() {
+      initThreeBodyProblems();
     });
   }
 })();

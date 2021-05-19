@@ -1,4 +1,4 @@
-/* ../../../../var/folders/vv/59_6rq_921j561ngk1c79y9h0000gn/T/tmp-28035-AU0y4Q7MOP8B/choxi.github.io/components/application.css */
+/* ../../../../var/folders/vv/59_6rq_921j561ngk1c79y9h0000gn/T/tmp-11656-vmvyki9U01dH/choxi.github.io/components/application.css */
 .post video,
 .post img,
 .post canvas {
@@ -9,13 +9,22 @@
   margin: 0 auto;
 }
 .post p {
-  line-height: 150%;
+  line-height: 1.6em;
+  margin: 2em 0;
 }
 .post ul {
   margin: 2em 0;
 }
 .post ul li {
   margin: 0.5em 0;
+}
+.post blockquote {
+  line-height: 1.6em;
+  background: #F5F5F5;
+  font-style: italic;
+  padding: 1.5em 2em;
+  margin: 0;
+  border-radius: 0.25em;
 }
 html,
 body {
@@ -25,14 +34,14 @@ body {
 }
 body {
   font-family: Helvetica Neue, Helvetica;
-  color: #444;
+  color: #333;
 }
 a {
   text-decoration: none;
   color: #2980b9;
 }
 a.reset {
-  color: #444;
+  color: #333;
 }
 ul.no-format {
   padding-left: 0;
@@ -87,6 +96,15 @@ ul.no-format li {
 .spc-s-tiny {
   margin-bottom: 0.25em;
 }
+.spc-n {
+  margin-top: 1em;
+}
+.spc-n-sm {
+  margin-top: 0.5em;
+}
+.spc-n-tiny {
+  margin-top: 0.25em;
+}
 .spc-n-l {
   margin-top: 2em;
 }
@@ -104,6 +122,14 @@ ul.no-format li {
 }
 .box--frost {
   background: rgba(50, 50, 50, 0.8);
+}
+.caption {
+  font-size: 0.75em;
+  color: #999;
+  text-align: center;
+  max-width: 75%;
+  margin: 1em auto 2em;
+  line-height: 150%;
 }
 @media (min-width:576px) {
   .sm-show {
