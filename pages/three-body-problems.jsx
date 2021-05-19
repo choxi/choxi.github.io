@@ -21,7 +21,7 @@
     </p>
 
     <p>
-      Genetics is one example that comes to mind. We sequenced the full human genome in 2003 and have some understanding of the rules of individual gene expression, but we still have no predictive understanding of the a genome as a whole. In economics, we can predict the behavior of prototypical consumers in one market, but we know very little about how different markets interact on the macro scale. We could fully catalogue the trillions of bacteria in our guts, but would we understand how the entire microbiome behaves? You can imagine the same problem in predicting the behavior of a biosphere, climate change, condensed matter, or any other situation where we have that follow simple rules individually but result in complex behavior when taken as a whole.
+      Genetics is one example that comes to mind. We sequenced the full human genome in 2003 and have some understanding of the rules of individual gene expression, but we still have no predictive understanding of the genome as a whole. In economics, we can predict the behavior of prototypical consumers in one market, but we know very little about how different markets interact on the macro scale. We could fully catalogue the trillions of bacteria in our guts, but would we understand how the entire microbiome behaves? You can imagine the same problem in predicting the behavior of a biosphere, climate change, condensed matter, or any other situation where we have that follow simple rules individually but result in complex behavior when taken as a whole.
     </p>
 
     <p>

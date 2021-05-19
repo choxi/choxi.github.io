@@ -5,6 +5,18 @@ const Y_AXIS = 1
 const X_AXIS = 2
 
 export default class Utils {
+  static isSafari() {
+    const ua = navigator.userAgent.toLowerCase()
+
+    if (ua.indexOf('safari') != -1) {
+      if (ua.indexOf('chrome') > -1) {
+        return false
+      } else {
+        return true
+      }
+    }
+  }
+
   static debugBezier(p, a1, c1, c2, a2) {
     p.push()
     p.noFill()

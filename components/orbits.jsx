@@ -2,6 +2,7 @@ import React from "react"
 import P5 from "./p5"
 import Vector from "./js/vector"
 import Color from "./js/color"
+import Utils from "./js/utils"
 
 export default class Orbits extends React.Component {
   constructor(props) {
@@ -72,14 +73,18 @@ export default class Orbits extends React.Component {
               new Body(3, x3, v3, 1, Color.palettes.flat.peterRiver)
             ]
 
-            let points = []
             let t = -1
             const deltaT = 0.01
+            let trace
+            const safari = Utils.isSafari()
 
             p.setup = () => {
               p.createCanvas(width, height, p.WEBGL)
               p.fill(255, 0, 0)
               p.noStroke()
+              trace = p.createGraphics(width, height, p.WEBGL)
+              trace.fill(255, 0, 0)
+              trace.noStroke()
             }
 
             p.draw = () => {
@@ -90,7 +95,9 @@ export default class Orbits extends React.Component {
               // p.rect(-400, -400, 800, 800)
               // p.fill(255, 0, 0)
 
-              points.forEach(point => point.render(p))
+              if (safari) p.scale(1, -1)
+              p.image(trace, -width / 2, - height / 2)
+              if (safari) p.scale(1, -1)
               bodies.forEach(body => body.render(p))
 
               const newBodies = []
@@ -118,15 +125,11 @@ export default class Orbits extends React.Component {
                   newBodies.push(new Body(body.id, newPosition, newVelocity, body.mass, body.color))
                 }
 
-                if (t % 5 === 0) {
-                  points.push(new Point(newPosition.multiply(200), body.color))
-                }
+                const point = new Point(newPosition.multiply(200), body.color)
+                point.render(trace)
               })
 
               bodies = newBodies
-              if (points.length > 1000) {
-                points = points.slice(1, points.length)
-              }
             }
           }
         }
