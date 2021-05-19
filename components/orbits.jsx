@@ -125,7 +125,7 @@ export default class Orbits extends React.Component {
 
               bodies = newBodies
               if (points.length > 1000) {
-                points = points.slice(100, points.length)
+                points = points.slice(1, points.length)
               }
             }
           }
