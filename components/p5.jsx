@@ -1,5 +1,7 @@
 import React from "react"
-import p5 from "p5"
+import Utils from "./js/utils"
+
+const p5 = Utils.isBrowser() ? require("p5") : null
 
 export default class P5 extends React.Component {
   constructor(props) {

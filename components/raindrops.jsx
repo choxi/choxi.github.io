@@ -1,16 +1,17 @@
-import React, { useEffect } from "react"
-import p5 from "p5"
+import React from "react"
 
 import Utils from "./js/utils"
 import Color from "./js/color"
 import Vector from "./js/vector"
 import { v4 as uuid } from "uuid"
 
+const p5 = Utils.isBrowser() ? require("p5") : null
+
 export default class Raindrops extends React.Component {
   componentDidMount() {
     const { width, height } = this.props
-    const w = width ? width : window.innerWidth
-    const h = height ? height : window.innerHeight
+    const w = width ? width : (Utils.isBrowser() ? window.innerWidth : 0)
+    const h = height ? height : (Utils.isBrowser() ? window.innerHeight : 0)
 
     console.log("starting playground")
     const app = new p5(p => sketch(w, h, p), "p5-canvas")
@@ -18,8 +19,8 @@ export default class Raindrops extends React.Component {
 
   render() {
     const { width, height } = this.props
-    const w = width ? width : window.innerWidth
-    const h = height ? height : window.innerHeight
+    const w = width ? width : (Utils.isBrowser() ? window.innerWidth : 0)
+    const h = height ? height : (Utils.isBrowser() ? window.innerHeight : 0)
     return <div id="p5-canvas" width={ w } height={ h } style={{ background: "black" }}></div>
   }
 }

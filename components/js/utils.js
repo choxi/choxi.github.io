@@ -5,6 +5,10 @@ const Y_AXIS = 1
 const X_AXIS = 2
 
 export default class Utils {
+  static isBrowser() {
+    return typeof window !== `undefined`
+  }
+
   static isSafari() {
     const ua = navigator.userAgent.toLowerCase()
 
@@ -111,8 +115,8 @@ export default class Utils {
   }
 
   static toGPUCoordinate(x, y) {
-    let height = window.innerHeight
-    let width = window.innerWidth
+    const height = Utils.isBrowser() ? window.innerHeight : 0
+    const width = Utils.isBrowser() ? window.innerWidth : 0
 
     let centeredX = x - width / 2
     let centeredY = y - height / 2

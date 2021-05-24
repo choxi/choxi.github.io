@@ -1,6 +1,8 @@
 import React from "react"
-import p5 from "p5"
 import CL from "./js/city-landscape"
+import Utils from "./js/utils"
+
+const p5 = Utils.isBrowser() ? require("p5") : null
 
 export default class CityLandscape extends React.Component {
   constructor(props) {
