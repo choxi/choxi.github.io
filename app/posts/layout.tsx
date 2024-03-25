@@ -1,7 +1,7 @@
-import React from "react";
+import React, { FC } from "react";
 import Sidebar from "../components/sidebar";
 
-export default function PostLayout(props) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="layout-sidebar">
       <div className="layout-sidebar--sidebar pad-l sm-hide lg-show">
@@ -9,7 +9,7 @@ export default function PostLayout(props) {
       </div>
 
       <div className="layout-sidebar--content pad-l">
-        <div>{props.children}</div>
+        <div>{children}</div>
         <div className="sm-show lg-hide">
           <hr />
           <Sidebar />
