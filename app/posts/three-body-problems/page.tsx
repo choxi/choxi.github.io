@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import Orbits from "../../components/orbits";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Three Body Problems | choxi",
 };
 

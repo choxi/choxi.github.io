@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import CityLandscape from "../../components/city-landscape";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Procedurally Generated Landscapes | choxi",
 };
 

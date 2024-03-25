@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Code from "../../components/code";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Idiom: A Static Site Generator | choxi",
 };
 
