@@ -1,5 +1,3 @@
-"use client";
-
 import Raindrops from "./components/raindrops";
 
 export default function Home() {

@@ -1,5 +1,3 @@
-"use client";
-
 import Orbits from "../../components/orbits";
 
 export default function Post() {
