@@ -1,6 +1,10 @@
 import Link from "next/link";
 import Code from "../../components/code";
 
+export const metadata = {
+  title: "Idiom: A Static Site Generator | choxi",
+};
+
 export default function Post() {
   return (
     <div className="post">

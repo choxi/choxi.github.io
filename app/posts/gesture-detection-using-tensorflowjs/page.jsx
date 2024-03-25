@@ -5,6 +5,10 @@ import debugging1 from "./gesture-detection-debugging.png";
 import debugging2 from "./gesture-detection-debugging-2.png";
 import final from "./gesture-detection-final.gif";
 
+export const metadata = {
+  title: "Gesture Detection Using Tensorflow.js | choxi",
+};
+
 export default function Post() {
   return (
     <div className="post">

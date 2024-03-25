@@ -1,10 +1,14 @@
 import Orbits from "../../components/orbits";
 
+export const metadata = {
+  title: "Three Body Problems | choxi",
+};
+
 export default function Post() {
   return (
     <>
       <div className="post">
-        <h1 className="spc-n-zero"> Three Body Problems </h1>
+        <h1 className="spc-n-zero">Three Body Problems</h1>
 
         <p>
           The{" "}

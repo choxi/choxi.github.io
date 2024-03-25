@@ -1,5 +1,9 @@
 import CityLandscape from "../../components/city-landscape";
 
+export const metadata = {
+  title: "Procedurally Generated Landscapes | choxi",
+};
+
 export default function Post() {
   return (
     <div className="post">
