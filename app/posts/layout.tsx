@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="layout-sidebar--content pad-l">
         <div>{children}</div>
         <div className="sm-show lg-hide">
-          <hr />
+          <hr className="pt-4" />
           <Sidebar />
         </div>
       </div>
