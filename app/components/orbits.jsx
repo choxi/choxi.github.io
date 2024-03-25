@@ -4,7 +4,6 @@ import React from "react";
 import P5 from "./p5";
 import Vector from "./js/vector";
 import Color from "./js/color";
-import Utils from "./js/utils";
 
 export default class Orbits extends React.Component {
   constructor(props) {
@@ -78,7 +77,6 @@ export default class Orbits extends React.Component {
             let t = -1;
             const deltaT = 0.01;
             let trace;
-            const safari = Utils.isSafari();
 
             p.setup = () => {
               p.createCanvas(width, height, p.WEBGL);
@@ -97,9 +95,7 @@ export default class Orbits extends React.Component {
               // p.rect(-400, -400, 800, 800)
               // p.fill(255, 0, 0)
 
-              if (safari) p.scale(1, -1);
               p.image(trace, -width / 2, -height / 2);
-              if (safari) p.scale(1, -1);
               bodies.forEach((body) => body.render(p));
 
               const newBodies = [];
