@@ -32,10 +32,10 @@ a.reset {
 ul.no-format {
   padding-left: 0;
   list-style: none;
+}
 
-  li {
-    margin: var(--spc-sm) 0;
-  }
+ul.no-format li {
+  margin: var(--spc-sm) 0;
 }
 
 .layout-sidebar {
