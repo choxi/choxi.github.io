@@ -27,6 +27,7 @@ export default function Canvas({
 }) {
   const [inViewRef, inView] = useInView();
   const canvas = useRef();
+  const loaded = useRef(false);
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -35,7 +36,25 @@ export default function Canvas({
     }
   }, []);
 
+  useEffect(() => {}, [
+    camera,
+    zoom,
+    size,
+    orthographic,
+    children,
+    inView,
+    bloom,
+    screenSize,
+  ]);
+
+  // unmount
   useEffect(() => {
+    if (loaded.current || !canvas.current) {
+      return;
+    }
+    console.log("loading!");
+    loaded.current = true;
+
     const newChildren = (
       <group>
         {bloom && (
@@ -66,13 +85,10 @@ export default function Canvas({
         alpha: true,
       })
       .render(<Suspense fallback={<group></group>}>{newChildren}</Suspense>);
-  }, [camera, zoom, size, orthographic, children, inView, bloom, screenSize]);
 
-  // unmount
-  useEffect(() => {
-    return () => {
-      unmountComponentAtNode(canvas.current);
-    };
+    // return () => {
+    //   unmountComponentAtNode(canvas.current);
+    // };
   }, []);
 
   return (

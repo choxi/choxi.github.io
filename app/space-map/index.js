@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useLayoutEffect,
 } from "react";
-import { useFrame, extend } from "@react-three/fiber";
+import { useFrame, extend, Canvas } from "@react-three/fiber";
 import { v4 as uuid } from "uuid";
 import * as THREE from "three";
 import { Text, Billboard, OrbitControls } from "@react-three/drei";
@@ -16,7 +16,7 @@ import Color from "color";
 import { EffectComposer, SMAA } from "@react-three/postprocessing";
 import _ from "lodash";
 
-import Canvas from "./canvas";
+// import Canvas from "./canvas";
 import JPL from "./jpl";
 
 extend({
@@ -878,24 +878,14 @@ export default function SpaceMap() {
         </div>
       </div>
 
-      <div>
-        {width && height && (
-          <Canvas
-            camera={[1, 0.2, 0.0]}
-            size={{ width, height }}
-            zoom={10}
-            bloom={false}
-            bloomStrength={6}
-          >
-            <Inner
-              startTime={startTime}
-              onDateChange={handleDateChange}
-              currentObject={currentObject}
-              onObjectSelect={(obj) => setCurrentObject(obj)}
-            />
-          </Canvas>
-        )}
-      </div>
+      <Canvas style={{ background: "black" }} camera={[1, 0.2, 0.0]} zoom={10}>
+        <Inner
+          startTime={startTime}
+          onDateChange={handleDateChange}
+          currentObject={currentObject}
+          onObjectSelect={(obj) => setCurrentObject(obj)}
+        />
+      </Canvas>
     </div>
   );
 }
