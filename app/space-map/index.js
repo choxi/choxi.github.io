@@ -481,14 +481,14 @@ function Inner({
     onObjectSelect(bodies.find((body) => body.name === "saturn"));
   }, []);
 
-  useLayoutEffect(() => {
-    controlsRef.current.addEventListener("change", () => {
-      const currentZoom = controlsRef.current.target.distanceTo(
-        controlsRef.current.object.position
-      );
-      setZoom(currentZoom);
-    });
-  });
+  // useLayoutEffect(() => {
+  //   controlsRef.current.addEventListener("change", () => {
+  //     const currentZoom = controlsRef.current.target.distanceTo(
+  //       controlsRef.current.object.position
+  //     );
+  //     setZoom(currentZoom);
+  //   });
+  // });
 
   const tempObject = new THREE.Object3D();
   const simulationStart = useMemo(() => new Date("21 Mar 2021"), []);
@@ -531,7 +531,7 @@ function Inner({
 
           body.ref.current.position.copy(body.position);
           body.ref.current.position.divideScalar(SCENE_RADIUS);
-          body.labelRef.current.position.copy(body.ref.current.position);
+          // body.labelRef.current.position.copy(body.ref.current.position);
         }
       });
 
@@ -561,7 +561,7 @@ function Inner({
       asteroidBeltRef.current.setMatrixAt(index, tempObject.matrix);
     });
     asteroidBeltRef.current.instanceMatrix.needsUpdate = true;
-    asteroidBeltLabelRef.current.position.set(0.05, 0, 0);
+    // asteroidBeltLabelRef.current.position.set(0.05, 0, 0);
     kuiperObjects.forEach((object, index) => {
       const x = -(elapsed + object.offset) / object.speed;
       tempObject.position.set(0, 0, 0);
@@ -572,7 +572,7 @@ function Inner({
       kuiperBeltRef.current.setMatrixAt(index, tempObject.matrix);
     });
     kuiperBeltRef.current.instanceMatrix.needsUpdate = true;
-    kuiperBeltLabelRef.current.position.set(0.65, 0, 0);
+    // kuiperBeltLabelRef.current.position.set(0.65, 0, 0);
     if (oortCloudRef?.current) {
       oortObjects.forEach((object, index) => {
         const x = -(elapsed + object.offset) / object.speed;
@@ -584,14 +584,14 @@ function Inner({
         oortCloudRef.current.setMatrixAt(index, tempObject.matrix);
       });
       oortCloudRef.current.instanceMatrix.needsUpdate = true;
-      oortCloudLabelRef.current.position.set(2.5, 0.25, 1.0);
+      // oortCloudLabelRef.current.position.set(2.5, 0.25, 1.0);
     }
 
     bodies.forEach((body) => {
       // Don't move the sun
       if (body.name === "sun") return;
 
-      body.labelRef.current.position.copy(body.ref.current.position);
+      // body.labelRef.current.position.copy(body.ref.current.position);
 
       if (body.name === "Voyager I") {
         return;
@@ -680,20 +680,20 @@ function Inner({
               />
             </mesh>
           )}
-          {body.name !== "sun" && (
+          {/* {body.name !== "sun" && (
             <Text
               color={body.id === currentObject?.id ? "#ffffff" : "#333333"}
               rotation={[Math.PI / 2, Math.PI / 4, 0]}
               anchorX={body.anchorX || -0.025}
               anchorY={body.anchorY || -0.12}
-              scale={body.labelScale || 0.04}
+              scale={0.004}
               // strokeWidth={"10%"}
               // strokeWidth={ body.id === currentObject?.id ? 10 : 0 }
               ref={body.labelRef}
             >
               {body.name}
             </Text>
-          )}
+          )} */}
         </group>
       ))}
       <ambientLight color={0xffffff} intensity={3}>
@@ -710,7 +710,7 @@ function Inner({
         <meshPhongMaterial color={theme.asteroidBelt.rgbNumber()} />
       </instancedMesh>
       {/* https://github.com/protectwise/troika/tree/master/packages/troika-three-text */}
-      <Text
+      {/* <Text
         color="#666666"
         rotation={[0, Math.PI / 4, 0]}
         anchorX={-0.1}
@@ -719,7 +719,7 @@ function Inner({
         ref={asteroidBeltLabelRef}
       >
         Asteroid Belt
-      </Text>
+      </Text> */}
 
       <instancedMesh
         rotation={[Math.PI / 2, 0, 0]}
@@ -729,7 +729,7 @@ function Inner({
         <sphereGeometry args={[0.0003]} />
         <meshPhongMaterial color={theme.kuiperBelt.rgbNumber()} />
       </instancedMesh>
-      <Text
+      {/* <Text
         color="#666666"
         rotation={[0, Math.PI / 4, 0]}
         anchorX={-0.1}
@@ -738,7 +738,7 @@ function Inner({
         ref={kuiperBeltLabelRef}
       >
         Kuiper Belt
-      </Text>
+      </Text> */}
 
       {zoom > 15 && (
         <>
@@ -750,7 +750,7 @@ function Inner({
             <sphereGeometry args={[0.0015]} />
             <meshPhongMaterial color={theme.oortCloud.rgbNumber()} />
           </instancedMesh>
-          <Text
+          {/* <Text
             color="#666666"
             rotation={[0, Math.PI / 4, 0]}
             anchorX={-0.1}
@@ -759,7 +759,7 @@ function Inner({
             ref={oortCloudLabelRef}
           >
             Oort Cloud
-          </Text>
+          </Text> */}
         </>
       )}
 
@@ -770,7 +770,7 @@ function Inner({
         zoomSpeed={0.5}
         minAzimuthAngle={Math.PI / 4}
         maxAzimuthAngle={Math.PI / 4}
-        minDistance={0.2}
+        minDistance={0.1}
         maxDistance={40}
       />
 
@@ -878,7 +878,7 @@ export default function SpaceMap() {
         </div>
       </div>
 
-      <Canvas style={{ background: "black" }} camera={[1, 0.2, 0.0]} zoom={10}>
+      <Canvas style={{ background: "black" }}>
         <Inner
           startTime={startTime}
           onDateChange={handleDateChange}
