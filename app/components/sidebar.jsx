@@ -32,6 +32,9 @@ export default function Sidebar() {
       <h3 className="spc-n-l">Posts</h3>
       <ul className="no-format">
         <li>
+          <a href="/posts/mac-no-mouse">Mac No Mouse</a>
+        </li>
+        <li>
           <a href="/posts/three-body-problems">Three Body Problems</a>
         </li>
         <li>
