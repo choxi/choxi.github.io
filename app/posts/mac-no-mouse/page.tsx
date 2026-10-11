@@ -28,19 +28,24 @@ export default function Post() {
       </p>
       <h2>Window Management</h2>
       <p>Use CMD+Tab to switch apps</p>
-      <p>Use </p>
-      <h2>The Basics</h2>
+      <p>CMD+~ to switch between windows of an app</p>
+      <p>
+        Rectangle / Apple Default Window Manager. There are a lot of options
+        that let you move windows to the a corner, or left/right split, or full
+        screen.
+      </p>
+      <p>CTRL+Up to open Mission Control (see all open windows)</p>
+      <p>CTRL+Down to view all open windows for the current application</p>
+      <h2>Controls</h2>
       <p>
         Turn on accessibility settings so you can use tab and space to interact
         with dialogs
       </p>
-      <p>CMD+~ to switch between windows of an app</p>
       <p>Tab to change focus</p>
       <p>Spotlight Search</p>
-      <p>Text Editing Shorcuts (cmd/option + arrow keys)</p>
-      <h2>Tools</h2>
-      <p>Rectangle / Apple Default Window Manager</p>
+      <h2>Text</h2>
       <p>Multi-paste (Maccy)</p>
+      <p>Text Editing Shorcuts (cmd/option + arrow keys)</p>
       <p>Vimium/Vimari/Homerow</p>
     </div>
   );
