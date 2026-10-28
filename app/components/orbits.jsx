@@ -17,7 +17,7 @@ export default class Orbits extends React.Component {
   }
 
   render() {
-    const { mass, renderID } = this.state;
+    const { mass } = this.state;
 
     return (
       <div>
@@ -74,7 +74,6 @@ export default class Orbits extends React.Component {
               new Body(3, x3, v3, 1, Color.palettes.flat.peterRiver),
             ];
 
-            let t = -1;
             const deltaT = 0.01;
             let trace;
 
@@ -88,8 +87,6 @@ export default class Orbits extends React.Component {
             };
 
             p.draw = () => {
-              t += 1;
-
               p.clear(0);
               // p.fill(255, 255, 255, 1)
               // p.rect(-400, -400, 800, 800)

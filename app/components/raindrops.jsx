@@ -7,6 +7,8 @@ import Color from "./js/color";
 import Vector from "./js/vector";
 import { v4 as uuid } from "uuid";
 
+// p5 touches `window` on import, so only load it in the browser.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const p5 = Utils.isBrowser() ? require("p5") : null;
 
 export default class Raindrops extends React.Component {

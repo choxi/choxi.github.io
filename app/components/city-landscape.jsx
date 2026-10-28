@@ -4,6 +4,8 @@ import React from "react";
 import CL from "./js/city-landscape";
 import Utils from "./js/utils";
 
+// p5 touches `window` on import, so only load it in the browser.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const p5 = Utils.isBrowser() ? require("p5") : null;
 
 export default class CityLandscape extends React.Component {

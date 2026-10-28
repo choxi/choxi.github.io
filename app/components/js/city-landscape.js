@@ -12,7 +12,6 @@ export default class CityLandscape {
     var bufferC;
     var gradient;
     const speed = 1;
-    const safari = this.isSafari();
 
     p.setup = () => {
       p.frameRate(20);

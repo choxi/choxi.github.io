@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React from "react";
 import Sidebar from "../components/sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {

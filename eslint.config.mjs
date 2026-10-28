@@ -5,6 +5,12 @@ const eslintConfig = [
   ...nextVitals,
   ...nextTs,
   {
+    // Posts are prose, so allow literal quotes and apostrophes in JSX text.
+    rules: {
+      "react/no-unescaped-entities": "off",
+    },
+  },
+  {
     ignores: [".next/**", "out/**", "next-env.d.ts"],
   },
 ];

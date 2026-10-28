@@ -1,11 +1,12 @@
 import React from "react";
+import Link from "next/link";
 
 export default function Sidebar() {
   return (
     <div>
-      <a href="/" className="reset">
+      <Link href="/" className="reset">
         <h1 className="mt-0 text-2xl font-bold mb-2"> roshan choxi </h1>
-      </a>
+      </Link>
       <p>
         Hi! I'm Roshan, a software engineer in Chicago. This is my site where I
         write about science, technology, and design.

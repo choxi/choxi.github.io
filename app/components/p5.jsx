@@ -3,6 +3,8 @@
 import React from "react";
 import Utils from "./js/utils";
 
+// p5 touches `window` on import, so only load it in the browser.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const p5 = Utils.isBrowser() ? require("p5") : null;
 
 export default class P5 extends React.Component {
