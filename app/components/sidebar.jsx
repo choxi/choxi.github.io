@@ -5,17 +5,19 @@ export default function Sidebar() {
   return (
     <div>
       <Link href="/" className="reset">
-        <h1 className="mt-0 text-2xl font-bold mb-2"> roshan choxi </h1>
+        <h1 className="mt-0 text-2xl font-bold mb-2"> Roshan Choxi</h1>
       </Link>
-      <p>
-        Hi! I'm Roshan, a software engineer in Chicago. This is my site where I
-        write about science, technology, and design.
+      <p className="text-sm">
+        Software engineer in Chicago
+      </p>
+      <p className="text-sm mt-1">
+        Writing about science, technology, and design.
       </p>
 
       <ul className="no-format mt-8">
         <li>
           <a href="https://twitter.com/choxi" target="_blank">
-            Twitter
+            X / Twitter
           </a>
         </li>
         <li>
