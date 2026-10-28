@@ -120,17 +120,6 @@ ul.no-format li {
   text-align: center;
 }
 
-.box {
-  width: 500px;
-  padding: 1em 2em;
-  color: #ccc;
-  border-radius: 0.25em;
-}
-
-.box--frost {
-  background: rgba(50, 50, 50, 0.8);
-}
-
 .caption {
   font-size: 0.75em;
   color: var(--color-text-light);
