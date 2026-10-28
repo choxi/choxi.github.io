@@ -22,7 +22,9 @@ export default function Home() {
       <div className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
         <p className={styles.intro}>
-          Software engineer in Chicago, writing about science, technology, and design.
+          Software engineer in Chicago 
+          <br />
+          Writing about science, technology, and design.
         </p>
 
         <h2 className={styles.label}>Recent writing</h2>
