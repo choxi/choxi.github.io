@@ -125,17 +125,32 @@ const TIER = 13;
 type Scene = {
   W: number;
   base: Uint8ClampedArray;
+  fx: number;
+  fallBottom: number;
+  poolCx: number;
   mainFall: number[];
   upperFall: number[];
   lowerFall: number[];
   pool: number[];
   lights: Light[];
+  spray: { x: number; vx: number; vy: number; phase: number }[];
+  mist: { x: number; drift: number; phase: number; size: number }[];
   stars: { i: number; phase: number; speed: number; big: boolean }[];
   petals: { x: number; y: number; phase: number; speed: number }[];
   flies: { x: number; y: number; phase: number; sx: number; sy: number }[];
 };
 
-function buildScene(W: number): Scene {
+// The fall's horizontal position lives in its own helper so the component can
+// keep it clear of the content card at any aspect ratio.
+const FALL_HALF = 0.05; // half the lip width, as a fraction of W
+const FALL_SPILL = 3 * 6 + 2; // how far the lowest tier reaches left of the lip, in px
+
+function fallCenter(W: number, cardHalf: number) {
+  const clear = W / 2 + cardHalf + W * FALL_HALF + FALL_SPILL + 2;
+  return Math.round(Math.min(W - 34, Math.max(W * 0.72, clear)));
+}
+
+function buildScene(W: number, fx: number): Scene {
   const rand = mulberry32(11);
   const noise = makeNoise(rand);
   const base = new Uint8ClampedArray(W * H * 4);
@@ -186,9 +201,11 @@ function buildScene(W: number): Scene {
   const addLight = (x: number, y: number, r: number, color: RGB, strength = 1, speed = 0.6 + rand() * 1.2) =>
     lights.push({ x, y, r, color, phase: rand() * 6.28, speed, strength });
 
-  const fx = Math.round(W * 0.6); // fall centre line
-  const lipL = Math.round(fx - W * 0.055);
-  const lipR = Math.round(fx + W * 0.055);
+  const lipL = Math.round(fx - W * FALL_HALF);
+  const lipR = Math.round(fx + W * FALL_HALF);
+  // Everything around the pool hangs off the fall's position.
+  const poolCx = fx - W * 0.06;
+  const poolRx = W * 0.13;
   const fallBottom = 150;
   // The curtain spills further left with each ledge; the right edge hugs the cliff.
   const fallLeft = (y: number) => {
@@ -263,47 +280,47 @@ function buildScene(W: number): Scene {
       puff(cx + Math.cos(a) * d * 1.3, cy + Math.sin(a) * d * 0.6 + (rand() - 0.3) * 3, r * (0.35 + rand() * 0.25));
     }
   };
+  // Left-cliff clumps are fractions of W; the ones beside the fall are offsets from the lips.
   const leftClumps: [number, number, number][] = [
-    [0.03, 36, 15], [0.12, 30, 14], [0.22, 34, 14], [0.32, 44, 12], [0.43, 52, 11],
-    [0.27, 70, 9], [0.38, 64, 8],
+    [0.03, 36, 15], [0.12, 30, 14], [0.22, 34, 14], [0.32, 44, 12], [0.43, 50, 11], [0.53, 54, 11],
+    [0.27, 70, 9], [0.38, 64, 8], [0.48, 72, 8],
   ];
-  const rightClumps: [number, number, number][] = [
-    [0.69, 60, 8], [0.76, 52, 12], [0.86, 44, 13], [0.97, 48, 13],
-    [0.72, 92, 10], [0.8, 84, 12], [0.9, 100, 13], [0.75, 116, 9], [0.84, 126, 11],
+  for (const [u, y, r] of leftClumps) blossom(W * u, y, r);
+  const nearFall: [number, number, number][] = [
+    [-10, 58, 10], [-14, 88, 9], [-22, 112, 10], [8, 50, 9], [20, 44, 11], [10, 90, 10], [16, 116, 11],
   ];
-  for (const [u, y, r] of [...leftClumps, ...rightClumps]) blossom(W * u, y, r);
+  for (const [dx, y, r] of nearFall) blossom((dx < 0 ? lipL : lipR) + dx, y, r);
 
   // Pool, the outlet channel and a small cascade over rocks at the bottom.
-  const poolCx = W * 0.54;
   const inPool = (x: number, y: number) =>
-    ((x - poolCx) / (W * 0.16)) ** 2 + ((y - 154) / 10) ** 2 <= 1 ||
-    (y >= 154 && y < 167 && x > W * 0.48 && x < W * 0.6);
+    ((x - poolCx) / poolRx) ** 2 + ((y - 154) / 10) ** 2 <= 1 ||
+    (y >= 154 && y < 167 && Math.abs(x - poolCx) < W * 0.06);
   for (let y = 140; y < 168; y++)
     for (let x = 0; x < W; x++) if (inPool(x, y)) px(x, y, C.pool, 2);
   for (let y = 167; y < H; y++)
-    for (let x = Math.round(W * 0.515); x <= W * 0.565; x++) px(x, y, C.fallMid, 4);
+    for (let x = Math.round(poolCx - W * 0.025); x <= poolCx + W * 0.025; x++) px(x, y, C.fallMid, 4);
 
   // Banks: dark bush mounds.
   const bush = (cx: number, cy: number, r: number) =>
     disc(cx, cy, r, (x, y) => (y < cy - r * 0.3 && hash(x, y) > 0.55 ? C.bushLit : C.bush));
   for (let n = 0; n < 7; n++) bush(W * (0.02 + n * 0.06), 168 + rand() * 6, 12 + rand() * 6);
-  for (let n = 0; n < 6; n++) bush(W * (0.7 + n * 0.06), 154 + n * 3 + rand() * 6, 11 + rand() * 7);
-  bush(W * 0.36, 146, 9);
-  bush(W * 0.68, 146, 8);
+  for (let x = poolCx + poolRx + 4; x < W + 12; x += W * 0.06) bush(x, 160 + rand() * 8, 11 + rand() * 7);
+  bush(poolCx - poolRx - 2, 148, 9);
+  bush(lipR + 18, 146, 8);
 
   const rocks: [number, number, number][] = [
-    [0.46, 170, 7], [0.63, 168, 8], [0.44, 179, 7], [0.65, 179, 7], [0.54, 182, 4], [0.69, 158, 5],
+    [-0.08, 170, 7], [0.09, 168, 8], [-0.1, 179, 7], [0.11, 179, 7], [0, 182, 4], [0.15, 158, 5],
   ];
   for (const [u, y, r] of rocks)
-    disc(W * u, y, r, (x, yy) => (yy < y - r * 0.5 || (hash(x, yy) > 0.85 && yy < y) ? C.rockLit : C.rock));
+    disc(poolCx + W * u, y, r, (x, yy) => (yy < y - r * 0.5 || (hash(x, yy) > 0.85 && yy < y) ? C.rockLit : C.rock));
 
-  // Arched stone bridge with a lattice railing.
-  const bx0 = Math.round(W * 0.15);
-  const bx1 = Math.round(W * 0.47);
+  // Arched stone bridge with a lattice railing, landing on the pool's left rim.
+  const bx1 = Math.round(poolCx - poolRx + W * 0.04);
+  const bx0 = Math.round(bx1 - W * 0.3);
   for (let x = bx0; x <= bx1; x++) {
     const u = (x - bx0) / (bx1 - bx0);
     const deck = Math.round(156 - u * 8 - Math.sin(u * Math.PI) * 7);
-    const archU = (u - 0.62) / 0.3;
+    const archU = (u - 0.72) / 0.3;
     const archTop = Math.abs(archU) < 1 ? deck + 4 + (1 - Math.sqrt(1 - archU * archU)) * 14 : 999;
     const bottom = 172 - u * 10;
     for (let y = deck; y < bottom; y++) {
@@ -357,14 +374,15 @@ function buildScene(W: number): Scene {
     else fern(x, y, color);
   };
   // Along the far side of the pool and the right bank.
-  for (let n = 0; n < 9; n++) plant(Math.round(W * (0.66 + rand() * 0.3)), Math.round(150 + rand() * 26), 1 + rand());
+  const rightBank = poolCx + poolRx;
+  for (let n = 0; n < 7; n++) plant(Math.round(rightBank + rand() * (W - rightBank)), Math.round(152 + rand() * 24), 1 + rand());
   // Near the bridge foot and the left bank.
-  for (let n = 0; n < 9; n++) plant(Math.round(W * (0.02 + rand() * 0.3)), Math.round(163 + rand() * 15), 1 + rand());
-  // Under the bridge and at the pool rim.
-  for (let n = 0; n < 5; n++) plant(Math.round(W * (0.36 + rand() * 0.08)), Math.round(146 + rand() * 4), 0.6);
+  for (let n = 0; n < 10; n++) plant(Math.round(W * (0.02 + rand() * 0.36)), Math.round(163 + rand() * 15), 1 + rand());
+  // At the pool's left rim, under the bridge.
+  for (let n = 0; n < 5; n++) plant(Math.round(poolCx - poolRx - 6 + rand() * 8), Math.round(146 + rand() * 4), 0.6);
   // Tucked into cliff ledges.
   for (let n = 0; n < 6; n++) {
-    const x = Math.round(rand() < 0.5 ? W * (0.05 + rand() * 0.4) : W * (0.68 + rand() * 0.3));
+    const x = Math.round(rand() < 0.7 ? W * (0.05 + rand() * 0.5) : lipR + 4 + rand() * (W - lipR - 4));
     plant(x, Math.round(cliffTop(x) + 8 + rand() * 50), 0.4);
   }
 
@@ -378,10 +396,12 @@ function buildScene(W: number): Scene {
   blossom(W * 0.08, 96, 12);
   blossom(W * 0.3, 74, 7);
 
-  limb([[W * 0.93, H + 4], [W * 0.95, 120], [W * 0.88, 50], [W * 0.84, -4]], 13, 7);
-  limb([[W * 0.88, 44], [W * 0.75, 18], [W * 0.62, -4]], 5, 2);
-  limb([[W * 0.91, 74], [W * 0.99, 56], [W + 4, 48]], 4, 2);
-  limb([[W * 0.86, 30], [W * 0.95, 8], [W, -2]], 3, 2);
+  // The right trunk sits beyond the fall's right lip and leans in over the moon.
+  const tx = Math.max(lipR + 14, W * 0.93);
+  limb([[tx, H + 4], [tx + 4, 120], [tx - 2, 50], [tx - 8, -4]], 13, 7);
+  limb([[tx - 2, 44], [fx + 6, 16], [fx - 24, -4]], 5, 2);
+  limb([[tx, 74], [W + 4, 52]], 4, 2);
+  limb([[tx - 6, 30], [W, 4]], 3, 2);
   // Dark leaves hanging across the top right, partly over the moon.
   for (let n = 0; n < 16; n++) {
     const cx = W * (0.56 + rand() * 0.46);
@@ -400,10 +420,20 @@ function buildScene(W: number): Scene {
   for (let n = 0; n < 5; n++) plant(Math.round(W * (rand() < 0.5 ? rand() * 0.2 : 0.8 + rand() * 0.2)), 176 + Math.floor(rand() * 4), 1.6);
 
   // Mist glow where the fall meets the pool, and along the fall itself.
-  addLight(fx - 6, fallBottom - 2, 30, C.mist, 0.9, 0.35);
+  addLight(fx - 8, fallBottom - 2, 32, C.mist, 0.9, 0.35);
   addLight(poolCx, 156, 22, C.mist, 0.6, 0.5);
   for (let y = FALL_TOP + 6; y < fallBottom - 10; y += 14) addLight(fx - (y - FALL_TOP) / 8, y, 16, C.mist, 0.35, 0.4);
-  addLight(W * 0.54, 172, 12, C.mist, 0.5, 0.6);
+  addLight(poolCx, 172, 12, C.mist, 0.5, 0.6);
+
+  // Spray kicked up where the curtain hits the pool.
+  const spray: Scene["spray"] = [];
+  for (let n = 0; n < 36; n++)
+    spray.push({ x: fallLeft(fallBottom - 1) + rand() * (lipR - fallLeft(fallBottom - 1)), vx: (rand() - 0.5) * 18, vy: 14 + rand() * 18, phase: rand() });
+
+  // Mist puffs that rise off the pool, swell and fade.
+  const mist: Scene["mist"] = [];
+  for (let n = 0; n < 14; n++)
+    mist.push({ x: fallLeft(fallBottom - 1) - 6 + rand() * (lipR - fallLeft(fallBottom - 1) + 14), drift: (rand() - 0.7) * 16, phase: rand(), size: 7 + rand() * 7 });
 
   const petals: Scene["petals"] = [];
   for (let n = 0; n < Math.round(W * 0.1); n++)
@@ -424,7 +454,7 @@ function buildScene(W: number): Scene {
     else if (kind[i] === 4) lowerFall.push(i);
   }
 
-  return { W, base, mainFall, upperFall, lowerFall, pool, lights, stars, petals, flies };
+  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, pool, lights, spray, mist, stars, petals, flies };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -453,19 +483,31 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const x = i % W;
     const y = (i / W) | 0;
     const st = streak(x, y, 26, 9);
-    put(i, st < 0.2 ? C.fallMid : C.upperFall);
+    const core = Math.abs(x - s.fx) <= 1;
+    put(i, st < (core ? 0.45 : 0.2) ? (core ? C.fallLight : C.fallMid) : C.upperFall);
   }
 
   for (const i of s.mainFall) {
     const x = i % W;
     const y = (i / W) | 0;
-    const tierY = (y - FALL_TOP + Math.round(Math.sin(x * 0.7) * 1.5) + TIER) % TIER;
-    const st = streak(x, y, 34, 8);
-    let c = st < 0.16 ? C.fallLight : st < 0.55 ? C.fallMid : C.fallDark;
-    // Each tier's lip curls over in a bright band; the curtain darkens below it.
-    if (tierY < 2 && hash(x, Math.floor((y - FALL_TOP) / TIER)) > 0.3) c = hash(x, y, tick) > 0.3 ? C.fallLight : C.foam;
-    else if (tierY > TIER - 3 && st > 0.4) c = C.fallDark;
-    if (y > 143 && hash(x, y, tick) > 0.4) c = C.foam;
+    // Lumpy ledge lines so each tier's lip bulges instead of running straight.
+    const local = y - FALL_TOP + Math.round(Math.sin(x * 0.45) * 1.2 + hash(Math.floor(x / 3), 5) * 2);
+    const k = Math.floor(local / TIER);
+    const tierY = local - k * TIER;
+    // Water gathers into ropes a couple of pixels wide, offset on every tier.
+    const rope = hash(Math.floor((x + k * 3) / 2), 9 + k);
+    const st = streak(x, y, 34, rope > 0.8 ? 14 : 7);
+    let c: RGB;
+    if (rope > 0.8) c = st < 0.7 ? C.fallLight : C.fallMid;
+    else if (rope > 0.45) c = st < 0.18 ? C.fallLight : C.fallMid;
+    else c = st < 0.12 ? C.fallMid : C.fallDark;
+    // The curtain glows a little brighter as it nears the pool.
+    const low = (y - (s.fallBottom - 26)) / 26;
+    if (c === C.fallDark && low > bayer(x, y)) c = C.fallMid;
+    // Each lip curls over bright; spray churns where the water hits the ledge below.
+    if (tierY < 2 && hash(Math.floor(x / 2), k) > 0.2) c = tierY === 0 || hash(x, y, tick) > 0.5 ? C.fallLight : C.foam;
+    else if (tierY > TIER - 3 && hash(x, y, tick) > 0.55) c = C.foam;
+    if (y > s.fallBottom - 7 && hash(x, y, tick) > 0.35) c = C.foam;
     put(i, c);
   }
 
@@ -477,6 +519,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   }
 
   // Pool: rings spreading out from the fall, plus drifting ripples.
+  const ix = s.fx - 8;
+  const iy = s.fallBottom + 1;
   for (const i of s.pool) {
     const x = i % W;
     const y = (i / W) | 0;
@@ -484,8 +528,19 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
       Math.sin((y - t * 7) * 0.9 + Math.sin(x * 0.2 + t * 0.6) * 1.8) * 0.6 +
       Math.sin(x * 0.13 - y * 0.3 + t * 1.1) * 0.4;
     let c = n > 0.8 ? C.poolLight : n > 0.35 ? C.poolMid : C.pool;
-    if (y < 151 && hash(x, y, tick) > 0.65) c = C.foam;
+    const d = Math.hypot(x - ix, (y - iy) * 2.4);
+    if (d < 44 && Math.sin(d * 0.6 - t * 4.5) > 0.82 + d / 160) c = C.poolLight;
+    if (d < 16 && hash(x, y, tick) > 0.55 + d / 40) c = C.foam;
     put(i, c);
+  }
+
+  // Spray: droplets thrown up and out from the impact, falling back in arcs.
+  for (const p of s.spray) {
+    const age = ((t / 1.1 + p.phase) % 1) * 1.1;
+    const X = Math.round(p.x + p.vx * age);
+    const Y = Math.round(s.fallBottom - (p.vy * age - 40 * age * age));
+    if (Y > s.fallBottom + 3 || X < 0 || X >= W || Y < 0) continue;
+    add(Y * W + X, C.foam, 0.7);
   }
 
   // Twinkling stars; the brightest flare into small crosses.
@@ -508,6 +563,26 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
       const Y = Math.floor(l.y) + o.dy;
       if (X < 0 || Y < 0 || X >= W || Y >= H) continue;
       add(Y * W + X, l.color, o.f * k);
+    }
+  }
+
+  // Mist: puffs rise off the pool, swell, drift and fade. Dense cores are
+  // dithered so the haze stays pixelly instead of turning into a smooth blur.
+  for (const m of s.mist) {
+    const u = (t / 8 + m.phase) % 1;
+    const cx = m.x + m.drift * u;
+    const cy = s.fallBottom - 2 - u * 32;
+    const r = m.size * (0.5 + u);
+    const a = Math.sin(u * Math.PI);
+    for (let Y = Math.floor(cy - r); Y <= cy + r; Y++) {
+      if (Y < 0 || Y >= H) continue;
+      for (let X = Math.floor(cx - r * 1.5); X <= cx + r * 1.5; X++) {
+        if (X < 0 || X >= W) continue;
+        const d = Math.hypot((X - cx) / 1.5, Y - cy) / r;
+        if (d >= 1) continue;
+        const v = a * (1 - d) ** 1.5;
+        add(Y * W + X, C.mist, v * 0.9 > bayer(X, Y) ? 0.2 : v * 0.1);
+      }
     }
   }
 
@@ -562,10 +637,14 @@ export default function PixelGrove() {
       const { width, height } = host.getBoundingClientRect();
       // Narrow screens crop the sides (object-fit: cover) rather than squeeze the gorge.
       const W = Math.min(480, Math.max(220, Math.round((H * width) / Math.max(1, height))));
-      if (scene?.W === W) return;
+      // Half the content card's width (see home.module.css) plus a margin, in canvas pixels.
+      const scale = Math.max(width / W, height / H);
+      const cardHalf = (Math.min(width - 32, 440) / 2 + 24) / scale;
+      const fx = fallCenter(W, cardHalf);
+      if (scene?.W === W && scene.fx === fx) return;
       canvas.width = W;
       canvas.height = H;
-      scene = buildScene(W);
+      scene = buildScene(W, fx);
       image = ctx.createImageData(W, H);
       draw(performance.now());
     };
