@@ -57,8 +57,10 @@ const C = {
   bushLit: hex("#1d3829"),
   trunk: hex("#0a0e0f"),
   trunkLit: hex("#1b2423"),
+  bark: hex("#131a1a"),
   leaf: hex("#0c1714"),
   leafLit: hex("#1b3124"),
+  strand: hex("#2c5848"),
   rock: hex("#272e31"),
   rockLit: hex("#414b4e"),
   stem: hex("#5d7a6c"),
@@ -139,6 +141,7 @@ type Scene = {
   lights: Light[];
   spray: { x: number; vx: number; vy: number; phase: number }[];
   mist: { x: number; drift: number; phase: number; size: number }[];
+  strands: { x: number; y: number; len: number; phase: number }[];
   stars: { i: number; phase: number; speed: number; big: boolean }[];
   petals: { x: number; y: number; phase: number; speed: number }[];
   flies: { x: number; y: number; phase: number; sx: number; sy: number }[];
@@ -195,7 +198,14 @@ function buildScene(W: number, fx: number): Scene {
         const x = x0 + (x1 - x0) * u;
         const y = y0 + (y1 - y0) * u;
         const w = (w0 + (w1 - w0) * ((done + d) / total)) / 2;
-        for (let dx = -w; dx <= w; dx++) px(x + dx, y, dx > w - 1.5 && hash(x + dx, y) > 0.4 ? C.trunkLit : C.trunk);
+        for (let dx = -w; dx <= w; dx++) {
+          const X = Math.floor(x + dx);
+          // Moonlit right edge; on thick limbs, broken vertical bark grooves.
+          let c = C.trunk;
+          if (dx > w - 1.5 && hash(X, y) > 0.4) c = C.trunkLit;
+          else if (w > 2 && X % 3 === 0 && hash(X, Math.floor(y / 5)) > 0.45) c = C.bark;
+          px(X, y, c);
+        }
       }
       done += len;
     }
@@ -342,23 +352,74 @@ function buildScene(W: number, fx: number): Scene {
   for (let y = FALL_TOP; y < fallBottom; y++)
     for (let x = fallLeft(y); x <= fallRight(y); x++) px(x, y, C.fallMid, 1);
 
-  // Blossom canopies spilling down the cliffs.
-  // Each canopy is a loose cluster of smaller puffs so it reads as layered foliage.
-  const puff = (cx: number, cy: number, r: number) =>
-    disc(cx, cy, r, (x, y) => {
-      const k = kind[y * W + x];
-      if (k === 1 || k === 3 || k === 5) return null;
-      const h = hash(x, y);
-      const shade = (x - cx) / r + (y - cy) / r; // light from upper left
-      if (h > 0.45) return shade > 0.7 ? C.blossomShade : h > 0.8 && shade < 0.2 ? C.blossomLit : C.blossom;
-      return C.blossomBase;
-    });
+  // Blossom canopies. Each canopy is a stack of flattened pads drawn back to
+  // front, so lower tiers overlap the ones behind with their lit tops. Pads are
+  // built from 2x2 florets shaded by where they sit on the pad: moonlit on the
+  // upper right, falling into shadow underneath.
+  const canopy: { x: number; y: number; r: number }[] = [];
+  const TONES = [C.blossomBase, C.blossomShade, C.blossom, C.blossomLit];
+  const FLORET: [number, number, number][] = [[0, 0, 0], [1, 0, 1], [0, 1, -1], [1, 1, 0]];
+  const pad = (cx: number, cy: number, r: number) => {
+    const rx = r * 1.35;
+    const ry = r * 0.8;
+    for (let gy = Math.floor((cy - ry) / 2) * 2; gy <= cy + ry; gy += 2)
+      for (let gx = Math.floor((cx - rx) / 2) * 2; gx <= cx + rx; gx += 2) {
+        const nx = (gx + 1 - cx) / rx;
+        const ny = (gy + 1 - cy) / ry;
+        if (nx * nx + ny * ny > 1 - hash(gx, gy, 3) * 0.35) continue; // ragged fringe
+        const l = -ny * 0.75 + nx * 0.3 + (hash(gx, gy, 4) - 0.5) * 0.5;
+        const tone = l > 0.55 ? 3 : l > 0.05 ? 2 : l > -0.45 ? 1 : 0;
+        // Rotate the floret's light/dark corners so no regular checker forms.
+        const rot = Math.floor(hash(gx, gy, 6) * 4);
+        for (let f = 0; f < 4; f++) {
+          const [ox, oy] = FLORET[f];
+          const step = FLORET[(f + rot) % 4][2];
+          const X = gx + ox;
+          const Y = gy + oy;
+          if (X < 0 || Y < 0 || X >= W || Y >= H) continue;
+          const k = kind[Y * W + X];
+          if (k === 1 || k === 3 || k === 5 || hash(X, Y, 5) > 0.92) continue;
+          px(X, Y, TONES[Math.min(3, Math.max(0, tone + step))]);
+        }
+      }
+    // A few petals dangle below the pad's rim.
+    for (let n = 0; n < r / 2; n++) {
+      const x = cx + (rand() - 0.5) * rx * 1.4;
+      const y = cy + ry * (0.7 + rand() * 0.4);
+      if (kind[Math.floor(y) * W + Math.floor(x)] !== 1) px(x, y, C.blossomShade);
+    }
+  };
   const blossom = (cx: number, cy: number, r: number) => {
-    const n = 4 + Math.floor(r / 3);
-    for (let p = 0; p < n; p++) {
-      const a = rand() * Math.PI * 2;
-      const d = rand() * r * 0.7;
-      puff(cx + Math.cos(a) * d * 1.3, cy + Math.sin(a) * d * 0.6 + (rand() - 0.3) * 3, r * (0.35 + rand() * 0.25));
+    const pads: [number, number, number][] = [];
+    const n = 3 + Math.floor(r / 4);
+    for (let p = 0; p < n; p++)
+      pads.push([cx + (rand() - 0.5) * r * 1.8, cy + (rand() - 0.5) * r * 0.9, r * (0.45 + rand() * 0.3)]);
+    pads.sort((a, b) => a[1] - b[1]);
+    for (const [x, y, pr] of pads) pad(x, y, pr);
+    canopy.push({ x: cx, y: cy, r });
+    // Some canopies carry a faint bioluminescent bloom.
+    if (rand() < 0.35) addLight(cx, cy, Math.round(r + 6), C.violet, 0.22, 0.3);
+  };
+
+  // Recursive branching: each limb bends once, then forks into two or three
+  // thinner, shorter limbs, nudged back toward vertical. Tips are collected.
+  const branch = (x: number, y: number, len: number, ang: number, w: number, depth: number, tips: [number, number][]) => {
+    const x1 = x + Math.cos(ang) * len * 0.5;
+    const y1 = y + Math.sin(ang) * len * 0.5;
+    const a2 = ang + (rand() - 0.5) * 0.5;
+    const x2 = x1 + Math.cos(a2) * len * 0.5;
+    const y2 = y1 + Math.sin(a2) * len * 0.5;
+    const w1 = Math.max(1, w * 0.68);
+    limb([[x, y], [x1, y1], [x2, y2]], w, w1);
+    if (depth === 0) {
+      tips.push([x2, y2]);
+      return;
+    }
+    const forks = rand() < 0.3 ? 3 : 2;
+    for (let i = 0; i < forks; i++) {
+      let a = a2 + (i - (forks - 1) / 2) * (0.5 + rand() * 0.5) + (rand() - 0.5) * 0.2;
+      a += (-Math.PI / 2 - a) * 0.15;
+      branch(x2, y2, len * (0.62 + rand() * 0.18), a, w1, depth - 1, tips);
     }
   };
   // Left-cliff clumps are fractions of W; the ones beside the fall are offsets from the lips.
@@ -515,32 +576,25 @@ function buildScene(W: number, fx: number): Scene {
     plant(x, Math.round(cliffTop(x) + 8 + rand() * 50), 0.4);
   }
 
-  // Framing trees: a slender one left, a heavy leaning trunk right.
-  limb([[W * 0.1, H + 4], [W * 0.13, 120], [W * 0.1, 60], [W * 0.06, -4]], 7, 3);
-  limb([[W * 0.125, 112], [W * 0.22, 92], [W * 0.33, 76]], 3, 1);
-  limb([[W * 0.11, 78], [W * 0.03, 56], [-4, 50]], 3, 1);
-  limb([[W * 0.1, 64], [W * 0.2, 36], [W * 0.27, 18]], 2.5, 1);
-  limb([[W * 0.17, 102], [W * 0.18, 86]], 1.5, 1);
-  blossom(W * 0.21, 84, 11);
-  blossom(W * 0.08, 96, 12);
-  blossom(W * 0.3, 74, 7);
+  // Left: a blossom tree grown by branching, with a canopy on every tip.
+  const leftTips: [number, number][] = [];
+  branch(W * 0.1, H + 4, 48, -Math.PI / 2 + 0.06, 8, 4, leftTips);
+  for (const [x, y] of leftTips) blossom(x, y, 7 + rand() * 4);
 
-  // The right trunk sits beyond the fall's right lip and leans in over the moon.
+  // Right: a dark willow leaning in over the moon. Its leaf clumps are static;
+  // the long strands hanging from them sway and glow (animated per frame).
   const tx = Math.max(lipR + 14, W * 0.93);
-  limb([[tx, H + 4], [tx + 4, 120], [tx - 2, 50], [tx - 8, -4]], 13, 7);
-  limb([[tx - 2, 44], [fx + 6, 16], [fx - 24, -4]], 5, 2);
-  limb([[tx, 74], [W + 4, 52]], 4, 2);
-  limb([[tx - 6, 30], [W, 4]], 3, 2);
-  // Dark leaves hanging across the top right, partly over the moon.
-  for (let n = 0; n < 16; n++) {
-    const cx = W * (0.56 + rand() * 0.46);
-    const cy = rand() * 12 - 4;
-    disc(cx, cy, 6 + rand() * 9, (x, y) => (hash(x, y) > 0.7 && y > cy ? C.leafLit : C.leaf));
-  }
-  for (let n = 0; n < 22; n++) {
-    const x = Math.round(W * (0.58 + rand() * 0.42));
-    const len = 6 + Math.floor(rand() * 22);
-    for (let d = 0; d < len; d++) if (hash(x, d) > 0.15) px(x + Math.round(Math.sin(d * 0.4) * 0.6), 6 + d, C.leaf);
+  const willowTips: [number, number][] = [];
+  branch(tx, H + 4, 52, -Math.PI / 2 - 0.14, 13, 4, willowTips);
+  const strands: Scene["strands"] = [];
+  for (const [x, y] of willowTips) {
+    disc(x, y, 5 + rand() * 3, (X, Y) => (Y > y && hash(X, Y) > 0.6 ? C.leafLit : C.leaf));
+    for (let s = 0; s < 3; s++) {
+      const sx = Math.round(x + (rand() - 0.5) * 10);
+      // Keep strands off the waterfall itself so the curtain stays readable.
+      if (sx >= lipL - 20 && sx <= lipR + 1 && y > FALL_TOP - 20) continue;
+      strands.push({ x: sx, y: Math.round(y + 2), len: 10 + Math.floor(rand() * 26), phase: rand() * 6.28 });
+    }
   }
 
   // Foreground bushes at the very bottom corners.
@@ -564,9 +618,12 @@ function buildScene(W: number, fx: number): Scene {
   for (let n = 0; n < 14; n++)
     mist.push({ x: fallLeft(fallBottom - 1) - 6 + rand() * (lipR - fallLeft(fallBottom - 1) + 14), drift: (rand() - 0.7) * 16, phase: rand(), size: 7 + rand() * 7 });
 
+  // Petals shed from the canopies and flutter down and to the left.
   const petals: Scene["petals"] = [];
-  for (let n = 0; n < Math.round(W * 0.1); n++)
-    petals.push({ x: rand() * W, y: rand() * H, phase: rand() * 6.28, speed: 3 + rand() * 6 });
+  for (let n = 0; n < Math.round(W * 0.12); n++) {
+    const c = canopy[Math.floor(rand() * canopy.length)];
+    petals.push({ x: c.x + (rand() - 0.5) * c.r * 2, y: c.y, phase: rand(), speed: 4 + rand() * 6 });
+  }
 
   const flies: Scene["flies"] = [];
   for (let n = 0; n < Math.round(W * 0.06); n++)
@@ -585,7 +642,7 @@ function buildScene(W: number, fx: number): Scene {
     else if (kind[i] === 4) lowerFall.push(i);
   }
 
-  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, spray, mist, stars, petals, flies };
+  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, spray, mist, strands, stars, petals, flies };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -682,6 +739,27 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     add(Y * W + X, C.foam, 0.7);
   }
 
+  // Willow strands: sway grows toward the free end; glowing beads every few
+  // pixels and a bright tip that pulses.
+  for (const st of s.strands) {
+    const pulse = 0.6 + 0.4 * Math.sin(t * 1.1 + st.phase);
+    let X = st.x;
+    for (let d = 0; d < st.len; d++) {
+      const Y = st.y + d;
+      if (Y >= H) break;
+      X = Math.round(st.x + Math.sin(t * 0.9 + st.phase + d * 0.12) * (d / st.len) ** 1.3 * 2.5);
+      if (X < 0 || X >= W || Y < 0) continue;
+      const bead = d % 7 === 6;
+      put(Y * W + X, bead ? C.mint : C.strand);
+      if (bead) add(Y * W + X, C.mint, 0.3 * pulse);
+    }
+    const tipY = st.y + st.len;
+    if (X >= 1 && X < W - 1 && tipY < H - 1) {
+      put(tipY * W + X, C.cyan);
+      for (const o of glowOffsets(3)) add((tipY + o.dy) * W + X + o.dx, C.cyan, o.f * 0.35 * pulse);
+    }
+  }
+
   // Twinkling stars; the brightest flare into small crosses.
   for (const st of s.stars) {
     const k = 0.5 + 0.5 * Math.sin(t * st.speed + st.phase);
@@ -725,11 +803,15 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     }
   }
 
-  // Petals drifting down across the scene.
+  // Petals fall from their canopy, drifting left and flickering as they turn.
   for (const p of s.petals) {
-    const Y = Math.floor((p.y + t * p.speed) % H);
-    const X = Math.floor((((p.x + Math.sin(t * 0.8 + p.phase) * 6 - t * 2) % W) + W) % W);
-    add(Y * W + X, C.petal, 0.55);
+    const span = H - p.y + 8;
+    const dy = (t * p.speed + p.phase * span) % span;
+    const Y = Math.floor(p.y + dy);
+    const X = Math.floor(p.x - dy * 0.35 + Math.sin(t * 1.5 + p.phase * 40) * 3);
+    if (X < 0 || X >= W || Y < 0 || Y >= H) continue;
+    const flip = Math.floor(t * 6 + p.phase * 10) % 3 === 0;
+    put(Y * W + X, flip ? C.blossomShade : C.petal);
   }
 
   // Fireflies.
