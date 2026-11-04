@@ -1,4 +1,4 @@
-import NightMesh from "./components/night-mesh";
+import PixelGrove from "./components/pixel-grove";
 import styles from "./home.module.css";
 
 const POSTS = [
@@ -17,7 +17,7 @@ const POSTS = [
 export default function Home() {
   return (
     <main className={styles.home}>
-      <NightMesh />
+      <PixelGrove />
 
       <div className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
