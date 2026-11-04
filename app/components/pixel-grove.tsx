@@ -60,7 +60,6 @@ const C = {
   bark: hex("#131a1a"),
   leaf: hex("#0c1714"),
   leafLit: hex("#1b3124"),
-  strand: hex("#2c5848"),
   wetEdge: hex("#0b1513"),
   pad: hex("#0f3322"),
   padLit: hex("#2a6a3a"),
@@ -147,7 +146,6 @@ type Scene = {
   seeps: number[];
   pool: number[];
   lights: Light[];
-  strands: { x: number; y: number; len: number; phase: number }[];
   reeds: { x: number; y: number; h: number; phase: number; glow: boolean }[];
   fish: { phase: number; speed: number; rx: number; ry: number; color: RGB }[];
   shallow: Uint8Array;
@@ -688,22 +686,13 @@ function buildScene(W: number, fx: number): Scene {
   branch(W * 0.1, H + 4, 48, -Math.PI / 2 + 0.06, 8, 4, leftTips);
   for (const [x, y] of leftTips) blossom(x, y, 7 + rand() * 4);
 
-  // Right: a dark willow leaning in over the moon. Its leaf clumps are static;
-  // the long strands hanging from them sway and glow (animated per frame).
+  // Right: a dark tree leaning in over the moon, with leaf clumps on its tips.
   const tx = Math.max(lipR + 14, W * 0.93);
-  const willowTips: [number, number][] = [];
+  const rightTips: [number, number][] = [];
   reseed(202);
-  branch(tx, H + 4, 52, -Math.PI / 2 - 0.14, 13, 4, willowTips, { minX: lipR + 3, belowY: FALL_TOP - 6 });
-  const strands: Scene["strands"] = [];
-  for (const [x, y] of willowTips) {
+  branch(tx, H + 4, 52, -Math.PI / 2 - 0.14, 13, 4, rightTips, { minX: lipR + 3, belowY: FALL_TOP - 6 });
+  for (const [x, y] of rightTips)
     disc(x, y, 5 + rand() * 3, (X, Y) => (Y > y && hash(X, Y) > 0.6 ? C.leafLit : C.leaf));
-    for (let s = 0; s < 3; s++) {
-      const sx = Math.round(x + (rand() - 0.5) * 10);
-      // Keep strands off the waterfall itself so the curtain stays readable.
-      if (sx >= lipL - 20 && sx <= lipR + 1 && y > FALL_TOP - 20) continue;
-      strands.push({ x: sx, y: Math.round(y + 2), len: 10 + Math.floor(rand() * 26), phase: rand() * 6.28 });
-    }
-  }
 
   // Foreground bushes at the very bottom corners.
   for (let n = 0; n < 4; n++) bush(W * (n * 0.07), 182, 12 + rand() * 6);
@@ -753,7 +742,7 @@ function buildScene(W: number, fx: number): Scene {
     else if (kind[i] === 4) lowerFall.push(i);
   }
 
-  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, strands, stars, petals, flies,
+  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, stars, petals, flies,
     reeds, fish, shallow, poolRx };
 }
 
@@ -865,16 +854,6 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     }
   }
 
-  // Willow strands: plain foliage whose sway grows toward the free end.
-  for (const st of s.strands) {
-    for (let d = 0; d < st.len; d++) {
-      const Y = st.y + d;
-      if (Y >= H) break;
-      const X = Math.round(st.x + Math.sin(t * 0.9 + st.phase + d * 0.12) * (d / st.len) ** 1.3 * 2.5);
-      if (X < 0 || X >= W || Y < 0) continue;
-      put(Y * W + X, C.strand);
-    }
-  }
 
   // Reeds bend from the root; cattail heads, some of them glowing.
   for (const r of s.reeds) {
