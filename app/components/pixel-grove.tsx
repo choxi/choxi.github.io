@@ -61,6 +61,13 @@ const C = {
   leaf: hex("#0c1714"),
   leafLit: hex("#1b3124"),
   strand: hex("#2c5848"),
+  wetEdge: hex("#0b1513"),
+  pad: hex("#0f3322"),
+  padLit: hex("#2a6a3a"),
+  poolDeep: hex("#164d52"),
+  reed: hex("#3c5a44"),
+  cattail: hex("#3b2c24"),
+  koi: hex("#ffb27a"),
   rock: hex("#272e31"),
   rockLit: hex("#414b4e"),
   stem: hex("#5d7a6c"),
@@ -125,6 +132,7 @@ function glowOffsets(r: number) {
 }
 
 const FALL_TOP = 64;
+const POOL_CY = 158; // vertical centre of the plunge pool
 const TIER = 13;
 
 type Scene = {
@@ -142,6 +150,12 @@ type Scene = {
   spray: { x: number; vx: number; vy: number; phase: number }[];
   mist: { x: number; drift: number; phase: number; size: number }[];
   strands: { x: number; y: number; len: number; phase: number }[];
+  reeds: { x: number; y: number; h: number; phase: number; glow: boolean }[];
+  fish: { phase: number; speed: number; rx: number; ry: number; color: RGB }[];
+  shallow: Uint8Array;
+  reflectL: number;
+  reflectR: number;
+  poolRx: number;
   stars: { i: number; phase: number; speed: number; big: boolean }[];
   petals: { x: number; y: number; phase: number; speed: number }[];
   flies: { x: number; y: number; phase: number; sx: number; sy: number }[];
@@ -158,8 +172,13 @@ function fallCenter(W: number, cardHalf: number) {
 }
 
 function buildScene(W: number, fx: number): Scene {
-  const rand = mulberry32(11);
+  let rand = mulberry32(11);
   const noise = makeNoise(rand);
+  // Each major element restarts the random stream from its own seed, so adding
+  // detail to one part of the scene never reshuffles the others.
+  const reseed = (seed: number) => {
+    rand = mulberry32(seed);
+  };
   const base = new Uint8ClampedArray(W * H * 4);
   // 0 solid, 1 main fall, 2 pool, 3 upper fall, 4 lower cascade
   const kind = new Uint8Array(W * H);
@@ -218,8 +237,10 @@ function buildScene(W: number, fx: number): Scene {
   const lipL = Math.round(fx - W * FALL_HALF);
   const lipR = Math.round(fx + W * FALL_HALF);
   // Everything around the pool hangs off the fall's position.
-  const poolCx = fx - W * 0.06;
-  const poolRx = W * 0.13;
+  // The pool sits forward and left of where the fall lands, leaving calm water
+  // away from the churn for lily pads and fish.
+  const poolCx = fx - W * 0.09;
+  const poolRx = W * 0.15;
   const fallBottom = 150;
   // The curtain spills further left with each ledge; the right edge hugs the cliff.
   const fallLeft = (y: number) => {
@@ -403,10 +424,20 @@ function buildScene(W: number, fx: number): Scene {
 
   // Recursive branching: each limb bends once, then forks into two or three
   // thinner, shorter limbs, nudged back toward vertical. Tips are collected.
-  const branch = (x: number, y: number, len: number, ang: number, w: number, depth: number, tips: [number, number][]) => {
+  // An optional keep-out keeps limbs left of `maxX` / right of `minX` below
+  // `belowY` (used to stop the willow from growing across the waterfall).
+  type KeepOut = { minX?: number; maxX?: number; belowY: number };
+  const branch = (
+    x: number, y: number, len: number, ang: number, w: number, depth: number,
+    tips: [number, number][], keep?: KeepOut,
+  ) => {
+    const blocked = (px2: number, py2: number) =>
+      !!keep && py2 > keep.belowY && ((keep.minX !== undefined && px2 < keep.minX) || (keep.maxX !== undefined && px2 > keep.maxX));
+    let a2 = ang + (rand() - 0.5) * 0.5;
+    // Steer straight up if this limb would stray into the keep-out.
+    if (blocked(x + Math.cos(ang) * len * 0.5 + Math.cos(a2) * len * 0.5, y + Math.sin(ang) * len)) ang = a2 = -Math.PI / 2;
     const x1 = x + Math.cos(ang) * len * 0.5;
     const y1 = y + Math.sin(ang) * len * 0.5;
-    const a2 = ang + (rand() - 0.5) * 0.5;
     const x2 = x1 + Math.cos(a2) * len * 0.5;
     const y2 = y1 + Math.sin(a2) * len * 0.5;
     const w1 = Math.max(1, w * 0.68);
@@ -419,7 +450,7 @@ function buildScene(W: number, fx: number): Scene {
     for (let i = 0; i < forks; i++) {
       let a = a2 + (i - (forks - 1) / 2) * (0.5 + rand() * 0.5) + (rand() - 0.5) * 0.2;
       a += (-Math.PI / 2 - a) * 0.15;
-      branch(x2, y2, len * (0.62 + rand() * 0.18), a, w1, depth - 1, tips);
+      branch(x2, y2, len * (0.62 + rand() * 0.18), a, w1, depth - 1, tips, keep);
     }
   };
   // Left-cliff clumps are fractions of W; the ones beside the fall are offsets from the lips.
@@ -433,13 +464,26 @@ function buildScene(W: number, fx: number): Scene {
   ];
   for (const [dx, y, r] of nearFall) blossom((dx < 0 ? lipL : lipR) + dx, y, r);
 
+  reseed(303);
   // Pool, the outlet channel and a small cascade over rocks at the bottom.
+  // The shoreline wobbles with noise; a band just inside it is shallow water.
+  const POOL_RY = 11;
+  const poolDist = (x: number, y: number) => {
+    const nx = (x - poolCx) / poolRx;
+    const ny = (y - POOL_CY) / POOL_RY;
+    const shore = 0.88 + noise(Math.atan2(ny, nx) * 1.6 + 20) * 0.26;
+    return Math.hypot(nx, ny) / shore; // <1 inside the pool
+  };
   const inPool = (x: number, y: number) =>
-    ((x - poolCx) / poolRx) ** 2 + ((y - 154) / 10) ** 2 <= 1 ||
-    (y >= 154 && y < 167 && Math.abs(x - poolCx) < W * 0.06);
-  for (let y = 140; y < 168; y++)
-    for (let x = 0; x < W; x++) if (inPool(x, y)) px(x, y, C.pool, 2);
-  for (let y = 167; y < H; y++)
+    poolDist(x, y) <= 1 || (y >= POOL_CY && y < 170 && Math.abs(x - poolCx) < W * 0.05);
+  const shallow = new Uint8Array(W * H);
+  for (let y = 140; y < 171; y++)
+    for (let x = 0; x < W; x++)
+      if (inPool(x, y)) {
+        px(x, y, C.pool, 2);
+        if (poolDist(x, y) > 0.8) shallow[y * W + x] = 1;
+      }
+  for (let y = 170; y < H; y++)
     for (let x = Math.round(poolCx - W * 0.025); x <= poolCx + W * 0.025; x++) px(x, y, C.fallMid, 4);
 
   // Banks: dark bush mounds.
@@ -447,14 +491,52 @@ function buildScene(W: number, fx: number): Scene {
     disc(cx, cy, r, (x, y) => (y < cy - r * 0.3 && hash(x, y) > 0.55 ? C.bushLit : C.bush));
   for (let n = 0; n < 7; n++) bush(W * (0.02 + n * 0.06), 168 + rand() * 6, 12 + rand() * 6);
   for (let x = poolCx + poolRx + 4; x < W + 12; x += W * 0.06) bush(x, 160 + rand() * 8, 11 + rand() * 7);
-  bush(poolCx - poolRx - 2, 148, 9);
   bush(lipR + 18, 146, 8);
 
+  // Boulders frame the outlet below the pool rather than sitting in it.
   const rocks: [number, number, number][] = [
-    [-0.08, 170, 7], [0.09, 168, 8], [-0.1, 179, 7], [0.11, 179, 7], [0, 182, 4], [0.15, 158, 5],
+    [-0.07, 175, 6], [0.07, 174, 7], [-0.1, 181, 7], [0.11, 181, 7], [0, 184, 4], [0.16, 160, 5],
   ];
   for (const [u, y, r] of rocks)
     disc(poolCx + W * u, y, r, (x, yy) => (yy < y - r * 0.5 || (hash(x, yy) > 0.85 && yy < y) ? C.rockLit : C.rock));
+
+  // Shoreline: a dark wet line hugging the water, then a scatter of pebbles.
+  for (let y = 138; y < 170; y++)
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (kind[i] !== 0) continue;
+      const d = poolDist(x, y);
+      if (d > 1.22) continue;
+      const touchesWater = kind[i - 1] === 2 || kind[i + 1] === 2 || kind[i - W] === 2 || kind[i + W] === 2;
+      if (touchesWater) px(x, y, C.wetEdge);
+      else if (hash(x, y, 8) > 0.72) px(x, y, hash(x, y, 9) > 0.5 ? C.rockLit : C.rock);
+    }
+
+  // Lily pads, foreshortened into flat ellipses, some with a glowing bloom.
+  // Kept away from the churn where the fall lands.
+  const impactX = fx - 8;
+  for (let n = 0, placed = 0; n < 30 && placed < 6; n++) {
+    const lx = Math.round(poolCx + (rand() - 0.5) * poolRx * 1.6);
+    const ly = Math.round(POOL_CY - 5 + rand() * 11);
+    if (Math.abs(lx - impactX) < 14 || poolDist(lx, ly) > 0.75) continue;
+    placed++;
+    const r = 2 + Math.floor(rand() * 2);
+    const notch = rand() < 0.5 ? 1 : -1;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -r; dx <= r; dx++) {
+        if ((dx / r) ** 2 + dy * dy > 1.05) continue;
+        if (dy === 0 && dx * notch > 0 && dx * notch < r) continue; // wedge-shaped notch
+        px(lx + dx, ly + dy, dy < 0 ? C.padLit : C.pad);
+        // A dark line where the pad meets the water seats it on the surface.
+        if (dy === 1 || (dy === 0 && Math.abs(dx) === r)) px(lx + dx, ly + dy + 1, C.wetEdge);
+      }
+    if (rand() < 0.6) {
+      const bloom = rand() < 0.5 ? C.mint : C.violet;
+      px(lx - notch, ly - 1, bloom);
+      px(lx - notch, ly - 2, C.petal);
+      addLight(lx - notch, ly - 1, 6, bloom, 0.6);
+    }
+  }
 
   // Arched stone footbridge over a side channel feeding the pool. Both feet
   // stand on the bank; the arch spans water so the opening never reads as a hole.
@@ -530,6 +612,34 @@ function buildScene(W: number, fx: number): Scene {
   bush(bx0 - 3, footL + 7, 8);
   bush(bx0 + 4, footL + 9, 6);
 
+  // Grass tufts on the banks around the pool.
+  for (let n = 0; n < 90; n++) {
+    const x = Math.floor(rand() * W);
+    const y = Math.floor(146 + rand() * 32);
+    const i = y * W + x;
+    if (kind[i] !== 0 || inPool(x, y) || (x >= bx0 - 4 && x <= bx1 + 4 && y < footL + 3)) continue;
+    const blades = 2 + Math.floor(rand() * 3);
+    for (let b = 0; b < blades; b++) {
+      const h = 1 + Math.floor(rand() * 3);
+      const lean = b - (blades - 1) / 2;
+      for (let d = 0; d < h; d++) px(x + Math.round(lean * (d / 2 + 0.5)), y - d, d === h - 1 ? C.mossLit : C.moss);
+    }
+  }
+
+  // Reeds standing along the shore; drawn per frame so they sway.
+  const reeds: Scene["reeds"] = [];
+  for (let n = 0; n < 60 && reeds.length < 16; n++) {
+    const a = rand() * Math.PI * 2;
+    const x = Math.round(poolCx + Math.cos(a) * poolRx * 1.02);
+    const y = Math.round(POOL_CY + Math.sin(a) * POOL_RY * 1.05);
+    if (y < 146 || inPool(x, y) || x < bx1 + 4 || Math.abs(x - impactX) < 14) continue;
+    for (let k = 0; k < 2 + Math.floor(rand() * 2); k++)
+      reeds.push({ x: x + k * 2 - 1, y, h: 6 + Math.floor(rand() * 8), phase: rand() * 6.28, glow: rand() < 0.35 });
+  }
+  // A clump at the bridge's near foot as well.
+  for (let k = 0; k < 4; k++)
+    reeds.push({ x: bx0 + 6 + k * 2, y: footL + 2, h: 7 + Math.floor(rand() * 7), phase: rand() * 6.28, glow: k === 1 });
+
   // Bioluminescent plants.
   const mushroom = (x: number, y: number, s: number, color: RGB) => {
     for (let d = 0; d < s + 1; d++) px(x, y - d, C.stem);
@@ -577,6 +687,7 @@ function buildScene(W: number, fx: number): Scene {
   }
 
   // Left: a blossom tree grown by branching, with a canopy on every tip.
+  reseed(101);
   const leftTips: [number, number][] = [];
   branch(W * 0.1, H + 4, 48, -Math.PI / 2 + 0.06, 8, 4, leftTips);
   for (const [x, y] of leftTips) blossom(x, y, 7 + rand() * 4);
@@ -585,7 +696,8 @@ function buildScene(W: number, fx: number): Scene {
   // the long strands hanging from them sway and glow (animated per frame).
   const tx = Math.max(lipR + 14, W * 0.93);
   const willowTips: [number, number][] = [];
-  branch(tx, H + 4, 52, -Math.PI / 2 - 0.14, 13, 4, willowTips);
+  reseed(202);
+  branch(tx, H + 4, 52, -Math.PI / 2 - 0.14, 13, 4, willowTips, { minX: lipR + 3, belowY: FALL_TOP - 6 });
   const strands: Scene["strands"] = [];
   for (const [x, y] of willowTips) {
     disc(x, y, 5 + rand() * 3, (X, Y) => (Y > y && hash(X, Y) > 0.6 ? C.leafLit : C.leaf));
@@ -604,7 +716,7 @@ function buildScene(W: number, fx: number): Scene {
 
   // Mist glow where the fall meets the pool, and along the fall itself.
   addLight(fx - 8, fallBottom - 2, 32, C.mist, 0.9, 0.35);
-  addLight(poolCx, 156, 22, C.mist, 0.6, 0.5);
+  addLight(impactX - 4, POOL_CY - 2, 18, C.mist, 0.45, 0.5);
   for (let y = FALL_TOP + 6; y < fallBottom - 10; y += 14) addLight(fx - (y - FALL_TOP) / 8, y, 16, C.mist, 0.35, 0.4);
   addLight(poolCx, 172, 12, C.mist, 0.5, 0.6);
 
@@ -617,6 +729,16 @@ function buildScene(W: number, fx: number): Scene {
   const mist: Scene["mist"] = [];
   for (let n = 0; n < 14; n++)
     mist.push({ x: fallLeft(fallBottom - 1) - 6 + rand() * (lipR - fallLeft(fallBottom - 1) + 14), drift: (rand() - 0.7) * 16, phase: rand(), size: 7 + rand() * 7 });
+
+  // Glowing fish circling the pool beneath the surface.
+  const fishColors = [C.koi, C.cyan, C.koi];
+  const fish: Scene["fish"] = fishColors.map((color, n) => ({
+    phase: rand() * 6.28,
+    speed: (0.25 + rand() * 0.2) * (n % 2 ? -1 : 1),
+    rx: poolRx * (0.45 + rand() * 0.3),
+    ry: 3 + rand() * 3,
+    color,
+  }));
 
   // Petals shed from the canopies and flutter down and to the left.
   const petals: Scene["petals"] = [];
@@ -636,13 +758,17 @@ function buildScene(W: number, fx: number): Scene {
   const pool: number[] = [];
   for (let i = 0; i < kind.length; i++) {
     if (kind[i] === 5) seeps.push(i);
+    // shallow: 0 = not water, 1 = shallows, 2 = deep (only where water survived).
+    if (kind[i] !== 2) shallow[i] = 0;
+    else if (!shallow[i]) shallow[i] = 2;
     if (kind[i] === 1) mainFall.push(i);
     else if (kind[i] === 2) pool.push(i);
     else if (kind[i] === 3) upperFall.push(i);
     else if (kind[i] === 4) lowerFall.push(i);
   }
 
-  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, spray, mist, strands, stars, petals, flies };
+  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, spray, mist, strands, stars, petals, flies,
+    reeds, fish, shallow, reflectL: fallLeft(fallBottom - 1), reflectR: lipR, poolRx };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -723,11 +849,36 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const n =
       Math.sin((y - t * 7) * 0.9 + Math.sin(x * 0.2 + t * 0.6) * 1.8) * 0.6 +
       Math.sin(x * 0.13 - y * 0.3 + t * 1.1) * 0.4;
-    let c = n > 0.8 ? C.poolLight : n > 0.35 ? C.poolMid : C.pool;
+    let c: RGB;
+    if (s.shallow[i] === 1) c = n > 0.6 ? C.poolLight : C.poolMid;
+    else {
+      // Deep water darkens toward the far bank, away from the glow of the fall.
+      const far = Math.abs(x - s.poolCx) / s.poolRx;
+      c = n > 0.85 ? C.poolLight : n > 0.4 ? C.poolMid : far > 0.5 && bayer(x, y) < far - 0.4 ? C.poolDeep : C.pool;
+    }
+    // The curtain's reflection: broken vertical glints below the fall.
+    if (x >= s.reflectL && x <= s.reflectR && y > iy + 2 && s.shallow[i] === 2 && hash(x, Math.floor(y / 2 + t * 3)) > 0.84) c = C.fallLight;
     const d = Math.hypot(x - ix, (y - iy) * 2.4);
     if (d < 44 && Math.sin(d * 0.6 - t * 4.5) > 0.82 + d / 160) c = C.poolLight;
-    if (d < 16 && hash(x, y, tick) > 0.55 + d / 40) c = C.foam;
+    if (d < 10 && hash(x, y, tick) > 0.55 + d / 30) c = C.foam;
     put(i, c);
+  }
+
+  // Fish: a soft glow under the surface, only where there's open water.
+  for (const f of s.fish) {
+    const a = t * f.speed + f.phase;
+    const X = Math.round(s.poolCx + Math.cos(a) * f.rx);
+    const Y = Math.round(POOL_CY + 1 + Math.sin(a) * f.ry);
+    const dir = -Math.sin(a) * Math.sign(f.speed) > 0 ? 1 : -1; // facing along the path
+    const body: [number, number, number][] = [[0, 0, 0.75], [-dir, 0, 0.6], [-2 * dir, 0, 0.4], [-3 * dir, Math.round(Math.sin(t * 8)), 0.3]];
+    for (const [dx, dy, k] of body) {
+      const j = (Y + dy) * W + X + dx;
+      if (s.shallow[j]) add(j, f.color, k);
+    }
+    for (const o of glowOffsets(4)) {
+      const j = (Y + o.dy) * W + X + o.dx;
+      if (s.shallow[j]) add(j, f.color, o.f * 0.12);
+    }
   }
 
   // Spray: droplets thrown up and out from the impact, falling back in arcs.
@@ -757,6 +908,22 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     if (X >= 1 && X < W - 1 && tipY < H - 1) {
       put(tipY * W + X, C.cyan);
       for (const o of glowOffsets(3)) add((tipY + o.dy) * W + X + o.dx, C.cyan, o.f * 0.35 * pulse);
+    }
+  }
+
+  // Reeds bend from the root; cattail heads, some of them glowing.
+  for (const r of s.reeds) {
+    let X = r.x;
+    for (let d = 0; d < r.h; d++) {
+      X = Math.round(r.x + Math.sin(t * 0.7 + r.phase) * (d / r.h) ** 1.5 * 1.6);
+      const Y = r.y - d;
+      if (X < 0 || X >= W || Y < 0 || Y >= H) continue;
+      const head = d >= r.h - 2;
+      put(Y * W + X, head ? (r.glow ? C.green : C.cattail) : C.reed);
+    }
+    if (r.glow) {
+      const pulse = 0.6 + 0.4 * Math.sin(t * 1.2 + r.phase);
+      for (const o of glowOffsets(4)) add((r.y - r.h + 1 + o.dy) * W + X + o.dx, C.green, o.f * 0.3 * pulse);
     }
   }
 
