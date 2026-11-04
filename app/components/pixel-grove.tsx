@@ -214,9 +214,11 @@ function buildScene(W: number, fx: number): Scene {
   };
   const fallRight = (y: number) => lipR + (y - FALL_TOP > TIER * 3 ? 1 : 0);
 
-  // Sky.
+  // Sky, then a dark ground floor so nothing below the cliffs is left unpainted.
   for (let y = 0; y < 110; y++)
     for (let x = 0; x < W; x++) px(x, y, dither(x, y, C.skyTop, C.skyLow, y / 90));
+  for (let y = 110; y < H; y++)
+    for (let x = 0; x < W; x++) px(x, y, hash(x, y) > 0.85 ? C.bushLit : C.bush);
 
   const stars: Scene["stars"] = [];
   for (let n = 0; n < W * 0.12; n++) {
@@ -320,60 +322,73 @@ function buildScene(W: number, fx: number): Scene {
   const bx0 = Math.round(bx1 - W * 0.26);
   const span = bx1 - bx0;
   const footL = 167; // ground line at each foot
-  const footR = 160;
+  const footR = 163;
   const ground = (u: number) => footL + (footR - footL) * u;
-  const deckY = (u: number) => Math.round(ground(u) - 6 - Math.sin(u * Math.PI) * 8);
-  // Arch opening: a half-ellipse across the middle of the span.
+  const deckY = (u: number) => Math.round(ground(u) - 7 - Math.sin(u * Math.PI) * 7);
+  // Arch opening: a half-ellipse across the middle of the span, low enough
+  // that a solid band of stone runs over its crown.
   const archC = 0.5;
-  const archHalf = 0.34;
+  const archHalf = 0.27;
+  const crown = deckY(archC) + 7;
   const archTopY = (u: number) => {
     const a = (u - archC) / archHalf;
     if (Math.abs(a) >= 1) return Infinity;
-    return deckY(archC) + 5 + (1 - Math.sqrt(1 - a * a)) * (ground(u) - deckY(archC) - 5);
+    return crown + (1 - Math.sqrt(1 - a * a)) * (ground(u) + 2 - crown);
   };
 
-  // Water under the arch, joining the pool's left edge.
+  // Water only under the arch: a stream slipping beneath the span.
   const cmx = bx0 + span * archC;
-  for (let y = 154; y < 172; y++)
-    for (let x = bx0; x <= bx1 + 8; x++) {
-      const lobe = ((x - cmx) / (span * archHalf + 3)) ** 2 + ((y - 164) / 5) ** 2 <= 1;
-      const link = y >= 156 && y <= 162 && x >= cmx && x <= bx1 + 8;
-      if (lobe || link) px(x, y, C.pool, 2);
+  for (let y = crown; y < footL + 4; y++)
+    for (let x = bx0; x <= bx1; x++)
+      if (((x - cmx) / (span * archHalf + 2)) ** 2 + ((y - (footL + 1)) / 6) ** 2 <= 1) px(x, y, C.pool, 2);
+
+  // Viewed from slightly above: far railing, then the walkway surface, then
+  // the near face and near railing in front.
+  const WALK = 2; // visible depth of the walkway, in px
+  const railing = (x: number, base: number, near: boolean) => {
+    const endPost = x - bx0 < 2 || bx1 - x < 2;
+    const railH = endPost ? 7 : 5;
+    for (let y = base - railH; y < base; y++) {
+      const dy = base - y;
+      const post = endPost || (x - bx0) % 6 === 0;
+      const lattice = dy < 5 && ((x + y) % 4 === 0 || (x - y + 400) % 4 === 0);
+      if (dy === 5 || post) px(x, y, near ? (dy === railH ? C.bridgeLit : C.bridge) : C.bridgeDark);
+      else if (lattice) px(x, y, near ? C.bridgeDark : C.rail);
     }
+  };
+  for (let x = bx0; x <= bx1; x++) railing(x, deckY((x - bx0) / span) - WALK, false);
 
   for (let x = bx0 - 3; x <= bx1 + 3; x++) {
     const u = Math.min(1, Math.max(0, (x - bx0) / span));
     const deck = deckY(u);
-    // Feet flare out a few pixels past the deck ends and sink into the bank.
+    // Feet flare out a few pixels past the deck ends and step down into the bank.
     const flare = x < bx0 ? bx0 - x : x > bx1 ? x - bx1 : 0;
     const top = deck + flare * 2;
-    const bottom = ground(u) + 2;
+    const bottom = ground(u) + 3;
     const arch = archTopY(u);
+    // Walkway: moonlit flagstones.
+    if (flare === 0)
+      for (let y = deck - WALK; y < deck; y++) px(x, y, (x + (y % 2) * 2) % 5 === 0 ? C.bridge : C.bridgeLit);
     for (let y = top; y < bottom; y++) {
-      if (y >= arch) continue; // leave the water/bank visible through the opening
-      const nearArch = arch - y < 2;
+      if (y >= arch) continue; // the stream shows through the opening
       const row = Math.floor((y - deck) / 3);
       const mortar = (y - deck) % 3 === 0 || (x + (row % 2) * 3) % 6 === 0;
       let c = mortar ? C.bridgeDark : C.bridge;
       if (y === top) c = C.bridgeLit;
-      else if (nearArch) c = (x + y) % 3 === 0 ? C.bridgeDark : C.bridgeLit; // voussoir ring
+      else if (arch - y < 2) c = (x + y) % 3 === 0 ? C.bridgeDark : C.bridgeLit; // voussoir ring
       px(x, y, c);
     }
-    // Shadow under the arch's crown, on whatever shows through.
-    if (Number.isFinite(arch)) for (let y = Math.ceil(arch); y < arch + 2; y++) if (kind[y * W + x] !== 2) px(x, y, C.bridgeDark);
-    // Railing: top rail, posts and a diagonal lattice, with taller end posts.
-    if (flare > 0) continue;
-    const endPost = x - bx0 < 2 || bx1 - x < 2;
-    const railH = endPost ? 7 : 5;
-    for (let y = deck - railH; y < deck; y++) {
-      const dy = deck - y;
-      const topRail = dy === 5;
-      const post = endPost || (x - bx0) % 6 === 0;
-      const lattice = dy < 5 && ((x + y) % 4 === 0 || (x - y + 400) % 4 === 0);
-      if (topRail || post) px(x, y, dy === railH ? C.bridgeLit : C.bridge);
-      else if (lattice) px(x, y, C.bridgeDark);
-    }
+    // Shadow the water just under the crown.
+    if (Number.isFinite(arch)) for (let y = Math.ceil(arch); y < arch + 2; y++) px(x, y, C.bridgeDark);
+    if (flare === 0) railing(x, deck, true);
   }
+
+  // Rocks and a bush in front of the feet so each end settles into the bank
+  // instead of stopping in a flat vertical cut.
+  for (const [ox, oy, r] of [[3, 5, 6], [8, 7, 5], [-2, 8, 5], [12, 4, 4]] as const)
+    disc(bx1 + ox, footR + oy, r, (x, y) => (y < footR + oy - r * 0.4 || (hash(x, y) > 0.85 && y < footR + oy) ? C.rockLit : C.rock));
+  bush(bx0 - 3, footL + 7, 8);
+  bush(bx0 + 4, footL + 9, 6);
 
   // Bioluminescent plants.
   const mushroom = (x: number, y: number, s: number, color: RGB) => {
@@ -413,8 +428,8 @@ function buildScene(W: number, fx: number): Scene {
   for (let n = 0; n < 7; n++) plant(Math.round(rightBank + rand() * (W - rightBank)), Math.round(152 + rand() * 24), 1 + rand());
   // Near the bridge foot and the left bank.
   for (let n = 0; n < 10; n++) plant(Math.round(W * (0.02 + rand() * 0.36)), Math.round(163 + rand() * 15), 1 + rand());
-  // At the pool's left rim, under the bridge.
-  for (let n = 0; n < 5; n++) plant(Math.round(poolCx - poolRx - 6 + rand() * 8), Math.round(146 + rand() * 4), 0.6);
+  // On the rocks by the bridge's far foot, clear of the railing.
+  for (let n = 0; n < 4; n++) plant(Math.round(bx1 + 4 + rand() * 8), Math.round(footR + 6 + rand() * 4), 0.6);
   // Tucked into cliff ledges.
   for (let n = 0; n < 6; n++) {
     const x = Math.round(rand() < 0.7 ? W * (0.05 + rand() * 0.5) : lipR + 4 + rand() * (W - lipR - 4));
