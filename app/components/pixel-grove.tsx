@@ -32,6 +32,9 @@ const C = {
   cliff: hex("#162120"),
   cliffDark: hex("#0e1716"),
   cliffStreak: hex("#1e2d2a"),
+  cliffWarm: hex("#1d2522"),
+  cliffLit: hex("#2d403b"),
+  root: hex("#1f2a26"),
   moss: hex("#2c5130"),
   mossLit: hex("#4b7d42"),
   blossomBase: hex("#253133"),
@@ -131,6 +134,7 @@ type Scene = {
   mainFall: number[];
   upperFall: number[];
   lowerFall: number[];
+  seeps: number[];
   pool: number[];
   lights: Light[];
   spray: { x: number; vx: number; vy: number; phase: number }[];
@@ -246,18 +250,92 @@ function buildScene(W: number, fx: number): Scene {
     x < lipL
       ? FALL_TOP - ((lipL - x) / lipL) * 24 + noise(x * 0.08) * 6
       : FALL_TOP - 2 - ((x - lipR) / (W - lipR)) * 22 + noise(x * 0.08 + 50) * 6;
+  // Faces are stacked bands of rock separated by wavy ledges; each band is
+  // split into blocks by vertical joints. Blocks catch light on the side facing
+  // the fall, ledges are lit on top and shadowed beneath their overhang.
+  const ledgeY = (n: number, x: number) => 68 + n * 17 + (noise(x * 0.06 + n * 7.3) - 0.5) * 10;
+  // Ledges only jut out along stretches; elsewhere the face runs on unbroken.
+  const ledgeHere = (n: number, x: number) => noise(x * 0.09 + n * 3.1) > 0.45;
+  // Irregular vertical joints, so the rock reads as fractured stone, not masonry.
+  const jointAt = (x: number, n: number) => hash(x, n + 20) > 0.84 && hash(x - 1, n + 20) <= 0.84;
+  const bandAt = (x: number, y: number) => {
+    let n = 0;
+    while (y >= ledgeY(n, x)) n++;
+    return n;
+  };
   for (let x = 0; x < W; x++) {
     if (x >= lipL && x <= lipR) continue;
     const top = Math.floor(cliffTop(x));
-    const streak = hash(x, 0) > 0.6;
     const drip = Math.floor(hash(x, 3) * hash(x, 4) * 10);
+    const facesRight = x < lipL; // the left cliff's blocks face the fall on their right
     for (let y = top; y < 160; y++) {
-      const depth = (y - top) / 90;
-      let c = dither(x, y, streak ? C.cliffStreak : C.cliff, C.cliffDark, depth);
+      const n = bandAt(x, y);
+      const prev = n > 0 ? ledgeY(n - 1, x) : top;
+      const ly = y - Math.floor(prev);
+      const bandH = ledgeY(n, x) - prev;
+      // Block tone changes from one joint to the next.
+      let jx = x;
+      while (jx > 0 && !jointAt(jx, n) && x - jx < 20) jx--;
+      const block = jx;
+      const bh = hash(block, n + 40);
+      const tone = bh < 0.45 ? C.cliff : bh < 0.8 ? C.cliffStreak : C.cliffWarm;
+      let c = dither(x, y, tone, C.cliffDark, (y - top) / 100);
+      // Joints run part-way down a band; the stone beside them catches light
+      // on the side facing the fall.
+      const jointOpen = ly > 1 && ly < bandH - 2 && hash(block, n + 21) > 0.3;
+      const nextJoint = facesRight ? jointAt(x + 1, n) : jointAt(x, n);
+      if (jointOpen && jointAt(x, n) && facesRight) c = C.cliffDark;
+      else if (jointOpen && jointAt(x + 1, n) && !facesRight) c = C.cliffDark;
+      else if (jointOpen && nextJoint && hash(x, y) > 0.4) c = C.cliffLit;
+      if (ledgeHere(n, x) && ledgeY(n, x) - y < 1.5) c = C.cliffDark; // shadow under the next ledge's lip
+      if (n > 0 && ly < 1 && ledgeHere(n - 1, x)) {
+        // Ledge tops: lit stone, or moss that drips over the edge.
+        c = hash(block, n + 3) > 0.55 ? C.mossLit : C.cliffLit;
+      } else if (n > 0 && ledgeHere(n - 1, x) && hash(block, n + 3) > 0.55 && ly < 1 + Math.floor(hash(x, n) * hash(x, n + 1) * 6)) {
+        c = C.moss;
+      }
       if (y - top < 2) c = dither(x, y, C.moss, C.mossLit, 0.5);
       else if (y - top < 4 + drip) c = C.moss;
       px(x, y, c);
     }
+  }
+  const onCliff = (x: number, y: number) =>
+    x >= 0 && x < W && (x < lipL - 1 || x > lipR + 1) && y > cliffTop(x) + 4 && y < 150;
+
+  // Glowing lichen crusted along a few ledges.
+  for (let n = 0; n < 16; n++) {
+    const x = Math.floor(rand() * W);
+    const band = 1 + Math.floor(rand() * 5);
+    const y = Math.floor(ledgeY(band - 1, x));
+    if (!onCliff(x, y)) continue;
+    const color = rand() < 0.6 ? C.cyan : C.green;
+    const len = 2 + Math.floor(rand() * 4);
+    for (let d = 0; d < len; d++) if (onCliff(x + d, y)) px(x + d, y - (hash(x + d, y) > 0.7 ? 1 : 0), color);
+    addLight(x + len / 2, y, 5, color, 0.5, 0.3 + rand() * 0.5);
+  }
+
+  // Roots dangling from the rim, a few ending in a glowing bud.
+  for (let n = 0; n < 14; n++) {
+    let x = Math.floor(rand() * W);
+    if (x >= lipL - 2 && x <= lipR + 2) continue;
+    const y0 = Math.floor(cliffTop(x)) + 2;
+    const len = 4 + Math.floor(rand() * 10);
+    for (let d = 0; d < len; d++) {
+      if (hash(x, y0 + d, 9) > 0.75) x += hash(x, d) > 0.5 ? 1 : -1;
+      px(x, y0 + d, C.root);
+    }
+    if (rand() < 0.35) {
+      px(x, y0 + len, C.mint);
+      addLight(x, y0 + len, 4, C.mint, 0.6);
+    }
+  }
+
+  // Thin seeps trickling down the left cliff face.
+  for (let n = 0; n < 3; n++) {
+    const x = Math.round(W * (0.04 + rand() * 0.2));
+    const from = Math.floor(ledgeY(1 + Math.floor(rand() * 2), x));
+    const to = Math.min(150, Math.floor(ledgeY(4 + Math.floor(rand() * 3), x)));
+    for (let y = from; y < to; y++) if (onCliff(x, y)) px(x, y, C.upperFall, 5);
   }
 
   // Main fall: stepped tiers widening toward the pool.
@@ -268,7 +346,8 @@ function buildScene(W: number, fx: number): Scene {
   // Each canopy is a loose cluster of smaller puffs so it reads as layered foliage.
   const puff = (cx: number, cy: number, r: number) =>
     disc(cx, cy, r, (x, y) => {
-      if (kind[y * W + x] === 1 || kind[y * W + x] === 3) return null;
+      const k = kind[y * W + x];
+      if (k === 1 || k === 3 || k === 5) return null;
       const h = hash(x, y);
       const shade = (x - cx) / r + (y - cy) / r; // light from upper left
       if (h > 0.45) return shade > 0.7 ? C.blossomShade : h > 0.8 && shade < 0.2 ? C.blossomLit : C.blossom;
@@ -496,15 +575,17 @@ function buildScene(W: number, fx: number): Scene {
   const mainFall: number[] = [];
   const upperFall: number[] = [];
   const lowerFall: number[] = [];
+  const seeps: number[] = [];
   const pool: number[] = [];
   for (let i = 0; i < kind.length; i++) {
+    if (kind[i] === 5) seeps.push(i);
     if (kind[i] === 1) mainFall.push(i);
     else if (kind[i] === 2) pool.push(i);
     else if (kind[i] === 3) upperFall.push(i);
     else if (kind[i] === 4) lowerFall.push(i);
   }
 
-  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, pool, lights, spray, mist, stars, petals, flies };
+  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, spray, mist, stars, petals, flies };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -559,6 +640,14 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     else if (tierY > TIER - 3 && hash(x, y, tick) > 0.55) c = C.foam;
     if (y > s.fallBottom - 7 && hash(x, y, tick) > 0.35) c = C.foam;
     put(i, c);
+  }
+
+  // Seeps: beads of light sliding down a thin wet line.
+  for (const i of s.seeps) {
+    const x = i % W;
+    const y = (i / W) | 0;
+    const st = streak(x, y, 14, 11);
+    put(i, st < 0.15 ? C.fallLight : st < 0.4 ? C.fallMid : C.upperFall);
   }
 
   for (const i of s.lowerFall) {
