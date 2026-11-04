@@ -93,6 +93,48 @@
   }
 }
 
+/* Light mode: the background is a daytime scene, so the card becomes bright
+   frosted glass with dark text. Comes after the portrait rule so it wins. */
+@media (prefers-color-scheme: light) {
+  .home {
+    background: #cfe7ee;
+  }
+
+  .glass {
+    color: #13211f;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.74),
+      rgba(255, 255, 255, 0.52) 60%
+    );
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 0 36px rgba(255, 255, 255, 0.25),
+      0 24px 60px rgba(30, 60, 70, 0.18);
+  }
+
+  .intro {
+    color: rgba(19, 33, 31, 0.72);
+  }
+
+  .label {
+    color: rgba(19, 33, 31, 0.55);
+  }
+
+  .posts li {
+    border-top-color: rgba(19, 33, 31, 0.12);
+  }
+
+  .posts a {
+    color: #13211f;
+  }
+
+  .posts a:focus-visible {
+    outline-color: rgba(19, 33, 31, 0.8);
+  }
+}
+
 @media (max-width: 480px) {
   .glass {
     padding: 24px 22px 14px;

@@ -23,7 +23,8 @@ const hex = (h: string): RGB => [
   parseInt(h.slice(5, 7), 16),
 ];
 
-const C = {
+// Night palette (dark mode).
+const NIGHT = {
   skyTop: hex("#12181b"),
   skyLow: hex("#25302f"),
   moon: hex("#e9f7e6"),
@@ -61,8 +62,6 @@ const C = {
   leaf: hex("#0c1714"),
   leafLit: hex("#1b3124"),
   wetEdge: hex("#0b1513"),
-  pad: hex("#0f3322"),
-  padLit: hex("#2a6a3a"),
   poolDeep: hex("#164d52"),
   reed: hex("#3c5a44"),
   cattail: hex("#3b2c24"),
@@ -78,6 +77,73 @@ const C = {
   moonGlow: hex("#cfeedd"),
   petal: hex("#e6e2f0"),
   firefly: hex("#d4ff9a"),
+};
+
+type Palette = typeof NIGHT;
+
+// Day palette (light mode): a bright spring morning. The moon becomes the sun,
+// blossoms turn cherry pink, and water and stone pick up daylight.
+const DAY: Palette = {
+  skyTop: hex("#78b2dc"),
+  skyLow: hex("#cfe7ee"),
+  moon: hex("#fff7da"),
+  moonShade: hex("#fff7da"),
+  moonHalo: hex("#a8d2ea"),
+  cliff: hex("#5f7a6c"),
+  cliffDark: hex("#4a6256"),
+  cliffStreak: hex("#688475"),
+  cliffWarm: hex("#6d7c68"),
+  cliffLit: hex("#8eaa95"),
+  root: hex("#5a4a3c"),
+  moss: hex("#5d9a4b"),
+  mossLit: hex("#8cc56a"),
+  blossomBase: hex("#5f8560"),
+  blossomShade: hex("#d998b6"),
+  blossom: hex("#f3bdd2"),
+  blossomLit: hex("#fff0f6"),
+  fallDark: hex("#4f9fb2"),
+  fallMid: hex("#8fd0de"),
+  fallLight: hex("#e6fbff"),
+  foam: hex("#ffffff"),
+  upperFall: hex("#6db6c8"),
+  pool: hex("#3d8ea2"),
+  poolMid: hex("#64b0c0"),
+  poolLight: hex("#b6e6ee"),
+  bridge: hex("#9aa4a3"),
+  bridgeDark: hex("#717c7c"),
+  bridgeLit: hex("#c6cdca"),
+  rail: hex("#646e6e"),
+  bush: hex("#3e6b45"),
+  bushLit: hex("#5e9055"),
+  trunk: hex("#4a3a30"),
+  trunkLit: hex("#705846"),
+  bark: hex("#3b2e26"),
+  leaf: hex("#3e6b45"),
+  leafLit: hex("#6a9b55"),
+  wetEdge: hex("#2e5a5e"),
+  poolDeep: hex("#347f92"),
+  reed: hex("#5e8a4f"),
+  cattail: hex("#6b4a32"),
+  koi: hex("#ff7a1a"),
+  rock: hex("#7d8783"),
+  rockLit: hex("#a7afaa"),
+  stem: hex("#5e8a5a"),
+  green: hex("#62d46a"),
+  cyan: hex("#3fcfd0"),
+  mint: hex("#9eefbd"),
+  violet: hex("#a184ff"),
+  mist: hex("#ffffff"),
+  moonGlow: hex("#fff3c8"),
+  petal: hex("#ffe1ee"),
+  firefly: hex("#fff3a0"),
+};
+
+// The active palette. Swapped (and the scene rebuilt) when the colour scheme changes.
+let C: Palette = NIGHT;
+let DAYTIME = false;
+const setTheme = (day: boolean) => {
+  DAYTIME = day;
+  C = day ? DAY : NIGHT;
 };
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
@@ -854,7 +920,7 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const dir = -Math.sin(a) * Math.sign(f.speed) > 0 ? 1 : -1; // facing along the path
     for (const o of glowOffsets(6)) {
       const j = (Y + o.dy) * W + X + o.dx;
-      if (s.shallow[j]) add(j, f.color, o.f * 0.18);
+      if (s.shallow[j]) add(j, f.color, o.f * (DAYTIME ? 0.08 : 0.18));
     }
     const head = tint(f.color, 1.6);
     const belly = tint(f.color, 0.75);
@@ -888,7 +954,7 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   }
 
   // Twinkling stars; the brightest flare into small crosses.
-  for (const st of s.stars) {
+  if (!DAYTIME) for (const st of s.stars) {
     const k = 0.5 + 0.5 * Math.sin(t * st.speed + st.phase);
     add(st.i, C.petal, k * 0.8);
     if (st.big && k > 0.7) {
@@ -901,7 +967,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
 
   // Pulsing glow from the plants, the fall's mist and the moon.
   for (const l of s.lights) {
-    const k = (0.6 + 0.4 * Math.sin(t * l.speed + l.phase)) * l.strength * 0.45;
+    // Bioluminescence barely shows in daylight, so glow is much weaker by day.
+    const k = (0.6 + 0.4 * Math.sin(t * l.speed + l.phase)) * l.strength * (DAYTIME ? 0.15 : 0.45);
     for (const o of glowOffsets(l.r)) {
       const X = Math.floor(l.x) + o.dx;
       const Y = Math.floor(l.y) + o.dy;
@@ -922,8 +989,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     put(Y * W + X, flip ? C.blossomShade : C.petal);
   }
 
-  // Fireflies.
-  for (const f of s.flies) {
+  // Fireflies (night only).
+  if (!DAYTIME) for (const f of s.flies) {
     const X = Math.round(f.x + Math.sin(t * f.sx + f.phase) * 14);
     const Y = Math.round(f.y + Math.sin(t * f.sy + f.phase * 2) * 8);
     const blink = Math.max(0, Math.sin(t * 1.3 + f.phase * 3));
@@ -980,9 +1047,19 @@ export default function PixelGrove() {
       image = ctx.createImageData(W, H);
       draw(performance.now());
     };
+    // Light mode shows the scene by day; follow the OS setting live.
+    const scheme = window.matchMedia("(prefers-color-scheme: light)");
+    const applyTheme = () => {
+      setTheme(scheme.matches);
+      host.style.background = scheme.matches ? "#cfe7ee" : "#12181b";
+      scene = null; // force a rebuild with the new palette
+      resize();
+    };
+    scheme.addEventListener("change", applyTheme);
+
     const observer = new ResizeObserver(resize);
     observer.observe(host);
-    resize();
+    applyTheme();
 
     if (!reduceMotion) {
       const loop = (now: number) => {
@@ -997,6 +1074,7 @@ export default function PixelGrove() {
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
+      scheme.removeEventListener("change", applyTheme);
       canvas.remove();
     };
   }, []);
