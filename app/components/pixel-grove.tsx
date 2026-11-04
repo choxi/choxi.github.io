@@ -165,6 +165,22 @@ function fallCenter(W: number, cardHalf: number) {
   return Math.round(Math.min(W - 34, Math.max(W * 0.72, clear)));
 }
 
+// Decides where the fall goes and which horizontal slice of the canvas is on
+// screen (`left`, in canvas px; `visW` is the slice width).
+// - Wide screens see the whole canvas; the fall sits just right of the card.
+// - On narrow/portrait screens the card spans the whole slice, so the fall
+//   can't dodge it sideways. Instead the slice pans onto the fall and pool:
+//   the moon shows above the card and the fall's base, pool and fish below.
+function frameScene(W: number, visW: number, cardHalf: number) {
+  const centered = (W - visW) / 2;
+  const fx = fallCenter(W, cardHalf);
+  if (fx + W * FALL_HALF + 1 <= centered + visW) return { fx, left: centered };
+  const fxPortrait = Math.round(W * 0.72);
+  const focus = fxPortrait - W * 0.05; // between the fall and the pool
+  const left = Math.min(W - visW, Math.max(0, focus - visW / 2));
+  return { fx: fxPortrait, left };
+}
+
 function buildScene(W: number, fx: number): Scene {
   let rand = mulberry32(11);
   const noise = makeNoise(rand);
@@ -969,7 +985,10 @@ export default function PixelGrove() {
       // Half the content card's width (see home.module.css) plus a margin, in canvas pixels.
       const scale = Math.max(width / W, height / H);
       const cardHalf = (Math.min(width - 32, 440) / 2 + 24) / scale;
-      const fx = fallCenter(W, cardHalf);
+      const visW = Math.min(W, width / scale);
+      const { fx, left } = frameScene(W, visW, cardHalf);
+      // object-position pans the cropped canvas so `left` is the slice's edge.
+      canvas.style.objectPosition = W - visW < 0.5 ? "50% 50%" : `${(left / (W - visW)) * 100}% 50%`;
       if (scene?.W === W && scene.fx === fx) return;
       canvas.width = W;
       canvas.height = H;

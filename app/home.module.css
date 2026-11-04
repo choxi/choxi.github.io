@@ -83,6 +83,16 @@
   border-radius: 4px;
 }
 
+/* On portrait screens the background pans so the waterfall sits right behind
+   the card; a dark tint keeps the white text readable over the bright water. */
+@media (orientation: portrait) {
+  .glass {
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 60%),
+      rgba(8, 14, 16, 0.4);
+  }
+}
+
 @media (max-width: 480px) {
   .glass {
     padding: 24px 22px 14px;
