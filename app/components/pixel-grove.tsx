@@ -66,7 +66,7 @@ const C = {
   poolDeep: hex("#164d52"),
   reed: hex("#3c5a44"),
   cattail: hex("#3b2c24"),
-  koi: hex("#ffb27a"),
+  koi: hex("#ff9a3c"),
   rock: hex("#272e31"),
   rockLit: hex("#414b4e"),
   stem: hex("#5d7a6c"),
@@ -562,11 +562,10 @@ function buildScene(W: number, fx: number): Scene {
   // the near face and near railing in front.
   const WALK = 2; // visible depth of the walkway, in px
   const railing = (x: number, base: number, near: boolean) => {
-    const endPost = x - bx0 < 2 || bx1 - x < 2;
-    const railH = endPost ? 7 : 5;
+    const railH = 5;
     for (let y = base - railH; y < base; y++) {
       const dy = base - y;
-      const post = endPost || (x - bx0) % 6 === 0;
+      const post = (x - bx0) % 6 === 0;
       const lattice = dy < 5 && ((x + y) % 4 === 0 || (x - y + 400) % 4 === 0);
       if (dy === 5 || post) px(x, y, near ? (dy === railH ? C.bridgeLit : C.bridge) : C.bridgeDark);
       else if (lattice) px(x, y, near ? C.bridgeDark : C.rail);
@@ -574,17 +573,28 @@ function buildScene(W: number, fx: number): Scene {
   };
   for (let x = bx0; x <= bx1; x++) railing(x, deckY((x - bx0) / span) - WALK, false);
 
-  for (let x = bx0 - 3; x <= bx1 + 3; x++) {
+  for (let x = bx0 - 1; x <= bx1 + 1; x++) {
     const u = Math.min(1, Math.max(0, (x - bx0) / span));
     const deck = deckY(u);
-    // Feet flare out a few pixels past the deck ends and step down into the bank.
-    const flare = x < bx0 ? bx0 - x : x > bx1 ? x - bx1 : 0;
-    const top = deck + flare * 2;
     const bottom = ground(u) + 3;
+    // Each end is a squared stone pillar that rises from the bank to cap the
+    // railing, so the bridge stops cleanly where the rail does.
+    const pillar = x <= bx0 + 1 || x >= bx1 - 1;
+    if (pillar) {
+      const outer = x === bx0 - 1 || x === bx1 + 1;
+      for (let y = deck - 8; y < bottom; y++) {
+        let c = (y - deck) % 3 === 0 ? C.bridgeDark : C.bridge;
+        if (y === deck - 8) c = C.bridgeLit; // cap
+        else if (outer) c = C.bridgeDark; // crisp outside edge
+        else if (x === bx1 && y > deck - 8) c = (y - deck) % 3 === 0 ? C.bridgeDark : C.bridgeLit; // moonlit side
+        px(x, y, c);
+      }
+      continue;
+    }
+    const top = deck;
     const arch = archTopY(u);
     // Walkway: moonlit flagstones.
-    if (flare === 0)
-      for (let y = deck - WALK; y < deck; y++) px(x, y, (x + (y % 2) * 2) % 5 === 0 ? C.bridge : C.bridgeLit);
+    for (let y = deck - WALK; y < deck; y++) px(x, y, (x + (y % 2) * 2) % 5 === 0 ? C.bridge : C.bridgeLit);
     for (let y = top; y < bottom; y++) {
       if (y >= arch) continue; // the stream shows through the opening
       const row = Math.floor((y - deck) / 3);
@@ -596,7 +606,7 @@ function buildScene(W: number, fx: number): Scene {
     }
     // Shadow the water just under the crown.
     if (Number.isFinite(arch)) for (let y = Math.ceil(arch); y < arch + 2; y++) px(x, y, C.bridgeDark);
-    if (flare === 0) railing(x, deck, true);
+    railing(x, deck, true);
   }
 
   // Rocks and a bush in front of the feet so each end settles into the bank
@@ -815,42 +825,48 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     put(i, st < 0.25 ? C.foam : st < 0.6 ? C.fallMid : C.fallDark);
   }
 
-  // Pool: rings spreading out from the fall, plus drifting ripples.
+  // Pool: still water so the fish read clearly. Shallows are lighter, deep
+  // water darkens toward the far bank; only the landing point churns.
   const ix = s.fx - 8;
   const iy = s.fallBottom + 1;
   for (const i of s.pool) {
     const x = i % W;
     const y = (i / W) | 0;
-    const n =
-      Math.sin((y - t * 7) * 0.9 + Math.sin(x * 0.2 + t * 0.6) * 1.8) * 0.6 +
-      Math.sin(x * 0.13 - y * 0.3 + t * 1.1) * 0.4;
     let c: RGB;
-    if (s.shallow[i] === 1) c = n > 0.6 ? C.poolLight : C.poolMid;
+    if (s.shallow[i] === 1) c = C.poolMid;
     else {
-      // Deep water darkens toward the far bank, away from the glow of the fall.
       const far = Math.abs(x - s.poolCx) / s.poolRx;
-      c = n > 0.85 ? C.poolLight : n > 0.4 ? C.poolMid : far > 0.5 && bayer(x, y) < far - 0.4 ? C.poolDeep : C.pool;
+      c = far > 0.5 && bayer(x, y) < far - 0.4 ? C.poolDeep : C.pool;
     }
     const d = Math.hypot(x - ix, (y - iy) * 2.4);
-    if (d < 44 && Math.sin(d * 0.6 - t * 4.5) > 0.82 + d / 160) c = C.poolLight;
     if (d < 10 && hash(x, y, tick) > 0.55 + d / 30) c = C.foam;
     put(i, c);
   }
 
-  // Fish: a soft glow under the surface, only where there's open water.
+  // Fish: solid bright bodies with a pale head, darker belly and a forked tail
+  // that flicks; a soft halo makes them glow. Drawn only over open water.
+  const tint = (c: RGB, k: number): RGB =>
+    k > 1 ? [c[0] + (255 - c[0]) * (k - 1), c[1] + (255 - c[1]) * (k - 1), c[2] + (255 - c[2]) * (k - 1)] : [c[0] * k, c[1] * k, c[2] * k];
   for (const f of s.fish) {
     const a = t * f.speed + f.phase;
     const X = Math.round(s.poolCx + Math.cos(a) * f.rx);
     const Y = Math.round(POOL_CY + 1 + Math.sin(a) * f.ry);
     const dir = -Math.sin(a) * Math.sign(f.speed) > 0 ? 1 : -1; // facing along the path
-    const body: [number, number, number][] = [[0, 0, 0.75], [-dir, 0, 0.6], [-2 * dir, 0, 0.4], [-3 * dir, Math.round(Math.sin(t * 8)), 0.3]];
-    for (const [dx, dy, k] of body) {
-      const j = (Y + dy) * W + X + dx;
-      if (s.shallow[j]) add(j, f.color, k);
-    }
-    for (const o of glowOffsets(4)) {
+    for (const o of glowOffsets(6)) {
       const j = (Y + o.dy) * W + X + o.dx;
-      if (s.shallow[j]) add(j, f.color, o.f * 0.12);
+      if (s.shallow[j]) add(j, f.color, o.f * 0.18);
+    }
+    const head = tint(f.color, 1.6);
+    const belly = tint(f.color, 0.75);
+    const flick = Math.sin(t * 8 + f.phase) > 0 ? 1 : 0;
+    const body: [number, number, RGB][] = [
+      [0, 0, head], [-1, 0, f.color], [-2, 0, f.color], [-3, 0, f.color],
+      [-1, 1, belly], [-2, 1, belly], [-3, 1, belly],
+      [-4, -1 + flick, f.color], [-5, -1 + flick, belly], [-4, 2 - flick, f.color], [-5, 2 - flick, belly],
+    ];
+    for (const [dx, dy, c] of body) {
+      const j = (Y + dy) * W + X + dx * dir;
+      if (s.shallow[j]) put(j, c);
     }
   }
 
