@@ -522,31 +522,7 @@ function buildScene(W: number, fx: number): Scene {
       else if (hash(x, y, 8) > 0.72) px(x, y, hash(x, y, 9) > 0.5 ? C.rockLit : C.rock);
     }
 
-  // Lily pads, foreshortened into flat ellipses, some with a glowing bloom.
-  // Kept away from the churn where the fall lands.
-  const impactX = fx - 8;
-  for (let n = 0, placed = 0; n < 30 && placed < 6; n++) {
-    const lx = Math.round(poolCx + (rand() - 0.5) * poolRx * 1.6);
-    const ly = Math.round(POOL_CY - 5 + rand() * 11);
-    if (Math.abs(lx - impactX) < 14 || poolDist(lx, ly) > 0.75) continue;
-    placed++;
-    const r = 2 + Math.floor(rand() * 2);
-    const notch = rand() < 0.5 ? 1 : -1;
-    for (let dy = -1; dy <= 1; dy++)
-      for (let dx = -r; dx <= r; dx++) {
-        if ((dx / r) ** 2 + dy * dy > 1.05) continue;
-        if (dy === 0 && dx * notch > 0 && dx * notch < r) continue; // wedge-shaped notch
-        px(lx + dx, ly + dy, dy < 0 ? C.padLit : C.pad);
-        // A dark line where the pad meets the water seats it on the surface.
-        if (dy === 1 || (dy === 0 && Math.abs(dx) === r)) px(lx + dx, ly + dy + 1, C.wetEdge);
-      }
-    if (rand() < 0.6) {
-      const bloom = rand() < 0.5 ? C.mint : C.violet;
-      px(lx - notch, ly - 1, bloom);
-      px(lx - notch, ly - 2, C.petal);
-      addLight(lx - notch, ly - 1, 6, bloom, 0.6);
-    }
-  }
+  const impactX = fx - 8; // where the fall lands
 
   // Arched stone footbridge over a side channel feeding the pool. Both feet
   // stand on the bank; the arch spans water so the opening never reads as a hole.
@@ -598,12 +574,19 @@ function buildScene(W: number, fx: number): Scene {
     const pillar = x <= bx0 + 1 || x >= bx1 - 1;
     if (pillar) {
       const outer = x === bx0 - 1 || x === bx1 + 1;
-      for (let y = deck - 8; y < bottom; y++) {
+      // Pillars run down past the deck's base and sink into the bank.
+      const pillarBottom = ground(u) + 9;
+      for (let y = deck - 8; y < pillarBottom; y++) {
         let c = (y - deck) % 3 === 0 ? C.bridgeDark : C.bridge;
         if (y === deck - 8) c = C.bridgeLit; // cap
         else if (outer) c = C.bridgeDark; // crisp outside edge
         else if (x === bx1 && y > deck - 8) c = (y - deck) % 3 === 0 ? C.bridgeDark : C.bridgeLit; // moonlit side
         px(x, y, c);
+      }
+      // A plinth one pixel wider at the foot of the outer face.
+      if (outer) {
+        const side = x === bx0 - 1 ? -1 : 1;
+        for (let y = pillarBottom - 3; y < pillarBottom; y++) px(x + side, y, y === pillarBottom - 3 ? C.bridgeLit : C.bridgeDark);
       }
       continue;
     }
@@ -625,12 +608,12 @@ function buildScene(W: number, fx: number): Scene {
     railing(x, deck, true);
   }
 
-  // Rocks and a bush in front of the feet so each end settles into the bank
-  // instead of stopping in a flat vertical cut.
-  for (const [ox, oy, r] of [[3, 5, 6], [8, 7, 5], [-2, 8, 5], [12, 4, 4]] as const)
+  // A few small rocks beside the far pillar's base (not in front of it), and
+  // low bushes at the near foot.
+  for (const [ox, oy, r] of [[6, 10, 3], [10, 9, 3], [5, 13, 2]] as const)
     disc(bx1 + ox, footR + oy, r, (x, y) => (y < footR + oy - r * 0.4 || (hash(x, y) > 0.85 && y < footR + oy) ? C.rockLit : C.rock));
-  bush(bx0 - 3, footL + 7, 8);
-  bush(bx0 + 4, footL + 9, 6);
+  bush(bx0 - 6, footL + 9, 6);
+  bush(bx0 + 4, footL + 11, 5);
 
   // Grass tufts on the banks around the pool.
   for (let n = 0; n < 90; n++) {
@@ -646,13 +629,16 @@ function buildScene(W: number, fx: number): Scene {
     }
   }
 
-  // Reeds standing along the shore; drawn per frame so they sway.
+  // Reeds standing along the shore; drawn per frame so they sway. Only on the
+  // back and right shores, so they grow up against the bank and never stand
+  // in front of the open water.
   const reeds: Scene["reeds"] = [];
-  for (let n = 0; n < 60 && reeds.length < 16; n++) {
+  for (let n = 0; n < 80 && reeds.length < 14; n++) {
     const a = rand() * Math.PI * 2;
+    if (!(Math.sin(a) < -0.5 || Math.cos(a) > 0.85)) continue;
     const x = Math.round(poolCx + Math.cos(a) * poolRx * 1.02);
     const y = Math.round(POOL_CY + Math.sin(a) * POOL_RY * 1.05);
-    if (y < 146 || inPool(x, y) || x < bx1 + 4 || Math.abs(x - impactX) < 14) continue;
+    if (inPool(x, y) || x < bx1 + 4 || Math.abs(x - impactX) < 14) continue;
     for (let k = 0; k < 2 + Math.floor(rand() * 2); k++)
       reeds.push({ x: x + k * 2 - 1, y, h: 6 + Math.floor(rand() * 8), phase: rand() * 6.28, glow: rand() < 0.35 });
   }
@@ -698,8 +684,6 @@ function buildScene(W: number, fx: number): Scene {
   for (let n = 0; n < 7; n++) plant(Math.round(rightBank + rand() * (W - rightBank)), Math.round(152 + rand() * 24), 1 + rand());
   // Near the bridge foot and the left bank.
   for (let n = 0; n < 10; n++) plant(Math.round(W * (0.02 + rand() * 0.36)), Math.round(163 + rand() * 15), 1 + rand());
-  // On the rocks by the bridge's far foot, clear of the railing.
-  for (let n = 0; n < 4; n++) plant(Math.round(bx1 + 4 + rand() * 8), Math.round(footR + 6 + rand() * 4), 0.6);
   // Tucked into cliff ledges.
   for (let n = 0; n < 6; n++) {
     const x = Math.round(rand() < 0.7 ? W * (0.05 + rand() * 0.5) : lipR + 4 + rand() * (W - lipR - 4));
