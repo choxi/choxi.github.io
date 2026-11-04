@@ -147,14 +147,10 @@ type Scene = {
   seeps: number[];
   pool: number[];
   lights: Light[];
-  spray: { x: number; vx: number; vy: number; phase: number }[];
-  mist: { x: number; drift: number; phase: number; size: number }[];
   strands: { x: number; y: number; len: number; phase: number }[];
   reeds: { x: number; y: number; h: number; phase: number; glow: boolean }[];
   fish: { phase: number; speed: number; rx: number; ry: number; color: RGB }[];
   shallow: Uint8Array;
-  reflectL: number;
-  reflectR: number;
   poolRx: number;
   stars: { i: number; phase: number; speed: number; big: boolean }[];
   petals: { x: number; y: number; phase: number; speed: number }[];
@@ -720,16 +716,6 @@ function buildScene(W: number, fx: number): Scene {
   for (let y = FALL_TOP + 6; y < fallBottom - 10; y += 14) addLight(fx - (y - FALL_TOP) / 8, y, 16, C.mist, 0.35, 0.4);
   addLight(poolCx, 172, 12, C.mist, 0.5, 0.6);
 
-  // Spray kicked up where the curtain hits the pool.
-  const spray: Scene["spray"] = [];
-  for (let n = 0; n < 36; n++)
-    spray.push({ x: fallLeft(fallBottom - 1) + rand() * (lipR - fallLeft(fallBottom - 1)), vx: (rand() - 0.5) * 18, vy: 14 + rand() * 18, phase: rand() });
-
-  // Mist puffs that rise off the pool, swell and fade.
-  const mist: Scene["mist"] = [];
-  for (let n = 0; n < 14; n++)
-    mist.push({ x: fallLeft(fallBottom - 1) - 6 + rand() * (lipR - fallLeft(fallBottom - 1) + 14), drift: (rand() - 0.7) * 16, phase: rand(), size: 7 + rand() * 7 });
-
   // Glowing fish circling the pool beneath the surface.
   const fishColors = [C.koi, C.cyan, C.koi];
   const fish: Scene["fish"] = fishColors.map((color, n) => ({
@@ -767,8 +753,8 @@ function buildScene(W: number, fx: number): Scene {
     else if (kind[i] === 4) lowerFall.push(i);
   }
 
-  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, spray, mist, strands, stars, petals, flies,
-    reeds, fish, shallow, reflectL: fallLeft(fallBottom - 1), reflectR: lipR, poolRx };
+  return { W, base, fx, fallBottom, poolCx, mainFall, upperFall, lowerFall, seeps, pool, lights, strands, stars, petals, flies,
+    reeds, fish, shallow, poolRx };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -856,8 +842,6 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
       const far = Math.abs(x - s.poolCx) / s.poolRx;
       c = n > 0.85 ? C.poolLight : n > 0.4 ? C.poolMid : far > 0.5 && bayer(x, y) < far - 0.4 ? C.poolDeep : C.pool;
     }
-    // The curtain's reflection: broken vertical glints below the fall.
-    if (x >= s.reflectL && x <= s.reflectR && y > iy + 2 && s.shallow[i] === 2 && hash(x, Math.floor(y / 2 + t * 3)) > 0.84) c = C.fallLight;
     const d = Math.hypot(x - ix, (y - iy) * 2.4);
     if (d < 44 && Math.sin(d * 0.6 - t * 4.5) > 0.82 + d / 160) c = C.poolLight;
     if (d < 10 && hash(x, y, tick) > 0.55 + d / 30) c = C.foam;
@@ -881,33 +865,14 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     }
   }
 
-  // Spray: droplets thrown up and out from the impact, falling back in arcs.
-  for (const p of s.spray) {
-    const age = ((t / 1.1 + p.phase) % 1) * 1.1;
-    const X = Math.round(p.x + p.vx * age);
-    const Y = Math.round(s.fallBottom - (p.vy * age - 40 * age * age));
-    if (Y > s.fallBottom + 3 || X < 0 || X >= W || Y < 0) continue;
-    add(Y * W + X, C.foam, 0.7);
-  }
-
-  // Willow strands: sway grows toward the free end; glowing beads every few
-  // pixels and a bright tip that pulses.
+  // Willow strands: plain foliage whose sway grows toward the free end.
   for (const st of s.strands) {
-    const pulse = 0.6 + 0.4 * Math.sin(t * 1.1 + st.phase);
-    let X = st.x;
     for (let d = 0; d < st.len; d++) {
       const Y = st.y + d;
       if (Y >= H) break;
-      X = Math.round(st.x + Math.sin(t * 0.9 + st.phase + d * 0.12) * (d / st.len) ** 1.3 * 2.5);
+      const X = Math.round(st.x + Math.sin(t * 0.9 + st.phase + d * 0.12) * (d / st.len) ** 1.3 * 2.5);
       if (X < 0 || X >= W || Y < 0) continue;
-      const bead = d % 7 === 6;
-      put(Y * W + X, bead ? C.mint : C.strand);
-      if (bead) add(Y * W + X, C.mint, 0.3 * pulse);
-    }
-    const tipY = st.y + st.len;
-    if (X >= 1 && X < W - 1 && tipY < H - 1) {
-      put(tipY * W + X, C.cyan);
-      for (const o of glowOffsets(3)) add((tipY + o.dy) * W + X + o.dx, C.cyan, o.f * 0.35 * pulse);
+      put(Y * W + X, C.strand);
     }
   }
 
@@ -950,25 +915,6 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     }
   }
 
-  // Mist: puffs rise off the pool, swell, drift and fade. Dense cores are
-  // dithered so the haze stays pixelly instead of turning into a smooth blur.
-  for (const m of s.mist) {
-    const u = (t / 8 + m.phase) % 1;
-    const cx = m.x + m.drift * u;
-    const cy = s.fallBottom - 2 - u * 32;
-    const r = m.size * (0.5 + u);
-    const a = Math.sin(u * Math.PI);
-    for (let Y = Math.floor(cy - r); Y <= cy + r; Y++) {
-      if (Y < 0 || Y >= H) continue;
-      for (let X = Math.floor(cx - r * 1.5); X <= cx + r * 1.5; X++) {
-        if (X < 0 || X >= W) continue;
-        const d = Math.hypot((X - cx) / 1.5, Y - cy) / r;
-        if (d >= 1) continue;
-        const v = a * (1 - d) ** 1.5;
-        add(Y * W + X, C.mist, v * 0.9 > bayer(X, Y) ? 0.2 : v * 0.1);
-      }
-    }
-  }
 
   // Petals fall from their canopy, drifting left and flickering as they turn.
   for (const p of s.petals) {
