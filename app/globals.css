@@ -7,6 +7,21 @@
   --color-text: #333;
   --color-text-light: #999;
   --spc-sm: 0.5em;
+  --font-serif: "Zodiak", Georgia, "Times New Roman", serif;
+  --font-sans: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* Titles in the serif. Zodiak's regular weight already reads as a title, so
+   headings are not bolded. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
 }
 
 html,
@@ -201,12 +216,6 @@ canvas {
   padding: 1.5em 2em;
   margin: 0;
   border-radius: 0.25em;
-}
-
-.post h1,
-h2,
-h3 {
-  font-weight: bold;
 }
 
 .post h1 {

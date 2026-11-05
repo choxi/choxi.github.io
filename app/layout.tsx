@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "choxi",
   description: "roshan choxi's dev blog",
 };
+
+// Zodiak (titles) and Satoshi (body) come from Fontshare as variable fonts.
+// Fontshare's API returns only the first family in a request, so each family
+// gets its own stylesheet. `@1` is the upright variable file, `@2` the italic.
+const FONTS = [
+  "https://api.fontshare.com/v2/css?f[]=zodiak@1&display=swap",
+  "https://api.fontshare.com/v2/css?f[]=satoshi@1,2&display=swap",
+];
 
 export default function RootLayout({
   children,
@@ -16,7 +21,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
+        {FONTS.map((href) => (
+          <link key={href} rel="stylesheet" href={href} />
+        ))}
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

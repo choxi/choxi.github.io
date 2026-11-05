@@ -41,9 +41,9 @@
 }
 
 .name {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
   line-height: 1.1;
   margin: 0;
 }
@@ -79,7 +79,9 @@
   color: var(--ink);
 }
 
+/* A small uppercase label, so it stays in the sans. */
 .label {
+  font-family: var(--font-sans);
   margin: 28px 0 8px;
   font-size: 12px;
   font-weight: 500;

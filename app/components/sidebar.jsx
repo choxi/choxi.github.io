@@ -6,7 +6,7 @@ export default function Sidebar() {
   return (
     <div>
       <Link href="/" className="reset">
-        <h1 className="mt-0 text-2xl font-bold mb-2"> Roshan Choxi</h1>
+        <h1 className="mt-0 text-2xl mb-2"> Roshan Choxi</h1>
       </Link>
       <p className="text-sm">
         Founder at{" "}
