@@ -365,6 +365,35 @@ canvas {
   margin-bottom: 0.2em;
 }
 
+/* Pixel section breaks: a tiny blossom between firefly dots, drawn on a
+   15x3 pixel grid and shown at 3x so the pixels stay crisp. It's a mask, so
+   the blossom and dots take the theme's colours (--motif-b and --motif-a).
+   Sits above each section heading, and replaces <hr>. */
+.post {
+  --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 3' shape-rendering='crispEdges'%3E%3Cpath d='M7 0h1v1H7zM6 1h3v1H6zM7 2h1v1H7zM1 1h1v1H1zM4 1h1v1H4zM10 1h1v1h-1zM13 1h1v1h-1z'/%3E%3C/svg%3E");
+  --motif-paint: linear-gradient(90deg, var(--motif-a) 0 33.4%, var(--motif-b) 33.4% 66.6%, var(--motif-a) 66.6%);
+}
+
+.post h2::before,
+.post hr {
+  content: "";
+  display: block;
+  width: 45px;
+  height: 9px;
+  border: 0;
+  background: var(--motif-paint);
+  -webkit-mask: var(--motif) center / 45px 9px no-repeat;
+  mask: var(--motif) center / 45px 9px no-repeat;
+}
+
+.post h2::before {
+  margin: 0 auto 30px;
+}
+
+.post hr {
+  margin: 2.6em auto;
+}
+
 .post h3 {
   font-size: 1.25em;
   line-height: 1.3;
