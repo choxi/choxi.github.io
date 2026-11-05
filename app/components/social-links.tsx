@@ -4,7 +4,7 @@ import styles from "./social-links.module.css";
 // Outline icons from Tabler (tabler.io/icons, MIT licence), pasted in as SVG.
 // They draw with currentColor, so each icon takes the colour of its link.
 
-function TablerIcon({ size = 22, children }: { size?: number; children: ReactNode }) {
+export function TablerIcon({ size = 22, children }: { size?: number; children: ReactNode }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

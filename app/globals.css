@@ -14,6 +14,9 @@
   --accent-soft: rgb(154 91 19 / 0.35);
   --highlight: #f3dca8;
   --code-bg: #f2ede3;
+  --bar-bg: color-mix(in srgb, var(--paper) 82%, transparent);
+  --drawer-bg: var(--paper);
+  --hover-bg: color-mix(in srgb, var(--ink) 6%, transparent);
 
   --color-primary: var(--accent);
   --color-text: var(--ink);
@@ -86,27 +89,6 @@ ul.no-format {
 
 ul.no-format li {
   margin: var(--spc-sm) 0;
-}
-
-.layout-sidebar {
-  display: flex;
-  align-items: stretch;
-  min-height: 100%;
-  min-width: 100%;
-}
-
-.layout-sidebar--sidebar {
-  border-right: 1px solid var(--rule);
-  flex: 0 0 350px;
-}
-
-/* Grows to fill the space beside the sidebar (up to 860px) rather than
-   shrinking to its content, so wide figures have room past the text column. */
-.layout-sidebar--content {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 860px;
-  margin: 0 auto;
 }
 
 .layout-absolute {

@@ -1,21 +1,36 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import SocialLinks, { MapPinIcon } from "./social-links";
 
+// The bio, social links and list of posts. Shown in the drawer that the
+// "Posts" button in the post pages' top bar opens (see post-chrome.tsx).
+
+const POSTS = [
+  { href: "/posts/three-body-problems", title: "Three Body Problems" },
+  { href: "/posts/idiom-static-site-generator", title: "Idiom: A Simple Static Site Generator in React" },
+  { href: "/posts/procedural-landscapes", title: "Procedurally Generated Landscapes" },
+  { href: "/posts/gesture-detection-using-tensorflowjs", title: "Gesture Detection Using Tensorflow.js" },
+];
+
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
-    <div className="flex flex-col gap-4">
-      <Link href="/" className="reset">
-        <h1 className="mt-0 text-2xl"> Roshan Choxi</h1>
+    <div className="sidebar">
+      <Link href="/" className="sidebar-name">
+        Roshan Choxi
       </Link>
-      <div className="flex flex-col gap-0">
-        <p className="text-sm">
+      <div className="sidebar-bio">
+        <p>
           Founder at{" "}
           <a href="https://reverieapps.com" target="_blank" rel="noopener noreferrer">
             Reverie
           </a>
         </p>
-        <p className="text-sm">
+        <p>
           <span className="inline-flex items-center gap-1 align-bottom">
             <MapPinIcon size={15} />
             Chicago
@@ -23,31 +38,22 @@ export default function Sidebar() {
         </p>
       </div>
 
-      <SocialLinks className="text-[var(--color-primary)]" />
+      <SocialLinks className="sidebar-social" />
 
-      <div>
-        <h3>Posts</h3>
-        <ul className="no-format">
-          <li>
-            <a href="/posts/three-body-problems">Three Body Problems</a>
-          </li>
-          <li>
-            <a href="/posts/idiom-static-site-generator">
-              Idiom: A Simple Static Site Generator in React
-            </a>
-          </li>
-          <li>
-            <a href="/posts/procedural-landscapes">
-              Procedurally Generated Landscapes
-            </a>
-          </li>
-          <li>
-            <a href="/posts/gesture-detection-using-tensorflowjs">
-              Gesture Detection Using Tensorflow.js
-            </a>
-          </li>
+      <nav aria-labelledby="sidebar-posts">
+        <h2 id="sidebar-posts" className="sidebar-label">
+          Posts
+        </h2>
+        <ul className="sidebar-posts">
+          {POSTS.map((post) => (
+            <li key={post.href}>
+              <Link href={post.href} aria-current={pathname === post.href ? "page" : undefined}>
+                {post.title}
+              </Link>
+            </li>
+          ))}
         </ul>
-      </div>
+      </nav>
     </div>
   );
 }
