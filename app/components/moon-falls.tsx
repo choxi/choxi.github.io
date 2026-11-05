@@ -34,25 +34,15 @@ const MOON = { x: 279, y: 37, r: 17 };
 // The thin stream pouring from beneath the moon.
 const STREAM = { x0: 270, x1: 290, top: 52, bottom: 90 };
 // The main fall: its left edge widens from x 250 at the top to x 199 at its
-// foot; its right edge runs straight down the cliff. It now lands in the
-// raised pond at `foot`.
-const FALL = { top: 88, foot: 204, x1: 302 };
+// foot; its right edge runs straight down the cliff.
+const FALL = { top: 88, foot: 212, x1: 302 };
 const fallLeft = (y: number) => 250 - (y - FALL.top) * 0.41;
-// The painted pool below the fall, and the little cascade below it.
+// The pool below the fall, and the little cascade below the pool.
 const POOL = { x0: 188, x1: 352, top: 213, bottom: 238 };
 const CASCADE = { x0: 220, x1: 322, top: 238 };
-// The pond is raised and widened: from a nearly flat waterline at `top`,
-// curving down only at its ends, water is painted down to `fillTo`, joining
-// the painted pool below. It stops at the bridge on the left.
-const POND = { x: 275, rx: 64, top: 200, curve: 20, fillTo: 221, left: 212 };
-// The waterline's height at x: flat across the middle, dipping at the ends.
-const pondTop = (x: number) => POND.top + POND.curve * Math.abs((x - POND.x) / POND.rx) ** 4;
-// Where the fall lands in the pond.
-const IMPACT = { x: 238, y: 203 };
+// Where the fall lands in the pool.
+const IMPACT = { x: 238, y: 216 };
 
-const POND_DEEP: RGB = [10, 72, 86];
-const POND_MID: RGB = [28, 98, 96];
-const POND_LIGHT: RGB = [42, 132, 122];
 const FISH_COLORS: RGB[] = [
   [255, 150, 70], // koi
   [90, 245, 230], // cyan
@@ -71,21 +61,6 @@ const STEM: RGB = [24, 60, 58];
 const hash = (x: number, y: number, z = 0) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
   return s - Math.floor(s);
-};
-
-// Smooth 2D value noise, for the swirls in the pond.
-const vnoise = (x: number, y: number) => {
-  const xi = Math.floor(x);
-  const yi = Math.floor(y);
-  const fx = x - xi;
-  const fy = y - yi;
-  const u = fx * fx * (3 - 2 * fx);
-  const v = fy * fy * (3 - 2 * fy);
-  const a = hash(xi, yi, 1);
-  const b = hash(xi + 1, yi, 1);
-  const c = hash(xi, yi + 1, 1);
-  const d = hash(xi + 1, yi + 1, 1);
-  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 };
 
 function mulberry32(seed: number) {
@@ -121,7 +96,6 @@ type Column = { idx: number[]; colors: RGB[]; phase: number; speed: number };
 type Scene = {
   base: Uint8ClampedArray;
   columns: Column[]; // the stream, the main fall and the cascade below the pool
-  foot: number[]; // white water where the fall lands
   pool: number[]; // the whole pond: the painted pool and the raised part
   isPond: Uint8Array;
   fish: { cx: number; cy: number; rx: number; ry: number; phase: number; speed: number; color: RGB }[];
@@ -152,27 +126,7 @@ function buildScene(base: Uint8ClampedArray): Scene {
     base[i * 4 + 2] = c[2];
   };
 
-  // ---- Raised pond ----
-  // Paint the upper half of the pond's oval as water, so the waterline sits
-  // higher and the fall lands in it. Long horizontal swirls of teal like the
-  // painted pool, a dark rim at the far shore, and a pale line just below it
-  // where the water catches the moonlight.
   const isPond = new Uint8Array(N);
-  for (let y = POND.top; y < POND.fillTo; y++) {
-    for (let x = Math.max(POND.left, POND.x - POND.rx); x <= POND.x + POND.rx; x++) {
-      const i = y * W + x;
-      // Rows below the waterline; the top two are its far shore.
-      const fromTop = y - pondTop(x) - (vnoise(x * 0.3, 7) - 0.5);
-      if (fromTop < 0) continue;
-      const swirl = vnoise(x * 0.13, y * 0.45) * 0.7 + vnoise(x * 0.3 + 9, y * 0.9) * 0.3;
-      let c = swirl > 0.6 ? POND_LIGHT : swirl < 0.4 ? POND_DEEP : POND_MID;
-      if (fromTop < 1) c = POND_DEEP;
-      else if (fromTop < 2) c = hash(x, y, 3) > 0.4 ? POND_LIGHT : POND_MID;
-      px(x, y, c);
-      isPond[i] = 1;
-    }
-  }
-
   const blossomMask = new Uint8Array(N);
   for (let i = 0; i < N; i++) blossomMask[i] = isBlossom(...at(i)) ? 1 : 0;
 
@@ -181,7 +135,6 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const stars: Scene["stars"] = [];
   const skyDark: number[] = [];
   const pool: number[] = [];
-  const foot: number[] = [];
   const petalOrigins: [number, number][] = [];
 
   for (let y = 0; y < H; y++)
@@ -198,12 +151,10 @@ function buildScene(base: Uint8ClampedArray): Scene {
       if (y < 110 && offMoon && r > 170 && g > 170 && b > 170 && !blossomMask[i]) stars.push({ i, phase: rand() * 6.28, speed: 0.8 + rand() * 2 });
       // Open night sky, for extra twinkling stars and shooting stars.
       if (y < 95 && x > 140 && offMoon && r < 40 && g < 70 && b < 90 && b > r) skyDark.push(i);
-      if (isPond[i] || (y >= POOL.top && y < POOL.bottom && x >= POOL.x0 && x <= POOL.x1 && b > r + 20 && g > 70)) {
+      if (y >= POOL.top && y < POOL.bottom && x >= POOL.x0 && x <= POOL.x1 && b > r + 20 && g > 70) {
         isPond[i] = 1;
         pool.push(i);
       }
-      // White water where the fall meets the pond.
-      if (y >= FALL.foot - 8 && y < FALL.foot + 3 && x >= fallLeft(y) && x < 268 && (isPond[i] || isFallWater(r, g, b))) foot.push(i);
     }
 
   // Falling water, one column at a time: the stream below the moon, the main
@@ -234,43 +185,62 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const lights: Light[] = [];
   const addLight = (x: number, y: number, r: number, color: RGB, strength: number, speed: number) =>
     lights.push({ x, y, r, color, phase: rand() * 6.28, speed, strength });
-  addLight(IMPACT.x + 8, IMPACT.y - 6, 30, MINT, 0.6, 0.35); // mist where the fall lands
-  addLight(150, 200, 26, MINT, 0.35, 0.25); // the glow behind the bridge
   addLight(262, 130, 22, MINT, 0.25, 0.3); // the face of the fall
   addLight(280, 70, 10, MINT_PALE, 0.35, 0.6); // the stream below the moon
 
   // ---- Bioluminescent plants ----
-  // Glowing mushrooms, bulb stalks and ferns tucked into the leafy banks.
+  // Glowing mushrooms, bulb stalks and ferns tucked into the leafy banks,
+  // each in a small clump and casting a wide pulsing glow.
+  const light = (c: RGB): RGB => [c[0] + (255 - c[0]) * 0.6, c[1] + (255 - c[1]) * 0.6, c[2] + (255 - c[2]) * 0.6];
+  const speed = () => 0.6 + rand() * 1.2;
+  // A domed cap on a stem, with a pale highlight across its top.
   const mushroom = (x: number, y: number, s: number, color: RGB) => {
-    for (let d = 0; d < s + 1; d++) px(x, y - d, STEM);
-    for (let dx = -s; dx <= s; dx++) px(x + dx, y - s - 1, color);
-    for (let dx = -s + 1; dx <= s - 1; dx++) px(x + dx, y - s - 2, color);
-    px(x - s + 1, y - s - 2, MINT_PALE); // a bright fleck on the cap
-    addLight(x, y - s - 1, 6 + s * 2, color, 1, 0.6 + rand() * 1.2);
+    for (let d = 0; d < s + 1; d++) {
+      px(x, y - d, STEM);
+      if (s > 2) px(x + 1, y - d, STEM);
+    }
+    const capY = y - s - 1;
+    for (let row = 0; row < 3; row++) {
+      const half = s - row;
+      for (let dx = -half; dx <= half + (s > 2 ? 1 : 0); dx++) px(x + dx, capY - row, row === 2 ? light(color) : color);
+    }
+    addLight(x, capY - 1, 8 + s * 3, color, 1.15, speed());
   };
+  // A thin stem ending in a round bulb with a bright core.
   const stalk = (x: number, y: number, h: number, color: RGB) => {
-    const lean = (rand() - 0.5) * 0.5;
+    const lean = (rand() - 0.5) * 0.6;
     for (let d = 0; d < h; d++) px(x + Math.round(lean * d), y - d, STEM);
     const tx = x + Math.round(lean * h);
     const ty = y - h;
-    for (const [dx, dy] of [[0, 0], [1, 0], [0, -1], [1, -1]]) px(tx + dx, ty + dy, color);
-    addLight(tx, ty, 7 + Math.round(h * 0.3), color, 1, 0.6 + rand() * 1.2);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx * dx + dy * dy < 2) px(tx + dx, ty + dy, color);
+    px(tx, ty, light(color));
+    addLight(tx, ty, 8 + Math.round(h * 0.35), color, 1.15, speed());
   };
+  // A spray of fronds with glowing tips and beads along them.
   const fern = (x: number, y: number, color: RGB) => {
-    for (let b = -3; b <= 3; b++) {
-      const h = 2 + Math.floor(rand() * 4) - Math.abs(b) / 2;
-      for (let d = 0; d < h; d++) px(x + b + Math.round((b * d) / 6), y - d, d >= h - 1 ? color : STEM);
+    for (let b = -5; b <= 5; b++) {
+      const h = 3 + Math.floor(rand() * 4) - Math.abs(b) / 2;
+      for (let d = 0; d < h; d++) {
+        const c = d >= h - 1 ? light(color) : d >= h - 2 || hash(x + b, d, 8) > 0.75 ? color : STEM;
+        px(x + b + Math.round((b * d) / 5), y - d, c);
+      }
     }
-    addLight(x, y - 3, 7, color, 0.8, 0.6 + rand() * 1.2);
+    addLight(x, y - 4, 10, color, 1.05, speed());
   };
   const plant = (x: number, y: number) => {
     const color = GLOW_COLORS[Math.floor(rand() * GLOW_COLORS.length)];
     const pick = rand();
     if (pick < 0.45) {
-      mushroom(x, y, 1 + Math.floor(rand() * 2), color);
-      if (rand() < 0.6) mushroom(x + 3, y + 1, 1, color); // mushrooms grow in pairs
-    } else if (pick < 0.75) stalk(x, y, 5 + Math.floor(rand() * 7), color);
-    else fern(x, y, color);
+      // Mushrooms grow in clusters of two or three, biggest first.
+      mushroom(x, y, 2 + Math.floor(rand() * 2), color);
+      mushroom(x + 4, y + 1, 1 + Math.floor(rand() * 2), color);
+      if (rand() < 0.5) mushroom(x - 4, y + 1, 1, color);
+    } else if (pick < 0.75) {
+      // Stalks come in clumps of uneven heights.
+      stalk(x, y, 9 + Math.floor(rand() * 8), color);
+      stalk(x + 3, y + 1, 5 + Math.floor(rand() * 5), color);
+      if (rand() < 0.5) stalk(x - 3, y + 1, 6 + Math.floor(rand() * 4), color);
+    } else fern(x, y, color);
   };
   // Leafy ground: green foliage, not water, blossom or stone.
   const leafy = (x: number, y: number) => {
@@ -279,12 +249,14 @@ function buildScene(base: Uint8ClampedArray): Scene {
     return !isPond[i] && !blossomMask[i] && g > 45 && g > r + 18 && g >= b - 5;
   };
   // Zones: [x0, x1, y0, y1, count] — the left foreground bushes, the bank
-  // under the bridge, the pond's right shore, and the right-hand bushes.
+  // under the bridge, the pond's right shore, the right-hand bushes, and the
+  // mossy ledges right of the falls.
   const zones: [number, number, number, number, number][] = [
-    [6, 110, 200, 252, 8],
-    [120, 190, 236, 254, 3],
-    [300, 345, 226, 246, 3],
-    [345, 450, 185, 252, 8],
+    [6, 110, 195, 252, 13],
+    [120, 190, 232, 254, 5],
+    [300, 345, 224, 246, 4],
+    [345, 450, 180, 252, 13],
+    [305, 345, 150, 215, 4],
   ];
   for (const [x0, x1, y0, y1, count] of zones) {
     let placed = 0;
@@ -299,8 +271,8 @@ function buildScene(base: Uint8ClampedArray): Scene {
 
   // Glowing fish circling the pond on overlapping loops.
   const fish: Scene["fish"] = FISH_COLORS.map((color, n) => ({
-    cx: POND.x + (rand() - 0.5) * 20,
-    cy: 213 + (rand() - 0.5) * 6,
+    cx: 270 + (rand() - 0.5) * 20,
+    cy: 225 + (rand() - 0.5) * 4,
     rx: 18 + rand() * 26,
     ry: 3 + rand() * 5,
     phase: rand() * 6.28,
@@ -322,7 +294,7 @@ function buildScene(base: Uint8ClampedArray): Scene {
     flies.push({ x, y: 150 + rand() * 100, phase: rand() * 6.28, sx: 0.15 + rand() * 0.35, sy: 0.2 + rand() * 0.4, color: FIREFLIES[Math.floor(rand() * FIREFLIES.length)] });
   }
 
-  return { base, columns, foot, pool, isPond, fish, blossom, blossomCore, stars, extraStars, lights, petals, flies, sky };
+  return { base, columns, pool, isPond, fish, blossom, blossomCore, stars, extraStars, lights, petals, flies, sky };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -371,12 +343,6 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const n = col.idx.length;
     const shift = Math.floor(t * col.speed + col.phase);
     for (let j = 0; j < n; j++) put(col.idx[j], col.colors[(((j - shift) % n) + n) % n]);
-  }
-  // White water churning where the fall lands.
-  for (const i of s.foot) {
-    const h = hash(i, fast);
-    if (h > 0.8) put(i, FOAM);
-    else if (h > 0.55) add(i, MINT_PALE, 0.25);
   }
 
   // Pool: slow glints drifting across, and rings spreading from the fall.
