@@ -180,7 +180,60 @@ function paintBase(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
     for (let x = 0; x < ox; x++) copy(y * W + x, y * W + x + IMG_W);
     for (let x = ox + IMG_W; x < W; x++) copy(y * W + x, y * W + x - IMG_W);
   }
+  // The wrapped edges don't match, so a foreground tree stands over each seam
+  // to hide the jump.
+  if (ox > 0) {
+    seamTree(d, ox, 1);
+    seamTree(d, ox + IMG_W, 2);
+  }
   return { image, ox };
+}
+
+// A tree in the painting's style: a pale, wavy trunk with a lit rim and dark
+// outline running the full height, and a mossy bush with gold tops at its
+// foot. It is wide enough, and sways little enough, to always cover `seam`.
+function seamTree(d: Uint8ClampedArray, seam: number, seed: number) {
+  const set = (x: number, y: number, c: RGB) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (y * W + x) * 4;
+    d[i] = c[0];
+    d[i + 1] = c[1];
+    d[i + 2] = c[2];
+  };
+  const OUTLINE: RGB = [18, 38, 40];
+  const RIM: RGB = [196, 176, 88];
+  const BARK: RGB = [112, 138, 102];
+  const BARK_DARK: RGB = [96, 124, 94];
+  const SHADE: RGB = [62, 95, 82];
+  for (let y = 0; y < H; y++) {
+    const cx = seam + Math.sin(y * 0.045 + seed * 2) * 2 + Math.sin(y * 0.11 + seed) * 0.6;
+    const half = 5.5 + (y / H) * 1.5; // a little thicker toward the ground
+    const l = Math.round(cx - half);
+    const r = Math.round(cx + half);
+    for (let x = l; x <= r; x++) {
+      const e = x - l;
+      let c: RGB;
+      if (x === l || x === r) c = OUTLINE;
+      else if (e === 1) c = RIM;
+      else if (r - x <= 2) c = SHADE;
+      else c = hash(x, Math.floor(y / 3), seed) > 0.7 ? BARK_DARK : BARK;
+      set(x, y, c);
+    }
+  }
+  // Bush at the foot: blue foliage mounds with gold-lit tops.
+  const BUSH_DARK: RGB = [8, 30, 56];
+  const BUSH: RGB = [20, 62, 112];
+  const BUSH_TOP: RGB = [226, 178, 40];
+  for (const [dx, cy, rad] of [[-9, 246, 11], [8, 248, 12], [0, 240, 9]] as const)
+    for (let y = cy - rad; y < H; y++)
+      for (let x = seam + dx - rad * 1.4; x <= seam + dx + rad * 1.4; x++) {
+        const nx = (x - seam - dx) / (rad * 1.4);
+        const ny = (y - cy) / rad;
+        if (nx * nx + ny * ny > 1 - hash(Math.floor(x), y, seed + 5) * 0.25) continue;
+        const X = Math.floor(x);
+        const c = ny < -0.55 && hash(X, y, seed + 6) > 0.35 ? BUSH_TOP : hash(X >> 1, y >> 1, seed + 7) > 0.55 ? BUSH : BUSH_DARK;
+        set(X, y, c);
+      }
 }
 
 function buildScene(base: Uint8ClampedArray, ox: number): Scene {
