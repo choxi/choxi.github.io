@@ -96,7 +96,6 @@ type Column = { idx: number[]; colors: RGB[]; phase: number; speed: number };
 type Scene = {
   base: Uint8ClampedArray;
   columns: Column[]; // the stream, the main fall and the cascade below the pool
-  foot: number[]; // white water where the fall lands
   pool: number[];
   isPond: Uint8Array;
   fish: { cx: number; cy: number; rx: number; ry: number; phase: number; speed: number; color: RGB }[];
@@ -136,7 +135,6 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const stars: Scene["stars"] = [];
   const skyDark: number[] = [];
   const pool: number[] = [];
-  const foot: number[] = [];
   const petalOrigins: [number, number][] = [];
 
   for (let y = 0; y < H; y++)
@@ -157,11 +155,10 @@ function buildScene(base: Uint8ClampedArray): Scene {
         isPond[i] = 1;
         pool.push(i);
       }
-      if (y >= FALL.foot - 8 && y < POOL.top + 2 && x >= fallLeft(y) && x <= FALL.x1 && isFallWater(r, g, b)) foot.push(i);
     }
 
   // Falling water, one column at a time: the stream below the moon, the main
-  // fall above where it lands, and the cascade below the pool.
+  // fall down to the pool, and the cascade below the pool.
   const columns: Column[] = [];
   const addColumn = (x: number, y0: number, y1: number, speed: number, bright: boolean) => {
     const idx: number[] = [];
@@ -176,7 +173,9 @@ function buildScene(base: Uint8ClampedArray): Scene {
   for (let x = Math.floor(fallLeft(FALL.foot)); x <= FALL.x1; x++) {
     let y0 = FALL.top;
     while (y0 < FALL.foot && x < fallLeft(y0)) y0++;
-    addColumn(x, y0, FALL.foot - 8, 26, false);
+    // All the way down to the pool's surface, so the painted foam at the foot
+    // pours with the rest of the fall instead of sitting still.
+    addColumn(x, y0, POOL.top, 26, false);
   }
   for (let x = CASCADE.x0; x <= CASCADE.x1; x++) addColumn(x, CASCADE.top, H, 18, true);
 
@@ -188,8 +187,6 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const lights: Light[] = [];
   const addLight = (x: number, y: number, r: number, color: RGB, strength: number, speed: number) =>
     lights.push({ x, y, r, color, phase: rand() * 6.28, speed, strength });
-  addLight(IMPACT.x + 8, IMPACT.y - 6, 30, MINT, 0.6, 0.35); // mist where the fall lands
-  addLight(150, 200, 26, MINT, 0.35, 0.25); // the glow behind the bridge
   addLight(262, 130, 22, MINT, 0.25, 0.3); // the face of the fall
   addLight(280, 70, 10, MINT_PALE, 0.35, 0.6); // the stream below the moon
 
@@ -299,7 +296,7 @@ function buildScene(base: Uint8ClampedArray): Scene {
     flies.push({ x, y: 150 + rand() * 100, phase: rand() * 6.28, sx: 0.15 + rand() * 0.35, sy: 0.2 + rand() * 0.4, color: FIREFLIES[Math.floor(rand() * FIREFLIES.length)] });
   }
 
-  return { base, columns, foot, pool, isPond, fish, blossom, blossomCore, stars, extraStars, lights, petals, flies, sky };
+  return { base, columns, pool, isPond, fish, blossom, blossomCore, stars, extraStars, lights, petals, flies, sky };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -348,13 +345,6 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const n = col.idx.length;
     const shift = Math.floor(t * col.speed + col.phase);
     for (let j = 0; j < n; j++) put(col.idx[j], col.colors[(((j - shift) % n) + n) % n]);
-  }
-
-  // White water churning where the fall lands.
-  for (const i of s.foot) {
-    const h = hash(i, fast);
-    if (h > 0.8) put(i, FOAM);
-    else if (h > 0.55) add(i, MINT_PALE, 0.25);
   }
 
   // Pool: slow glints drifting across, and rings spreading from the fall.
