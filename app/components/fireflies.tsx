@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { SCENE_H, SCENE_W } from "./pixel-scene";
+
+// The landing scene's pixel grid (see moon-falls.tsx).
+const SCENE_W = 455;
+const SCENE_H = 256;
 
 // Pixel fireflies, like the ones in the landing scene (moon-falls.tsx): single
 // bright pixels with a small stepped glow, wandering slowly and blinking.
 //
-// They draw on a canvas that fills its parent, at the same pixel size as the
-// scene behind them, so they sit on the painting's pixel grid. `grid` says how
-// that scene is scaled: "cover" for the full-screen backdrop, "width" for
-// strips that span the page. `zone` keeps them to a band of the canvas
-// (fractions of its height), e.g. the undergrowth in the lower half.
+// They draw on a canvas that fills its parent. Their pixel size matches the
+// landing scene's grid: `grid` "cover" sizes it as the full-screen scene,
+// "width" as a strip spanning the page; or `pixel` sets it outright, to share
+// a grid with other pixel art (the plants at the bottom of posts). `zone`
+// keeps them to a band of the canvas (fractions of its height).
 //
 // They pause while off screen or in a background tab, and hold still for
 // people who prefer reduced motion.
@@ -38,10 +41,11 @@ type Props = {
   // Keep most flies in the outer edges (fraction of the width on each side),
   // where a centred sheet won't cover them.
   edges?: number;
+  pixel?: number;
   className?: string;
 };
 
-export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", edges, className }: Props) {
+export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", edges, pixel, className }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [z0, z1] = zone;
 
@@ -61,7 +65,7 @@ export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", e
     const fit = () => {
       const box = canvas.getBoundingClientRect();
       if (!box.width || !box.height) return;
-      const px = grid === "cover" ? Math.max(box.width / SCENE_W, box.height / SCENE_H) : box.width / SCENE_W;
+      const px = pixel ?? (grid === "cover" ? Math.max(box.width / SCENE_W, box.height / SCENE_H) : box.width / SCENE_W);
       w = Math.ceil(box.width / px);
       h = Math.ceil(box.height / px);
       canvas.width = w;
@@ -126,7 +130,7 @@ export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", e
       resize.disconnect();
       seen.disconnect();
     };
-  }, [count, z0, z1, grid, edges]);
+  }, [count, z0, z1, grid, edges, pixel]);
 
   return <canvas ref={ref} className={["fireflies", className].filter(Boolean).join(" ")} aria-hidden="true" />;
 }

@@ -6,9 +6,10 @@
    the landing page. <html data-theme> picks one; the switch is in the top bar
    (post-chrome.tsx) and a script in layout.tsx restores it before paint.
 
-   night: the scene itself behind the page, dimmed, with the post on a sheet
-          of the same dark glass as the landing card.
-   day:   pale moonlit paper, with a band of the night sky across the top.
+   night: the deep teal of the night scene.
+   day:   pale moonlit paper.
+   Both are plain backgrounds; the pixel art is a few glowing plants at the
+   bottom of each post (glow-plants.tsx), plus fireflies.
 
    Accents: lavender from the blossoms for links, mint from the falls for
    hover and selection. Text colours and accents pass WCAG AA on each
@@ -16,7 +17,6 @@
 :root,
 [data-theme="night"] {
   --paper: #0a1a1c;
-  --sheet-bg: rgb(11 27 29 / 0.9);
   --ink: #e8f0ec;
   --ink-2: #a7b8b3;
   --rule: rgb(255 255 255 / 0.12);
@@ -47,7 +47,6 @@
 
 [data-theme="day"] {
   --paper: #f6f4f9;
-  --sheet-bg: transparent;
   --ink: #1b2023;
   --ink-2: #565d63;
   --rule: #e2dfe9;

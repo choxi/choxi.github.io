@@ -1,63 +1,29 @@
-/* The post pages' frame: the sheet the post sits on, the top bar, and the
-   drawer that holds the sidebar. Colours come from the theme variables in
-   globals.css. */
+/* The post pages' frame: the column the post sits in, the glowing plants at
+   the bottom, the top bar, and the drawer that holds the sidebar. Colours
+   come from the theme variables in globals.css; the page itself is a plain
+   background in both themes. */
 
 .post-page {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: 100svh;
-  padding: 96px 16px 72px;
+  padding-top: 96px;
 }
 
-/* The sheet: wide enough for a wide figure (788px inside) with the reading
-   column centred in it. */
+/* Wide enough for a wide figure (788px inside) with the reading column
+   centred in it. */
 .post-sheet {
   position: relative;
   z-index: 1;
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 56px clamp(4px, 5vw, 56px) 72px;
+  padding: 24px clamp(20px, 5vw, 56px) 48px;
 }
 
-/* ---------- The scene ---------- */
-
-.pixel-scene {
-  display: block;
-  image-rendering: pixelated;
-  opacity: 0;
-  transition: opacity 600ms ease-out;
-}
-
-.pixel-scene[data-ready] {
-  opacity: 1;
-}
-
-/* Night: the whole painting fixed behind the page, dimmed so the sheet reads
-   as the brightest thing on screen. */
-.scene-backdrop {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(0.55) saturate(1.1);
-}
-
-/* Day: the top of the painting (stars, moon and blossoms) as a band across
-   the top of the page, fading into the paper. */
-.scene-band {
-  position: absolute;
-  inset: 0 0 auto;
-  width: 100%;
-  height: auto;
-  /* On narrow screens, keep it tall enough to show below the top bar by
-     cropping the sides rather than shrinking it. */
-  min-height: 200px;
-  object-fit: cover;
-  object-position: center top;
-  -webkit-mask-image: linear-gradient(black 45%, transparent);
-  mask-image: linear-gradient(black 45%, transparent);
-}
+/* ---------- Fireflies ---------- */
 
 .fireflies {
   display: block;
@@ -65,69 +31,39 @@
   pointer-events: none;
 }
 
-/* Night: fireflies over the backdrop's undergrowth, behind the sheet, so they
-   show in the margins either side of the post. */
-.scene-backdrop-flies {
+/* Night: fireflies drift in the margins either side of the post. On the day
+   theme's pale paper they'd barely show, so they stay with the plants. */
+.page-flies {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-/* The footer strip: full page width (the page has 16px side padding and
-   72px below), fading in from the page above. */
-.scene-footer {
+[data-theme="day"] .page-flies {
+  display: none;
+}
+
+/* Without real margins beside the 900px column they'd drift over the text. */
+@media (max-width: 1039px) {
+  .page-flies {
+    display: none;
+  }
+}
+
+/* ---------- Glowing plants at the bottom of the page ---------- */
+
+.post-ground {
   position: relative;
-  margin: 72px -16px -72px;
-  -webkit-mask-image: linear-gradient(transparent, black 45%);
-  mask-image: linear-gradient(transparent, black 45%);
+  margin-top: auto;
+  height: 132px;
 }
 
-.scene-footer .pixel-scene {
-  width: 100%;
-  height: auto;
-  min-height: 140px;
-  object-fit: cover;
-}
-
-.scene-footer .fireflies {
+.post-ground canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-}
-
-[data-theme="night"] .scene-band,
-[data-theme="day"] .scene-backdrop,
-[data-theme="day"] .scene-backdrop-flies {
-  display: none;
-}
-
-/* Night: the post sits on dark glass, like the landing card. */
-[data-theme="night"] .post-sheet {
-  border-radius: 28px;
-  background: var(--sheet-bg);
-  -webkit-backdrop-filter: blur(14px) saturate(1.3);
-  backdrop-filter: blur(14px) saturate(1.3);
-  box-shadow:
-    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / 0.3),
-    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.1),
-    0 0 0 0.5px rgb(0 0 0 / 0.3),
-    0 20px 60px -20px rgb(0 0 0 / 0.6);
-}
-
-/* Day: the band is 84 of the painting's 455 columns tall at full width, so
-   the post starts just above where it fades out. */
-[data-theme="day"] .post-page {
-  padding-top: max(150px, calc(100vw * 84 / 455 - 24px));
-}
-
-@media (max-width: 575px) {
-  [data-theme="night"] .post-sheet {
-    border-radius: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
 }
 
 /* ---------- Top bar ---------- */

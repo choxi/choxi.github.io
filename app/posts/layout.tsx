@@ -1,27 +1,22 @@
 import React from "react";
 import Fireflies from "../components/fireflies";
-import PixelScene from "../components/pixel-scene";
+import GlowPlants, { PLANT_PX } from "../components/glow-plants";
 import PostChrome from "../components/post-chrome";
 import "./post-page.css";
 
-// Post pages focus on the writing: a top bar with a drawer for the bio, links
-// and post list, and the post itself on a centred sheet.
-//
-// Both scene pieces are always rendered; the theme's CSS shows one: the full
-// scene behind the page at night, a band of sky across the top by day. Both
-// themes end on a strip of the painting's foreground.
+// Post pages focus on the writing: a plain page with a top bar, a drawer for
+// the bio, links and post list, and the post in a centred column. A few
+// glowing pixel plants grow at the bottom, with fireflies over them; at night
+// more fireflies drift in the margins.
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="post-page">
-      <PixelScene className="scene-backdrop" />
-      <Fireflies className="scene-backdrop-flies" grid="cover" count={24} zone={[0.3, 0.98]} edges={0.16} />
-      <PixelScene rows={[0, 84]} className="scene-band" />
+      <Fireflies className="page-flies" grid="cover" count={18} zone={[0.3, 0.95]} edges={0.14} />
       <PostChrome />
       <main className="post-sheet">{children}</main>
-      {/* The bottom of the painting, as ground for the page to end on. */}
-      <footer className="scene-footer" aria-hidden="true">
-        <PixelScene rows={[190, 256]} />
-        <Fireflies count={10} zone={[0.15, 0.85]} />
+      <footer className="post-ground" aria-hidden="true">
+        <GlowPlants />
+        <Fireflies pixel={PLANT_PX} count={7} zone={[0.15, 0.75]} edges={0.2} />
       </footer>
     </div>
   );
