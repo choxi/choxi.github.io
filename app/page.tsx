@@ -24,15 +24,15 @@ export default function Home() {
       <GlassCard className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
         <p className={styles.intro}>
-          <span className={styles.place}>
-            <MapPinIcon />
-            Chicago
-          </span>
-          <br />
           Founder at{" "}
           <a href="https://reverieapps.com" target="_blank" rel="noopener noreferrer" className={styles.inline}>
             Reverie
           </a>
+          <br />
+          <span className={styles.place}>
+            <MapPinIcon />
+            Chicago
+          </span>
         </p>
 
         <SocialLinks className={styles.social} />

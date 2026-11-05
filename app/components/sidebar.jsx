@@ -9,16 +9,16 @@ export default function Sidebar() {
         <h1 className="mt-0 text-2xl font-bold mb-2"> Roshan Choxi</h1>
       </Link>
       <p className="text-sm">
-        <span className="inline-flex items-center gap-1 align-bottom">
-          <MapPinIcon size={15} />
-          Chicago
-        </span>
-      </p>
-      <p className="text-sm mt-1">
         Founder at{" "}
         <a href="https://reverieapps.com" target="_blank" rel="noopener noreferrer">
           Reverie
         </a>
+      </p>
+      <p className="text-sm mt-1">
+        <span className="inline-flex items-center gap-1 align-bottom">
+          <MapPinIcon size={15} />
+          Chicago
+        </span>
       </p>
 
       <SocialLinks className="mt-6 text-[var(--color-primary)]" />
