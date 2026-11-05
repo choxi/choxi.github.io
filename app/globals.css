@@ -2,10 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Post pages take their colours from the forest painting on the landing page:
+   warm paper instead of white, and the painting's deep amber for links. The
+   two greys and the accent all pass WCAG AA on the paper. */
 :root {
-  --color-primary: #2980b9;
-  --color-text: #333;
-  --color-text-light: #999;
+  --paper: #fbf8f2;
+  --ink: #1f1d1a;
+  --ink-2: #5f5a52;
+  --rule: #e7e1d6;
+  --accent: #9a5b13;
+  --accent-soft: rgb(154 91 19 / 0.35);
+  --highlight: #f3dca8;
+
+  --color-primary: var(--accent);
+  --color-text: var(--ink);
+  --color-text-light: var(--ink-2);
   --spc-sm: 0.5em;
   /* --font-zodiak and --font-satoshi are set by next/font in layout.tsx. */
   --font-serif: var(--font-zodiak), Georgia, "Times New Roman", serif;
@@ -34,11 +45,32 @@ body {
 
 body {
   color: var(--color-text);
+  background: var(--paper);
+}
+
+::selection {
+  background: var(--highlight);
+  color: var(--ink);
 }
 
 a {
   text-decoration: none;
   color: var(--color-primary);
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
 }
 
 a.reset {
@@ -62,7 +94,7 @@ ul.no-format li {
 }
 
 .layout-sidebar--sidebar {
-  border-right: 1px solid #EEE;
+  border-right: 1px solid var(--rule);
   flex: 0 0 350px;
 }
 
@@ -190,6 +222,19 @@ ul.no-format li {
 img,
 canvas {
   max-width: 100%;
+}
+
+/* Links inside writing get a soft underline so they read as links without the
+   colour alone; it firms up on hover. */
+.post a {
+  text-decoration: underline;
+  text-decoration-color: var(--accent-soft);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.post a:hover {
+  text-decoration-color: currentColor;
 }
 
 .post img {
