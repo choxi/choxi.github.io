@@ -54,8 +54,24 @@
   mask-image: linear-gradient(black 45%, transparent);
 }
 
+.fireflies {
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* Night: fireflies over the backdrop's undergrowth, behind the sheet, so they
+   show in the margins either side of the post. */
+.scene-backdrop-flies {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 [data-theme="night"] .scene-band,
-[data-theme="day"] .scene-backdrop {
+[data-theme="day"] .scene-backdrop,
+[data-theme="day"] .scene-backdrop-flies {
   display: none;
 }
 
