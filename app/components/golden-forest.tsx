@@ -6,26 +6,20 @@ import { useEffect, useRef } from "react";
 // night forest under golden canopies, a waterfall at the back of a clearing
 // feeding a stream over mossy rocks, and a glowing ring on the left.
 //
-// The painting is sampled down to a small canvas (384x256) and scaled back up
-// with nearest-neighbour sampling, so every effect lands on the same coarse
-// pixel grid as the art. On wide screens the canvas grows sideways and the
-// painting wraps around into the extra columns, so the scene isn't cropped
-// top and bottom. On load the image is scanned for its golden leaves,
-// waterfall, stream, trunks and misty distance; glowing plants are painted
-// in, and the colours are varied. Each frame copies that base and animates
-// the canopy, water, mist and glow, then adds drifting leaves, fireflies and
-// the ring's gold dust on top.
+// The 16:9 painting is sampled down to a small canvas (455x256) and scaled
+// back up with nearest-neighbour sampling, so every effect lands on the same
+// coarse pixel grid as the art. A 16:9 screen shows all of it; narrower
+// screens crop the sides and wider ones the top and bottom. On load the image
+// is scanned for its golden leaves, waterfall, stream, trunks and misty
+// distance; the lower stream is turned into a pond, glowing plants are
+// painted in, and the colours are varied. Each frame copies that base and
+// animates the canopy, water, mist and glow, then adds fish, drifting leaves,
+// fireflies and the ring's gold dust on top.
 
 const SRC = "/assets/golden-forest.webp";
-const IMG_W = 384;
+const W = 455;
 const H = 256;
-// Widest the canvas grows (an aspect ratio of 1.875:1, covering 16:9 and
-// 16:10). Kept narrow enough that the wrapped margins never repeat the ring.
-const MAX_W = 480;
 const FPS_INTERVAL = 1000 / 20;
-
-// Canvas width for the current viewport; set before each scene is built.
-let W = IMG_W;
 
 type RGB = [number, number, number];
 
@@ -63,23 +57,22 @@ const GLOW_COLORS: RGB[] = [
 ];
 const STEM: RGB = [34, 66, 74];
 
-// Positions in painting coordinates (0..384); offset by `ox` on the canvas.
-const RING = { x: 63, y: 93, r: 4 };
+// Positions in canvas pixels (455x256).
+const RING = { x: 72, y: 74, r: 4 };
 
-// The painting's waterfall pours in from the right. The block around it is
-// mirrored across the fall's left edge (`axis`) so it pours in from the left;
-// the mossy rocks that stood left of the fall end up on its right.
-const FLIP = { axis: 196, x0: 166, y0: 114, y1: 200 };
-// The waterfall after the flip: its lip, where it lands, and its columns.
-const FALL = { x0: 164, x1: 200, lip: 124, foot: 176, footX: 183 };
-// Where the cascade below it turns into running water.
-const STREAM_TOP = 177;
+// The painted waterfall: the columns it spans, the rows from its slanted lip
+// down to where it lands, and the middle of its foot.
+const FALL = { x0: 102, x1: 162, top: 112, foot: 172, footX: 146 };
+// Running water below the fall: the cascade stepping down to the right, then
+// the stream. (The bright clearing behind is left out; it's mist, not water.)
+const inStream = (x: number, y: number) =>
+  (y >= FALL.foot && x >= 140 && x < 215) || (y >= 196 && x >= 170 && x < 380);
 // The lower stream becomes a still pond from this row down. Two of its rocks
 // stay (centre x, centre y, half-width); the others are flooded.
-const POND_TOP = 201;
+const POND_TOP = 206;
 // The pond's round body, which the stream's own outline is widened to.
-const POND_BODY = { x: 245, y: 233, rx: 48, ry: 19 };
-const KEEP_ROCKS: [number, number, number][] = [[260, 235, 14], [280, 218, 9]];
+const POND_BODY = { x: 272, y: 229, rx: 58, ry: 21 };
+const KEEP_ROCKS: [number, number, number][] = [[202, 217, 13], [298, 238, 9]];
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 const bayer = (x: number, y: number) => (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
@@ -160,67 +153,8 @@ const isGold = (r: number, g: number, b: number) => r > 160 && g > 100 && b < 11
 const isTrunk = (r: number, g: number, b: number) =>
   g > 95 && g - r > 8 && g - b > 8 && Math.max(r, g, b) - Math.min(r, g, b) < 55;
 
-// Draws the painting into a canvas `W` wide. Any extra columns either side
-// are filled with a strip of columns copied from elsewhere in the painting:
-// the strip whose edge best matches the painting's own edge there, so trunks,
-// bushes and colours carry on across the join without a hard vertical line.
-// Strips never come from the middle of the painting (the waterfall and pond)
-// or around the ring, which would show up twice.
-function paintBase(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
-  const ox = Math.floor((W - IMG_W) / 2);
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(img, ox, 0, IMG_W, H);
-  const image = ctx.getImageData(0, 0, W, H);
-  if (ox === 0) return { image, ox };
-  const d = image.data;
-  const at = (u: number, y: number) => (y * W + ox + u) * 4; // painting column u
-  const diff = (a: number, b: number) => {
-    let s = 0;
-    for (let y = 0; y < H; y += 2) {
-      const i = at(a, y);
-      const j = at(b, y);
-      s += Math.abs(d[i] - d[j]) + Math.abs(d[i + 1] - d[j + 1]) + Math.abs(d[i + 2] - d[j + 2]);
-    }
-    return s;
-  };
-  const allowed = (lo: number, hi: number) =>
-    lo >= 0 && hi < IMG_W && (hi < RING.x - 12 || lo > RING.x + 12) && (hi < 140 || lo > 330);
-
-  // Left: the strip ends at column c, so columns c+1.. should resemble 0..
-  let left = -1;
-  let best = Infinity;
-  for (let c = ox - 1; c < IMG_W - 4; c++) {
-    if (!allowed(c - ox + 1, c)) continue;
-    const s = diff(c + 1, 0) + diff(c + 2, 1) + diff(c + 3, 2);
-    if (s < best) [best, left] = [s, c];
-  }
-  // Right: the strip starts at column c, so columns ..c-1 should resemble the last ones.
-  let right = -1;
-  best = Infinity;
-  for (let c = 3; c + ox <= IMG_W; c++) {
-    if (!allowed(c, c + ox - 1)) continue;
-    const s = diff(c - 1, IMG_W - 1) + diff(c - 2, IMG_W - 2) + diff(c - 3, IMG_W - 3);
-    if (s < best) [best, right] = [s, c];
-  }
-
-  const copy = (x: number, y: number, from: number) => {
-    const i = (y * W + x) * 4;
-    d[i] = d[from];
-    d[i + 1] = d[from + 1];
-    d[i + 2] = d[from + 2];
-    d[i + 3] = 255;
-  };
-  // (If no strip qualifies, a reflection of the edge fills the margin instead.)
-  for (let y = 0; y < H; y++)
-    for (let j = 0; j < ox; j++) {
-      copy(ox - 1 - j, y, at(left < 0 ? j : left - j, y));
-      copy(ox + IMG_W + j, y, at(right < 0 ? IMG_W - 1 - j : right + j, y));
-    }
-  return { image, ox };
-}
-
-
-function buildScene(base: Uint8ClampedArray, ox: number): Scene {
+function buildScene(base: Uint8ClampedArray): Scene {
+  const ox = 0; // the painting fills the canvas
   const rand = mulberry32(7);
   const N = W * H;
   const at = (i: number): RGB => [base[i * 4], base[i * 4 + 1], base[i * 4 + 2]];
@@ -233,19 +167,6 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
     base[i * 4 + 1] = c[1];
     base[i * 4 + 2] = c[2];
   };
-
-  // ---- Waterfall from the left ----
-  // Mirror the block around the waterfall across its left edge.
-  for (let y = FLIP.y0; y <= FLIP.y1; y++)
-    for (let u = FLIP.x0; u < FLIP.axis; u++) {
-      const a = (y * W + u + ox) * 4;
-      const b = (y * W + 2 * FLIP.axis - u + ox) * 4;
-      for (let ch = 0; ch < 3; ch++) {
-        const v = base[a + ch];
-        base[a + ch] = base[b + ch];
-        base[b + ch] = v;
-      }
-    }
 
   const gold = new Uint8Array(N);
   const trunk = new Uint8Array(N);
@@ -281,25 +202,25 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
         leaves.push(i);
         if (y < 90 && hash(x, y, 2) > 0.93) leafOrigins.push([x, y]);
       }
-      const inFall = y >= FALL.lip && y <= FALL.foot + 6 && u >= FALL.x0 && u <= FALL.x1;
+      const inFall = y >= FALL.top && y < FALL.foot && u >= FALL.x0 && u <= FALL.x1;
       // The cascade below the fall and the stream: blue water down to the bottom edge.
-      if (y >= STREAM_TOP && u > 160 && u < 320 && b > 110 && b > r + 60) {
+      if (inStream(u, y) && b > 110 && b > r + 60) {
         water.push(i);
         isWater[i] = 1;
-      } else if (inFall && isFallWater(r, g, b)) {
-        isWater[i] = 1;
-        if (y < FALL.lip + 3) lip.push(i);
-      }
-      // The misty distance behind the waterfall: pale blue between the near trunks.
-      else if (y > 50 && y < 140 && u > 135 && u < 275 && b > r + 30 && g > 40) mist.push(i);
+      } else if (inFall && isFallWater(r, g, b)) isWater[i] = 1;
+      // The misty clearing behind the stream: pale blue between the near trunks.
+      else if (y > 50 && y < 195 && u > 175 && u < 310 && b > r + 30 && g > 40) mist.push(i);
       if (inFall && isWater[i] && y > FALL.foot - 8) splash.push(i);
       if (nearRing && gold[i]) ringPx.push(i);
     }
-  // The waterfall's columns, below the lip and above where it lands.
+  // The waterfall's columns. The lip slants, so each column's first two water
+  // pixels are its lip; below that, down to where it lands, the water scrolls.
   for (let x = FALL.x0 + ox; x <= FALL.x1 + ox; x++) {
-    const idx: number[] = [];
-    for (let y = FALL.lip + 3; y <= FALL.foot - 8; y++) if (isWater[y * W + x]) idx.push(y * W + x);
-    if (idx.length < 4) continue;
+    const run: number[] = [];
+    for (let y = FALL.top; y < FALL.foot - 8; y++) if (isWater[y * W + x]) run.push(y * W + x);
+    if (run.length < 6) continue;
+    lip.push(run[0], run[1]);
+    const idx = run.slice(2);
     fallCols.push({ idx, colors: idx.map(at), phase: rand() * 40, speed: 16 + rand() * 8 });
   }
 
@@ -313,7 +234,7 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
   for (let y = POND_TOP; y < H; y++) {
     let l = Infinity;
     let r = -Infinity;
-    for (let u = 160; u < 320; u++)
+    for (let u = 170; u < 380; u++)
       if (isWater[y * W + u + ox]) {
         l = Math.min(l, u);
         r = Math.max(r, u);
@@ -363,7 +284,8 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
   const pondWater = water.filter((i) => !isPond[i]);
   water.length = 0;
   water.push(...pondWater);
-  const inflow = { x: FALL.footX + ox + 6, y: POND_TOP + 2 };
+  // Where the cascade spills into the pond.
+  const inflow = { x: 200 + ox, y: POND_TOP + 2 };
 
   // Glowing fish circling the pond on overlapping loops.
   const fish: Scene["fish"] = FISH_COLORS.map((color, n) => ({
@@ -410,7 +332,7 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
 
   // Mist glowing off the waterfall, brightest where it lands.
   addLight(FALL.footX + ox, FALL.foot - 2, 18, MIST, 0.9, 0.4);
-  addLight(FALL.footX + ox, (FALL.lip + FALL.foot) / 2, 14, MIST, 0.4, 0.5);
+  addLight(FALL.footX + ox - 12, (FALL.top + FALL.foot) / 2, 14, MIST, 0.4, 0.5);
 
   // ---- Bioluminescent plants ----
   // Glowing mushrooms, bulb stalks and ferns tucked into the undergrowth.
@@ -448,13 +370,13 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
     } else if (pick < 0.75) stalk(x, y, 5 + Math.floor(rand() * 8), color);
     else fern(x, y, color);
   };
-  // Zones in painting coordinates: [x0, x1, y0, y1, count]. The left zone runs
-  // into the mirrored margin on wide screens.
+  // Zones of undergrowth: [x0, x1, y0, y1, count]. Left of the waterfall,
+  // along the near bank, and across the right side of the forest.
   const zones: [number, number, number, number, number][] = [
-    [8 - ox, 125, 160, 250, 10],
-    [125, 215, 222, 252, 5],
-    [235, 300, 205, 250, 4],
-    [338, IMG_W + ox - 6, 175, 250, 7],
+    [8, 98, 120, 250, 10],
+    [95, 185, 205, 252, 5],
+    [330, 380, 175, 225, 3],
+    [380, W - 6, 150, 250, 8],
   ];
   for (const [x0, x1, y0, y1, count] of zones) {
     let placed = 0;
@@ -709,6 +631,7 @@ export default function GoldenForest() {
   useEffect(() => {
     const host = ref.current!;
     const canvas = document.createElement("canvas");
+    canvas.width = W;
     canvas.height = H;
     Object.assign(canvas.style, {
       display: "block",
@@ -724,7 +647,6 @@ export default function GoldenForest() {
     const start = performance.now();
     let scene: Scene | null = null;
     let image: ImageData | null = null;
-    let loaded = false;
     let raf = 0;
     let last = 0;
     let cancelled = false;
@@ -736,30 +658,13 @@ export default function GoldenForest() {
     };
 
     const img = new Image();
-
-    // Widen the canvas to the viewport's aspect ratio (up to 2:1) so wide
-    // screens see the whole painting instead of a vertically cropped band.
-    const resize = () => {
-      if (!loaded) return;
-      const { width, height } = host.getBoundingClientRect();
-      const fit = Math.round((H * width) / Math.max(1, height) / 2) * 2;
-      const next = Math.min(MAX_W, Math.max(IMG_W, fit));
-      if (scene && next === W) return;
-      W = next;
-      canvas.width = W;
-      const painted = paintBase(ctx, img);
-      image = painted.image;
-      scene = buildScene(new Uint8ClampedArray(image.data), painted.ox);
-      draw(performance.now());
-    };
-    const observer = new ResizeObserver(resize);
-
     img.onload = () => {
       if (cancelled) return;
-      loaded = true;
-      scene = null;
-      resize();
-      observer.observe(host);
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, W, H);
+      image = ctx.getImageData(0, 0, W, H);
+      scene = buildScene(new Uint8ClampedArray(image.data));
+      draw(performance.now());
       canvas.style.opacity = "1";
     };
     img.src = SRC;
@@ -781,7 +686,6 @@ export default function GoldenForest() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
-      observer.disconnect();
       canvas.remove();
     };
   }, []);
