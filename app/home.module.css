@@ -62,6 +62,18 @@
   vertical-align: bottom;
 }
 
+.inline {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.inline:hover {
+  text-decoration-color: currentColor;
+}
+
 .social {
   margin-top: 14px;
   color: var(--ink);
