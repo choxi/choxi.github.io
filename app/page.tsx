@@ -1,4 +1,4 @@
-import PixelGrove from "./components/pixel-grove";
+import GoldenForest from "./components/golden-forest";
 import styles from "./home.module.css";
 
 const POSTS = [
@@ -17,7 +17,7 @@ const POSTS = [
 export default function Home() {
   return (
     <main className={styles.home}>
-      <PixelGrove />
+      <GoldenForest />
 
       <div className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
