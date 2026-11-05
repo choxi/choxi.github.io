@@ -3,18 +3,18 @@
 import { useEffect, useRef } from "react";
 
 // Full-viewport animated pixel-art background built on a painted scene: a
-// night forest under golden canopies, a stream winding out of a misty clearing,
-// and a glowing ring standing on a mossy rock.
+// night forest under golden canopies, a waterfall at the back of a clearing
+// feeding a stream over mossy rocks, and a glowing ring on the left.
 //
 // The painting is sampled down to a small canvas (384x256) and scaled back up
 // with nearest-neighbour sampling, so every effect lands on the same coarse
 // pixel grid as the art. On wide screens the canvas grows sideways and the
-// painting's edges are mirrored into the extra columns, so the scene isn't
-// cropped top and bottom. On load the image is scanned for its golden leaves,
-// stream, trunks and misty clearing; a short waterfall and glowing plants are
-// painted in, and the colours are varied. Each frame copies that base and
-// animates the canopy, water, mist and glow, then adds drifting leaves,
-// fireflies and the ring's gold dust on top.
+// painting wraps around into the extra columns, so the scene isn't cropped
+// top and bottom. On load the image is scanned for its golden leaves,
+// waterfall, stream, trunks and misty distance; glowing plants are painted
+// in, and the colours are varied. Each frame copies that base and animates
+// the canopy, water, mist and glow, then adds drifting leaves, fireflies and
+// the ring's gold dust on top.
 
 const SRC = "/assets/golden-forest.webp";
 const IMG_W = 384;
@@ -39,17 +39,8 @@ const FOAM: RGB = [200, 238, 255];
 const SPARKLE: RGB = [240, 252, 255];
 const FIREFLIES: RGB[] = [[255, 226, 120], [160, 255, 170], [130, 235, 255]];
 
-// The waterfall is far back in the clearing, so its water and rock are pale
-// and low in contrast, as if seen through the mist.
-const FALL_DARK: RGB = [70, 140, 182];
-const FALL_MID: RGB = [128, 196, 224];
 const FALL_LIGHT: RGB = [196, 236, 248];
 const FALL_FOAM: RGB = [232, 250, 255];
-const ROCK: RGB = [36, 80, 106];
-const ROCK_DARK: RGB = [24, 58, 82];
-const ROCK_LIT: RGB = [72, 124, 148];
-const MOSS: RGB = [44, 98, 100];
-const MOSS_LIT: RGB = [138, 150, 92];
 
 const GLOW_COLORS: RGB[] = [
   [90, 245, 230], // cyan
@@ -61,37 +52,12 @@ const GLOW_COLORS: RGB[] = [
 const STEM: RGB = [34, 66, 74];
 
 // Positions in painting coordinates (0..384); offset by `ox` on the canvas.
-const RING = { x: 62, y: 93, r: 4 };
+const RING = { x: 63, y: 93, r: 4 };
 
-// The waterfall feeding the stream from the back of the clearing. It steps
-// down a rock outcrop: each point is a ledge it spills over, and between
-// ledges it slides sideways to the next one, so the cascade zigzags instead
-// of falling straight. The last point is where the painted stream begins.
-const FALL_PTS: [number, number][] = [
-  [198, 104], [194, 120], [190, 136], [194, 152], [200, 167], [205, 182], [207, 197],
-];
-const FALL_TOP = FALL_PTS[0][1];
-const FALL_BOTTOM = FALL_PTS[FALL_PTS.length - 1][1];
-const smooth = (u: number) => u * u * (3 - 2 * u);
-// Which step a row is on, and how far down that step (0..1).
-function fallStep(y: number) {
-  let k = 0;
-  while (k < FALL_PTS.length - 2 && y >= FALL_PTS[k + 1][1]) k++;
-  const [, y0] = FALL_PTS[k];
-  const [, y1] = FALL_PTS[k + 1];
-  return { k, u: Math.min(1, Math.max(0, (y - y0) / (y1 - y0))), local: y - y0, len: y1 - y0 };
-}
-// Centre of the water at a row, in painting coordinates.
-function fallCenter(y: number) {
-  const { k, u } = fallStep(y);
-  return FALL_PTS[k][0] + (FALL_PTS[k + 1][0] - FALL_PTS[k][0]) * smooth(u);
-}
-// Half the water's width: narrow at the top, fanning out on each step.
-function fallHalf(y: number, side: number) {
-  const { u } = fallStep(y);
-  const depth = (y - FALL_TOP) / (FALL_BOTTOM - FALL_TOP);
-  return 1.5 + depth * 4.5 + u * 1.5 + (hash(y, 11 + side) - 0.5) * 1.4;
-}
+// The painted waterfall: its lip, where it lands, and the columns it spans.
+const FALL = { x0: 192, x1: 228, lip: 124, foot: 176, footX: 209 };
+// Where the cascade below it turns into the stream.
+const STREAM_TOP = 177;
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 const bayer = (x: number, y: number) => (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
@@ -149,9 +115,12 @@ type Scene = {
   base: Uint8ClampedArray;
   canopy: number[]; // pixels in and around the golden canopy that sway
   leaves: number[]; // golden leaf pixels that can catch a glint
-  water: number[]; // the painted stream
-  fall: number[];
-  splash: number[];
+  water: number[]; // the painted cascade and stream
+  // The painted waterfall, column by column: each column's pixels top to
+  // bottom and their original colours, which scroll down as the water falls.
+  fallCols: { idx: number[]; colors: RGB[]; phase: number; speed: number }[];
+  lip: number[]; // the bright edge where the water pours over
+  splash: number[]; // where the waterfall lands
   mist: number[];
   ringPx: number[];
   lights: Light[];
@@ -204,13 +173,10 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
 
   const gold = new Uint8Array(N);
   const trunk = new Uint8Array(N);
-  // The misty blue distance; the dark leaning tree and near foliage aren't.
-  const far = new Uint8Array(N);
   for (let i = 0; i < N; i++) {
     const [r, g, b] = at(i);
     gold[i] = isGold(r, g, b) ? 1 : 0;
     trunk[i] = isTrunk(r, g, b) ? 1 : 0;
-    far[i] = !gold[i] && !trunk[i] && b >= 70 && b > r + 40 ? 1 : 0;
   }
   const ring = { x: RING.x + ox, y: RING.y };
 
@@ -222,6 +188,10 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
   const ringPx: number[] = [];
   const isWater = new Uint8Array(N);
   const leafOrigins: [number, number][] = [];
+  const fallCols: Scene["fallCols"] = [];
+  const lip: number[] = [];
+  const splash: number[] = [];
+  const isFallWater = (r: number, g: number, b: number) => b > 120 && b > r + 50 && g > 90;
 
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
@@ -235,15 +205,27 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
         leaves.push(i);
         if (y < 90 && hash(x, y, 2) > 0.93) leafOrigins.push([x, y]);
       }
-      // The stream: saturated blue in the lower middle, down to the bottom edge.
-      if (y > 188 && u > 175 && u < 315 && b > 110 && b > g + 25 && b > r + 70) {
+      const inFall = y >= FALL.lip && y <= FALL.foot + 6 && u >= FALL.x0 && u <= FALL.x1;
+      // The cascade below the fall and the stream: blue water down to the bottom edge.
+      if (y >= STREAM_TOP && u > 170 && u < 320 && b > 110 && b > r + 60) {
         water.push(i);
         isWater[i] = 1;
+      } else if (inFall && isFallWater(r, g, b)) {
+        isWater[i] = 1;
+        if (y < FALL.lip + 3) lip.push(i);
       }
-      // The misty clearing behind the stream: pale cyan between the near trunks.
-      else if (y > 70 && y < 200 && u > 140 && u < 250 && b > r + 30 && g > 40) mist.push(i);
+      // The misty distance behind the waterfall: pale blue between the near trunks.
+      else if (y > 50 && y < 140 && u > 135 && u < 275 && b > r + 30 && g > 40) mist.push(i);
+      if (inFall && isWater[i] && y > FALL.foot - 8) splash.push(i);
       if (nearRing && gold[i]) ringPx.push(i);
     }
+  // The waterfall's columns, below the lip and above where it lands.
+  for (let x = FALL.x0 + ox; x <= FALL.x1 + ox; x++) {
+    const idx: number[] = [];
+    for (let y = FALL.lip + 3; y <= FALL.foot - 8; y++) if (isWater[y * W + x]) idx.push(y * W + x);
+    if (idx.length < 4) continue;
+    fallCols.push({ idx, colors: idx.map(at), phase: rand() * 40, speed: 16 + rand() * 8 });
+  }
 
   // ---- Colour variation ----
   // Patches of the canopy turn orange and coral or cool toward lime, and the
@@ -277,70 +259,9 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
   const addLight = (x: number, y: number, r: number, color: RGB, strength = 1, speed = 0.6 + rand() * 1.2) =>
     lights.push({ x, y, r, color, phase: rand() * 6.28, speed, strength });
 
-  // ---- Waterfall ----
-  // A distant cascade at the back of the clearing, stepping down a rock
-  // outcrop into the head of the stream. Only the misty distance is painted
-  // over, so the dark leaning tree, the trunks and the bushes stay in front.
-  const fall: number[] = [];
-  const splash: number[] = [];
-  const kind = new Uint8Array(N); // 1 fall, 2 splash
-  const open = (x: number, y: number) => x >= 0 && y >= 0 && x < W && y < H && far[y * W + x] === 1;
-  const cx = (y: number) => fallCenter(y) + ox;
-
-  // The outcrop: a mound of rock that widens toward its foot, with lumpy
-  // sides that fade into the haze and moss along its crown.
-  for (let y = FALL_TOP - 6; y < FALL_BOTTOM; y++) {
-    const yy = Math.max(y, FALL_TOP);
-    const depth = (y - FALL_TOP + 6) / (FALL_BOTTOM - FALL_TOP + 6);
-    const half = 5 + depth * 12;
-    const l = Math.round(cx(yy) - half - vnoise(y * 0.2, 3) * 5);
-    const r = Math.round(cx(yy) + half + vnoise(y * 0.2, 8) * 5);
-    for (let x = l; x <= r; x++) {
-      if (!open(x, y)) continue;
-      // Thin out toward the outline so the rock dissolves into the mist.
-      const edge = Math.min(x - l, r - x);
-      if (edge < 3 && bayer(x, y) > edge / 3) continue;
-      let c: RGB;
-      if (y < FALL_TOP - 2) c = hash(x, y, 6) > 0.6 ? MOSS_LIT : MOSS;
-      else if (x - l < 4 && hash(x >> 1, y >> 1, 4) > 0.35) c = ROCK_LIT; // light on the left faces
-      else c = hash(x >> 1, y >> 1, 5) > 0.72 ? ROCK_DARK : ROCK;
-      px(x, y, c);
-    }
-  }
-  // Each ledge: a lit shelf with a shadow under its lip.
-  for (let k = 0; k < FALL_PTS.length - 1; k++) {
-    const ly = FALL_PTS[k][1];
-    const w = fallHalf(ly, 0) + 3 + hash(k, 3) * 3;
-    for (let x = Math.round(cx(ly) - w); x <= cx(ly) + w; x++) {
-      if (open(x, ly - 1)) px(x, ly - 1, hash(x, ly, 3) > 0.45 ? ROCK_LIT : MOSS);
-      if (open(x, ly + 1)) px(x, ly + 1, ROCK_DARK);
-    }
-  }
-  // The water, emerging from the haze at the top.
-  for (let y = FALL_TOP; y <= FALL_BOTTOM; y++) {
-    const l = Math.round(cx(y) - fallHalf(y, 0));
-    const r = Math.round(cx(y) + fallHalf(y, 1));
-    for (let x = l; x <= r; x++) {
-      if (!open(x, y) || (y < FALL_TOP + 3 && bayer(x, y) > (y - FALL_TOP + 1) / 4)) continue;
-      kind[y * W + x] = 1;
-      px(x, y, FALL_MID);
-    }
-  }
-  // Churning water where it lands in the head of the stream.
-  const poolX = FALL_PTS[FALL_PTS.length - 1][0] + ox;
-  const poolY = FALL_BOTTOM;
-  for (let y = poolY - 3; y <= poolY + 3; y++)
-    for (let x = poolX - 10; x <= poolX + 10; x++)
-      if (((x - poolX) / 10) ** 2 + ((y - poolY) / 3) ** 2 <= 1 && (open(x, y) || isWater[y * W + x]) && !kind[y * W + x]) {
-        kind[y * W + x] = 2;
-        px(x, y, FALL_MID);
-      }
-  for (let i = 0; i < N; i++) {
-    if (kind[i] === 1) fall.push(i);
-    else if (kind[i] === 2) splash.push(i);
-  }
-  addLight(poolX, poolY - 3, 16, MIST, 0.9, 0.4);
-  for (let y = FALL_TOP + 8; y < FALL_BOTTOM - 8; y += 18) addLight(cx(y), y, 10, MIST, 0.3, 0.5);
+  // Mist glowing off the waterfall, brightest where it lands.
+  addLight(FALL.footX + ox, FALL.foot - 2, 18, MIST, 0.9, 0.4);
+  addLight(FALL.footX + ox, (FALL.lip + FALL.foot) / 2, 14, MIST, 0.4, 0.5);
 
   // ---- Bioluminescent plants ----
   // Glowing mushrooms, bulb stalks and ferns tucked into the undergrowth.
@@ -393,7 +314,7 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
       const y = Math.round(y0 + rand() * (y1 - y0));
       if (x < 4 || x >= W - 4) continue;
       const i = y * W + x;
-      if (isWater[i] || kind[i] || trunk[i] || Math.hypot(x - ring.x, y - ring.y) < 16) continue;
+      if (isWater[i] || trunk[i] || Math.hypot(x - ring.x, y - ring.y) < 16) continue;
       plant(x, y);
       placed++;
     }
@@ -429,7 +350,7 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
       color: FIREFLIES[Math.floor(rand() * FIREFLIES.length)],
     });
 
-  return { ox, base, canopy, leaves, water, fall, splash, mist, ringPx, lights, falling, motes, flies };
+  return { ox, base, canopy, leaves, water, fallCols, lip, splash, mist, ringPx, lights, falling, motes, flies };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -488,41 +409,29 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   for (const i of s.water) {
     const x = i % W;
     const y = (i / W) | 0;
-    flowing(i, x, y, y + x * 0.45 + hash(x >> 1, 3) * 3);
+    flowing(i, x, y, y + x * 0.3 + hash(x >> 1, 3) * 3);
   }
-  // Waterfall: streaks of water scroll down lanes that follow the cascade as
-  // it swings from ledge to ledge. Each lip curls over bright, spray churns at
-  // the foot of each step, and the edges flicker as water splashes off them.
-  const streak = (lane: number, y: number, speed: number, len: number) => {
-    const v = (y + hash(lane, 2) * 30 - t * (speed + hash(lane, 1) * speed * 0.6)) / len;
-    return v - Math.floor(v);
-  };
-  for (const i of s.fall) {
-    const x = i % W;
-    const y = (i / W) | 0;
-    const { local, len } = fallStep(y);
-    const lateral = x - (fallCenter(y) + s.ox);
-    const lane = Math.round(lateral) + 20;
-    const rope = hash(lane >> 1, 9);
-    const st = streak(lane, y, 26, rope > 0.6 ? 12 : 6);
-    let c: RGB;
-    if (rope > 0.6) c = st < 0.65 ? FALL_LIGHT : FALL_MID;
-    else c = st < 0.25 ? FALL_LIGHT : st < 0.6 ? FALL_MID : FALL_DARK;
-    const half = lateral < 0 ? fallHalf(y, 0) : fallHalf(y, 1);
-    if (local < 2) c = local === 0 || hash(x, y, fast) > 0.5 ? FALL_LIGHT : FALL_FOAM;
-    else if (local > len - 3 && hash(x, y, fast) > 0.4) c = FALL_FOAM;
-    else if (Math.abs(lateral) > half - 1) c = hash(x, y, fast) > 0.5 ? FALL_FOAM : FALL_DARK;
-    put(i, c);
+
+  // Waterfall: each column's painted pixels scroll downward, so the falling
+  // water keeps its painted look but pours. Bright streaks race down a few
+  // columns, the lip shimmers, and the water churns white where it lands.
+  for (const col of s.fallCols) {
+    const n = col.idx.length;
+    const shift = Math.floor(t * col.speed + col.phase);
+    for (let j = 0; j < n; j++) put(col.idx[j], col.colors[(((j - shift) % n) + n) % n]);
+    const x = col.idx[0] % W;
+    if (hash(x, 9) > 0.6) {
+      const head = (t * col.speed * 1.4 + col.phase * 3) % (n + 6);
+      for (let j = 0; j < n; j++) if (j <= head && head - j < 3) put(col.idx[j], FALL_LIGHT);
+    }
   }
-  const poolX = FALL_PTS[FALL_PTS.length - 1][0] + s.ox;
-  const poolY = FALL_BOTTOM;
+  for (const i of s.lip) if (hash(i, fast) > 0.6) put(i, FALL_FOAM);
+  const poolX = FALL.footX + s.ox;
+  const poolY = FALL.foot;
   for (const i of s.splash) {
     const x = i % W;
     const y = (i / W) | 0;
-    const d = Math.hypot(x - poolX, (y - poolY) * 3);
-    let c: RGB = d > 7 ? FALL_DARK : FALL_MID;
-    if (hash(x, y, fast) > 0.4 + d / 18) c = FALL_FOAM;
-    put(i, c);
+    if (hash(x, y, fast) > 0.35 + Math.abs(y - poolY) / 20) put(i, FALL_FOAM);
   }
   // Spray drifting up off the foot of the fall.
   for (let n = 0; n < 10; n++) {
