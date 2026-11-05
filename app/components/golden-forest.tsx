@@ -42,6 +42,18 @@ const FIREFLIES: RGB[] = [[255, 226, 120], [160, 255, 170], [130, 235, 255]];
 const FALL_LIGHT: RGB = [196, 236, 248];
 const FALL_FOAM: RGB = [232, 250, 255];
 
+const POND_DEEP: RGB = [8, 62, 108];
+const POND: RGB = [14, 96, 152];
+const POND_LIGHT: RGB = [48, 138, 200];
+const POND_GLINT: RGB = [150, 215, 245];
+const FISH_COLORS: RGB[] = [
+  [255, 150, 60], // koi
+  [90, 245, 230], // cyan
+  [255, 120, 210], // magenta
+  [255, 214, 90], // gold
+  [255, 150, 60],
+];
+
 const GLOW_COLORS: RGB[] = [
   [90, 245, 230], // cyan
   [255, 110, 220], // magenta
@@ -54,10 +66,20 @@ const STEM: RGB = [34, 66, 74];
 // Positions in painting coordinates (0..384); offset by `ox` on the canvas.
 const RING = { x: 63, y: 93, r: 4 };
 
-// The painted waterfall: its lip, where it lands, and the columns it spans.
-const FALL = { x0: 192, x1: 228, lip: 124, foot: 176, footX: 209 };
-// Where the cascade below it turns into the stream.
+// The painting's waterfall pours in from the right. The block around it is
+// mirrored across the fall's left edge (`axis`) so it pours in from the left;
+// the mossy rocks that stood left of the fall end up on its right.
+const FLIP = { axis: 196, x0: 166, y0: 114, y1: 200 };
+// The waterfall after the flip: its lip, where it lands, and its columns.
+const FALL = { x0: 164, x1: 200, lip: 124, foot: 176, footX: 183 };
+// Where the cascade below it turns into running water.
 const STREAM_TOP = 177;
+// The lower stream becomes a still pond from this row down. Two of its rocks
+// stay (centre x, centre y, half-width); the others are flooded.
+const POND_TOP = 201;
+// The pond's round body, which the stream's own outline is widened to.
+const POND_BODY = { x: 245, y: 233, rx: 48, ry: 19 };
+const KEEP_ROCKS: [number, number, number][] = [[260, 235, 14], [280, 218, 9]];
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 const bayer = (x: number, y: number) => (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
@@ -121,6 +143,10 @@ type Scene = {
   fallCols: { idx: number[]; colors: RGB[]; phase: number; speed: number }[];
   lip: number[]; // the bright edge where the water pours over
   splash: number[]; // where the waterfall lands
+  pond: number[];
+  isPond: Uint8Array;
+  inflow: { x: number; y: number }; // where the cascade enters the pond
+  fish: { cx: number; cy: number; rx: number; ry: number; phase: number; speed: number; color: RGB }[];
   mist: number[];
   ringPx: number[];
   lights: Light[];
@@ -171,6 +197,19 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
     base[i * 4 + 2] = c[2];
   };
 
+  // ---- Waterfall from the left ----
+  // Mirror the block around the waterfall across its left edge.
+  for (let y = FLIP.y0; y <= FLIP.y1; y++)
+    for (let u = FLIP.x0; u < FLIP.axis; u++) {
+      const a = (y * W + u + ox) * 4;
+      const b = (y * W + 2 * FLIP.axis - u + ox) * 4;
+      for (let ch = 0; ch < 3; ch++) {
+        const v = base[a + ch];
+        base[a + ch] = base[b + ch];
+        base[b + ch] = v;
+      }
+    }
+
   const gold = new Uint8Array(N);
   const trunk = new Uint8Array(N);
   for (let i = 0; i < N; i++) {
@@ -207,7 +246,7 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
       }
       const inFall = y >= FALL.lip && y <= FALL.foot + 6 && u >= FALL.x0 && u <= FALL.x1;
       // The cascade below the fall and the stream: blue water down to the bottom edge.
-      if (y >= STREAM_TOP && u > 170 && u < 320 && b > 110 && b > r + 60) {
+      if (y >= STREAM_TOP && u > 160 && u < 320 && b > 110 && b > r + 60) {
         water.push(i);
         isWater[i] = 1;
       } else if (inFall && isFallWater(r, g, b)) {
@@ -226,6 +265,79 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
     if (idx.length < 4) continue;
     fallCols.push({ idx, colors: idx.map(at), phase: rand() * 40, speed: 16 + rand() * 8 });
   }
+
+  // ---- Pond ----
+  // Each row of the lower stream is filled from its leftmost to its rightmost
+  // water, flooding the rocks between (except the two kept), with the row
+  // ends smoothed so the shore curves. Bush tops and trunks stay in front.
+  const pond: number[] = [];
+  const isPond = new Uint8Array(N);
+  const rows: [number, number][] = [];
+  for (let y = POND_TOP; y < H; y++) {
+    let l = Infinity;
+    let r = -Infinity;
+    for (let u = 160; u < 320; u++)
+      if (isWater[y * W + u + ox]) {
+        l = Math.min(l, u);
+        r = Math.max(r, u);
+      }
+    rows.push(Number.isFinite(l) ? [l, r] : rows[rows.length - 1] ?? [230, 250]);
+  }
+  const keptRock = (u: number, y: number) =>
+    KEEP_ROCKS.some(([rx, ry, s]) => ((u - rx) / s) ** 2 + ((y - ry) / (s * 0.55)) ** 2 <= 1);
+  for (let y = POND_TOP; y < H; y++) {
+    // Average each shore over nearby rows, and round off the pond's top.
+    let l = 0;
+    let r = 0;
+    let n = 0;
+    for (let k = -4; k <= 4; k++) {
+      const row = rows[Math.min(rows.length - 1, Math.max(0, y - POND_TOP + k))];
+      l += row[0];
+      r += row[1];
+      n++;
+    }
+    const top = Math.min(1, (y - POND_TOP + 1) / 6);
+    let lo = l / n;
+    let hi = r / n;
+    // Widen the row out to the pond's round body, with a wobbling shore.
+    const e = (y - POND_BODY.y) / POND_BODY.ry;
+    if (Math.abs(e) < 1) {
+      const reach = POND_BODY.rx * Math.sqrt(1 - e * e) * (0.92 + vnoise(y * 0.3, 4) * 0.16);
+      lo = Math.min(lo, POND_BODY.x - reach);
+      hi = Math.max(hi, POND_BODY.x + reach);
+    }
+    const mid = (lo + hi) / 2;
+    const half = ((hi - lo) / 2) * Math.sqrt(top) + 1;
+    for (let u = Math.round(mid - half); u <= mid + half; u++) {
+      const x = u + ox;
+      const i = y * W + x;
+      if (gold[i] || trunk[i] || keptRock(u, y)) continue;
+      isPond[i] = 1;
+      isWater[i] = 1;
+      pond.push(i);
+      // Long horizontal swirls of lighter and deeper water, like the painted
+      // stream, and a dark wet rim along the shore.
+      const edge = Math.min(u - (mid - half), mid + half - u);
+      const swirl = vnoise(x * 0.13, y * 0.45) * 0.7 + vnoise(x * 0.3 + 9, y * 0.9) * 0.3;
+      const c = edge < 1.5 ? POND_DEEP : swirl > 0.6 ? POND_LIGHT : swirl < 0.4 ? POND_DEEP : POND;
+      px(x, y, c);
+    }
+  }
+  const pondWater = water.filter((i) => !isPond[i]);
+  water.length = 0;
+  water.push(...pondWater);
+  const inflow = { x: FALL.footX + ox + 6, y: POND_TOP + 2 };
+
+  // Glowing fish circling the pond on overlapping loops.
+  const fish: Scene["fish"] = FISH_COLORS.map((color, n) => ({
+    cx: POND_BODY.x + ox + (rand() - 0.5) * 16,
+    cy: POND_BODY.y + (rand() - 0.5) * 6,
+    rx: 16 + rand() * 22,
+    ry: 5 + rand() * 7,
+    phase: rand() * 6.28,
+    speed: (0.22 + rand() * 0.2) * (n % 2 ? -1 : 1),
+    color,
+  }));
 
   // ---- Colour variation ----
   // Patches of the canopy turn orange and coral or cool toward lime, and the
@@ -350,7 +462,10 @@ function buildScene(base: Uint8ClampedArray, ox: number): Scene {
       color: FIREFLIES[Math.floor(rand() * FIREFLIES.length)],
     });
 
-  return { ox, base, canopy, leaves, water, fallCols, lip, splash, mist, ringPx, lights, falling, motes, flies };
+  return {
+    ox, base, canopy, leaves, water, fallCols, lip, splash, pond, isPond, inflow, fish,
+    mist, ringPx, lights, falling, motes, flies,
+  };
 }
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -426,6 +541,54 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     }
   }
   for (const i of s.lip) if (hash(i, fast) > 0.6) put(i, FALL_FOAM);
+
+  // Pond: still water with slow glints drifting across it, and rings
+  // spreading from where the cascade pours in.
+  const { inflow } = s;
+  for (const i of s.pond) {
+    const x = i % W;
+    const y = (i / W) | 0;
+    const w = Math.sin(x * 0.12 + t * 0.5 + Math.sin(y * 0.7) * 2) * Math.sin(y * 1.3 - t * 0.8);
+    if (w > 0.8) add(i, POND_GLINT, 0.3);
+    const d = Math.hypot(x - inflow.x, (y - inflow.y) * 2.6);
+    for (let k = 0; k < 3; k++) {
+      const r = (t * 6 + k * 8) % 24;
+      if (Math.abs(d - r) < 0.7) add(i, POND_GLINT, 0.45 * (1 - r / 24));
+    }
+    if (d < 5 && hash(x, y, fast) > 0.5) put(i, FALL_FOAM);
+    else if (hash(x, y, fast) > 0.996) put(i, SPARKLE);
+  }
+
+  // Fish: bright bodies with a pale head, darker belly and a flicking forked
+  // tail, each wrapped in a soft glow. Only drawn over open pond water, so
+  // they slip out of sight behind rocks and under the bank.
+  const tint = (c: RGB, k: number): RGB =>
+    k > 1
+      ? [c[0] + (255 - c[0]) * (k - 1), c[1] + (255 - c[1]) * (k - 1), c[2] + (255 - c[2]) * (k - 1)]
+      : [c[0] * k, c[1] * k, c[2] * k];
+  for (const f of s.fish) {
+    const a = t * f.speed + f.phase;
+    const X = Math.round(f.cx + Math.cos(a) * f.rx);
+    const Y = Math.round(f.cy + Math.sin(a) * f.ry);
+    const dir = -Math.sin(a) * Math.sign(f.speed) > 0 ? 1 : -1; // facing along the path
+    for (const o of glowOffsets(8)) {
+      const j = (Y + o.dy) * W + X - 2 * dir + o.dx;
+      if (j >= 0 && j < W * H && s.isPond[j]) add(j, f.color, o.f * 0.4);
+    }
+    const head = tint(f.color, 1.7);
+    const belly = tint(f.color, 0.8);
+    const flick = Math.sin(t * 8 + f.phase) > 0 ? 1 : 0;
+    const body: [number, number, RGB][] = [
+      [1, 0, head], [0, 0, head], [0, 1, head],
+      [-1, 0, f.color], [-2, 0, f.color], [-3, 0, f.color], [-4, 0, f.color],
+      [-1, 1, belly], [-2, 1, belly], [-3, 1, belly], [-4, 1, belly],
+      [-5, -1 + flick, f.color], [-6, -1 + flick, belly], [-5, 2 - flick, f.color], [-6, 2 - flick, belly],
+    ];
+    for (const [dx, dy, c] of body) {
+      const j = (Y + dy) * W + X + dx * dir;
+      if (j >= 0 && j < W * H && s.isPond[j]) put(j, c);
+    }
+  }
   const poolX = FALL.footX + s.ox;
   const poolY = FALL.foot;
   for (const i of s.splash) {
