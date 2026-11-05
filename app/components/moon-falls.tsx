@@ -162,10 +162,18 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const columns: Column[] = [];
   const addColumn = (x: number, y0: number, y1: number, speed: number, bright: boolean) => {
     const idx: number[] = [];
+    let gap = 0;
     for (let y = y0; y < y1; y++) {
       const i = y * W + x;
       const [r, g, b] = at(i);
-      if (bright ? g > 120 && g > r + 40 && b > 100 : isFallWater(r, g, b)) idx.push(i);
+      const water = bright
+        ? g > 120 && g > r + 40 && b > 100
+        : // Mint water, not the moss on the cliff (far less blue) or its dark rock.
+          isFallWater(r, g, b) && b > g * 0.66 && g > 100;
+      if (water) {
+        idx.push(i);
+        gap = 0;
+      } else if (!bright && idx.length && ++gap > 5) break; // the fall's edge: rock from here down
     }
     if (idx.length >= 4) columns.push({ idx, colors: idx.map(at), phase: rand() * 40, speed: speed * (0.8 + rand() * 0.4) });
   };
