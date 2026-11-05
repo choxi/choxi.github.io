@@ -25,8 +25,9 @@ function padLevel(body) {
 
 export default function Code(props) {
   const body = padLevel(String(props.children))
-  // Warm code panel to sit on the paper background; the font comes from
-  // --font-mono in globals.css rather than Prism's Consolas stack.
+  // The panel follows the theme: its background, font and syntax colours all
+  // come from globals.css (.code-block and the --code-* variables), so Prism
+  // only supplies the token classes, not inline colours.
   const customStyle = {
     fontFamily: "var(--font-mono)",
     fontSize: "0.8em",
@@ -39,7 +40,7 @@ export default function Code(props) {
   const codeTagProps = { style: { fontFamily: "inherit" } }
 
   return (
-    <SyntaxHighlighter language={ props.lang } style={ prism } customStyle={ customStyle } codeTagProps={ codeTagProps }>
+    <SyntaxHighlighter language={ props.lang } style={ prism } useInlineStyles={ false } className="code-block" customStyle={ customStyle } codeTagProps={ codeTagProps }>
       { body }
     </SyntaxHighlighter>
   )

@@ -13,6 +13,45 @@ import { TablerIcon } from "./social-links";
 // The drawer is a native <dialog> opened with showModal(), which gives focus
 // trapping, Escape to close and an inert page behind it for free.
 
+type Theme = "night" | "day";
+
+// Switches between the night (dark glass) and day (moonlit paper) themes in
+// globals.css and remembers the choice.
+function ThemeSwitch() {
+  const [theme, setTheme] = useState<Theme>("night");
+
+  useEffect(() => {
+    setTheme(document.documentElement.dataset.theme === "day" ? "day" : "night");
+  }, []);
+
+  const toggle = () => {
+    const next: Theme = theme === "night" ? "day" : "night";
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
+    setTheme(next);
+  };
+
+  const label = theme === "night" ? "Switch to the day theme" : "Switch to the night theme";
+
+  return (
+    <button type="button" className="topbar-button" onClick={toggle} aria-label={label} title={label}>
+      {theme === "night" ? (
+        <TablerIcon size={18}>
+          <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" />
+        </TablerIcon>
+      ) : (
+        <TablerIcon size={18}>
+          <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+          <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+        </TablerIcon>
+      )}
+      <span>{theme === "night" ? "Night" : "Day"}</span>
+    </button>
+  );
+}
+
 export default function PostChrome() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [hidden, setHidden] = useState(false);
@@ -52,6 +91,7 @@ export default function PostChrome() {
           Roshan Choxi
         </Link>
         <div className="topbar-actions">
+          <ThemeSwitch />
           <button type="button" className="topbar-button" onClick={open} aria-haspopup="dialog" aria-controls="site-drawer">
             <TablerIcon size={18}>
               <path d="M4 6l16 0" />

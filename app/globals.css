@@ -2,22 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Post pages take their colours from the forest painting on the landing page:
-   warm paper instead of white, and the painting's deep amber for links. The
-   two greys and the accent all pass WCAG AA on the paper. */
-:root {
-  --paper: #fbf8f2;
-  --ink: #1f1d1a;
-  --ink-2: #5f5a52;
-  --rule: #e7e1d6;
-  --accent: #9a5b13;
-  --accent-soft: rgb(154 91 19 / 0.35);
-  --highlight: #f3dca8;
-  --code-bg: #f2ede3;
-  --bar-bg: color-mix(in srgb, var(--paper) 82%, transparent);
-  --drawer-bg: var(--paper);
-  --hover-bg: color-mix(in srgb, var(--ink) 6%, transparent);
+/* Two themes for the post pages, both taken from the Moon Falls painting on
+   the landing page. <html data-theme> picks one; the switch is in the top bar
+   (post-chrome.tsx) and a script in layout.tsx restores it before paint.
 
+   night: the scene itself behind the page, dimmed, with the post on a sheet
+          of the same dark glass as the landing card.
+   day:   pale moonlit paper, with a band of the night sky across the top.
+
+   Accents: lavender from the blossoms for links, mint from the falls for
+   hover and selection. Text colours and accents pass WCAG AA on each
+   theme's surface. */
+:root,
+[data-theme="night"] {
+  --paper: #0a1a1c;
+  --sheet-bg: rgb(11 27 29 / 0.9);
+  --ink: #e8f0ec;
+  --ink-2: #a7b8b3;
+  --rule: rgb(255 255 255 / 0.12);
+  --rule-strong: rgb(255 255 255 / 0.24);
+  --accent: #c9b6f7;
+  --accent-soft: rgb(201 182 247 / 0.4);
+  --accent-hover: #96ffd2;
+  --highlight: rgb(150 255 210 / 0.28);
+  --code-bg: rgb(255 255 255 / 0.06);
+  --bar-bg: rgb(10 26 28 / 0.72);
+  --drawer-bg: #0f2224;
+  --hover-bg: rgb(255 255 255 / 0.08);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -10px rgb(0 0 0 / 0.5);
+  --motif-a: #96ffd2;
+  --motif-b: #c9b6f7;
+  color-scheme: dark;
+
+  /* Code, tuned for the dark sheet. */
+  --code-ink: #dfe9e5;
+  --code-comment: #7f948f;
+  --code-punct: #a7b8b3;
+  --code-keyword: #c9b6f7;
+  --code-string: #96ffd2;
+  --code-tag: #ffb38a;
+  --code-function: #8fd8ff;
+  --code-special: #ffd27a;
+}
+
+[data-theme="day"] {
+  --paper: #f6f4f9;
+  --sheet-bg: transparent;
+  --ink: #1b2023;
+  --ink-2: #565d63;
+  --rule: #e2dfe9;
+  --rule-strong: #cbc6d6;
+  --accent: #6646b8;
+  --accent-soft: rgb(102 70 184 / 0.3);
+  --accent-hover: #1f7564;
+  --highlight: #e4dafb;
+  --code-bg: #edeaf3;
+  --bar-bg: rgb(246 244 249 / 0.82);
+  --drawer-bg: #f6f4f9;
+  --hover-bg: rgb(27 32 35 / 0.06);
+  --shadow: 0 1px 2px rgb(40 30 70 / 0.06), 0 6px 20px -8px rgb(40 30 70 / 0.14);
+  --motif-a: #1f7564;
+  --motif-b: #6646b8;
+  color-scheme: light;
+
+  --code-ink: #1b2023;
+  --code-comment: #5c6469;
+  --code-punct: #565d63;
+  --code-keyword: #6646b8;
+  --code-string: #1c6b5c;
+  --code-tag: #9e4515;
+  --code-function: #19628f;
+  --code-special: #7d5800;
+}
+
+:root {
   --color-primary: var(--accent);
   --color-text: var(--ink);
   --color-text-light: var(--ink-2);
@@ -65,7 +123,7 @@ a {
 }
 
 a:hover {
-  color: var(--ink);
+  color: var(--accent-hover);
 }
 
 a:focus-visible {
@@ -341,7 +399,7 @@ canvas {
 .figure--framed img,
 .figure--framed video {
   border: 1px solid var(--rule);
-  box-shadow: 0 1px 2px rgb(60 45 20 / 0.06), 0 6px 20px -8px rgb(60 45 20 / 0.12);
+  box-shadow: var(--shadow);
 }
 
 .figure > * + * {
@@ -383,7 +441,7 @@ output {
   font-weight: 600;
   font-size: 0.85em;
   color: var(--ink-2);
-  border-bottom: 1px solid #cfc7b8;
+  border-bottom: 1px solid var(--rule-strong);
   padding: 0.5em 0.75em 0.5em 0;
 }
 
@@ -406,4 +464,56 @@ samp {
   padding: 0.1em 0.35em;
   border-radius: 4px;
   background: var(--code-bg);
+}
+
+/* Syntax colours for code blocks. components/code.jsx renders Prism's token
+   classes without inline colours, so each theme can set its own. */
+.code-block {
+  color: var(--code-ink);
+}
+
+.code-block .token.comment,
+.code-block .token.prolog,
+.code-block .token.doctype,
+.code-block .token.cdata {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.code-block .token.punctuation {
+  color: var(--code-punct);
+}
+
+.code-block .token.tag,
+.code-block .token.property,
+.code-block .token.boolean,
+.code-block .token.number,
+.code-block .token.constant,
+.code-block .token.symbol {
+  color: var(--code-tag);
+}
+
+.code-block .token.attr-name,
+.code-block .token.string,
+.code-block .token.char,
+.code-block .token.builtin,
+.code-block .token.selector {
+  color: var(--code-string);
+}
+
+.code-block .token.keyword,
+.code-block .token.atrule,
+.code-block .token.attr-value {
+  color: var(--code-keyword);
+}
+
+.code-block .token.function,
+.code-block .token.class-name {
+  color: var(--code-function);
+}
+
+.code-block .token.regex,
+.code-block .token.important,
+.code-block .token.variable {
+  color: var(--code-special);
 }

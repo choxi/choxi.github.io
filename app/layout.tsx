@@ -35,13 +35,26 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// Restores the reader's theme (night or day, see globals.css) before the first
+// paint, so the page doesn't flash the default theme first.
+const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="day"||t==="night")document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${zodiak.variable} ${satoshi.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="en"
+      data-theme="night"
+      className={`${zodiak.variable} ${satoshi.variable} ${jetbrainsMono.variable}`}
+      // The theme script changes data-theme before React hydrates.
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );
