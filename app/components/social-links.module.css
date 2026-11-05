@@ -1,0 +1,32 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  /* Pull the first icon's padding back so it lines up with the text above. */
+  margin: 0 0 0 -8px;
+}
+
+.row li {
+  margin: 0;
+}
+
+.link {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: inherit;
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+
+.link:hover {
+  opacity: 0.7;
+}
+
+.link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 0;
+}

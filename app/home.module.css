@@ -55,6 +55,18 @@
   color: var(--ink-2);
 }
 
+.place {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  vertical-align: bottom;
+}
+
+.social {
+  margin-top: 14px;
+  color: var(--ink);
+}
+
 .label {
   margin: 28px 0 8px;
   font-size: 12px;

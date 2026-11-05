@@ -1,5 +1,6 @@
 import GlassCard from "./components/glass-card";
 import GoldenForest from "./components/golden-forest";
+import SocialLinks, { MapPinIcon } from "./components/social-links";
 import styles from "./home.module.css";
 
 const POSTS = [
@@ -23,10 +24,16 @@ export default function Home() {
       <GlassCard className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
         <p className={styles.intro}>
-          Software engineer in Chicago 
+          Software engineer in{" "}
+          <span className={styles.place}>
+            <MapPinIcon />
+            Chicago
+          </span>
           <br />
           Writing about science, technology, and design.
         </p>
+
+        <SocialLinks className={styles.social} />
 
         <h2 className={styles.label}>Recent writing</h2>
         <ul className={styles.posts}>

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import SocialLinks, { MapPinIcon } from "./social-links";
 
 export default function Sidebar() {
   return (
@@ -8,29 +9,17 @@ export default function Sidebar() {
         <h1 className="mt-0 text-2xl font-bold mb-2"> Roshan Choxi</h1>
       </Link>
       <p className="text-sm">
-        Software engineer in Chicago
+        Software engineer in{" "}
+        <span className="inline-flex items-center gap-1 align-bottom">
+          <MapPinIcon size={15} />
+          Chicago
+        </span>
       </p>
       <p className="text-sm mt-1">
         Writing about science, technology, and design.
       </p>
 
-      <ul className="no-format mt-8">
-        <li>
-          <a href="https://twitter.com/choxi" target="_blank">
-            X / Twitter
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/choxi" target="_blank">
-            GitHub
-          </a>
-        </li>
-        <li>
-          <a href="https://www.linkedin.com/in/choxi" target="_blank">
-            LinkedIn
-          </a>
-        </li>
-      </ul>
+      <SocialLinks className="mt-6 text-[var(--color-primary)]" />
 
       <h3 className="spc-n-l">Posts</h3>
       <ul className="no-format">
