@@ -5,29 +5,39 @@
   display: grid;
   place-items: center;
   padding: 32px 16px;
-  background: #06090f;
+  background: #07131a;
 }
 
-/* Liquid glass card */
+/* Smoky glass, after Glasswork's dark material (github.com/kubai087/glasswork,
+   glass.css). Four declarations make the surface: a thin dark tint, a backdrop
+   that is barely blurred but dimmed and saturated so the forest's colour comes
+   through, rim light and bevel in the box-shadow, and light ink. The rim lens
+   from GlassCard is appended to the backdrop-filter in Chromium.
+   The scene is always night, so the card is dark glass in both colour schemes. */
 .glass {
+  --ink: rgba(255, 255, 255, 0.94);
+  --ink-2: rgba(235, 235, 245, 0.68);
+  --filter: blur(2px) saturate(1.6) brightness(0.62);
+
   position: relative;
   width: min(100%, 440px);
   padding: 32px 32px 20px;
   border-radius: 28px;
-  color: #fff;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0.05) 60%
-  );
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: var(--ink);
+  background: color-mix(in srgb, #1e1e22 34%, transparent);
+  -webkit-backdrop-filter: var(--filter);
+  backdrop-filter: var(--filter) var(--glass-lens,);
+  isolation: isolate;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.12),
-    inset 0 0 36px rgba(255, 255, 255, 0.06),
-    0 24px 60px rgba(0, 0, 0, 0.3);
+    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / 0.46),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.18),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.06),
+    0 0 0 0.5px rgb(0 0 0 / 0.28),
+    0 4px 14px rgb(0 0 0 / 0.22),
+    inset 0 6px 8px -6px rgb(255 255 255 / 0.18),
+    inset 4px 0 8px -6px rgb(255 255 255 / 0.07),
+    inset -4px 0 8px -6px rgb(255 255 255 / 0.04),
+    inset 0 -6px 8px -6px rgb(0 0 0 / 0.08);
 }
 
 .name {
@@ -42,7 +52,7 @@
   margin: 8px 0 0;
   font-size: 16px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--ink-2);
 }
 
 .label {
@@ -51,7 +61,7 @@
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--ink-2);
 }
 
 .posts {
@@ -69,7 +79,7 @@
   padding: 12px 0;
   font-size: 16px;
   line-height: 1.35;
-  color: #fff;
+  color: var(--ink);
   transition: opacity 150ms ease;
 }
 
@@ -83,55 +93,20 @@
   border-radius: 4px;
 }
 
-/* On portrait screens the background pans so the waterfall sits right behind
-   the card; a dark tint keeps the white text readable over the bright water. */
-@media (orientation: portrait) {
+/* Without transparency: a solid surface in the same tint. */
+@media (prefers-reduced-transparency: reduce) {
   .glass {
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 60%),
-      rgba(8, 14, 16, 0.4);
+    background: #1e1e22;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
-/* Light mode: the background is a daytime scene, so the card becomes bright
-   frosted glass with dark text. Comes after the portrait rule so it wins. */
-@media (prefers-color-scheme: light) {
-  .home {
-    background: #cfe7ee;
-  }
-
+@media (forced-colors: active) {
   .glass {
-    color: #13211f;
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.74),
-      rgba(255, 255, 255, 0.52) 60%
-    );
-    border-color: rgba(255, 255, 255, 0.8);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 0 36px rgba(255, 255, 255, 0.25),
-      0 24px 60px rgba(30, 60, 70, 0.18);
-  }
-
-  .intro {
-    color: rgba(19, 33, 31, 0.72);
-  }
-
-  .label {
-    color: rgba(19, 33, 31, 0.55);
-  }
-
-  .posts li {
-    border-top-color: rgba(19, 33, 31, 0.12);
-  }
-
-  .posts a {
-    color: #13211f;
-  }
-
-  .posts a:focus-visible {
-    outline-color: rgba(19, 33, 31, 0.8);
+    border: 1px solid CanvasText;
+    background: Canvas;
+    backdrop-filter: none;
   }
 }
 

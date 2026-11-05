@@ -1,3 +1,4 @@
+import GlassCard from "./components/glass-card";
 import GoldenForest from "./components/golden-forest";
 import styles from "./home.module.css";
 
@@ -19,7 +20,7 @@ export default function Home() {
     <main className={styles.home}>
       <GoldenForest />
 
-      <div className={styles.glass}>
+      <GlassCard className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
         <p className={styles.intro}>
           Software engineer in Chicago 
@@ -35,7 +36,7 @@ export default function Home() {
             </li>
           ))}
         </ul>
-      </div>
+      </GlassCard>
     </main>
   );
 }
