@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Figure from "../../components/figure";
 import overview from "./gesture-detection-overview.gif";
 import recordingGestures from "./gesture-detection-recording-gestures.gif";
 import debugging1 from "./gesture-detection-debugging.png";
@@ -21,7 +22,9 @@ export default function Post() {
         <a href="https://priceless-jones-bef040.netlify.com/">here</a>.
       </p>
 
-      <Image src={overview} alt="overview" />
+      <Figure framed>
+        <Image src={overview} alt="overview" />
+      </Figure>
 
       <p>
         The idea came from some of my work with the{" "}
@@ -63,7 +66,9 @@ export default function Post() {
         recorded gestures on Airtable.
       </p>
 
-      <Image src={recordingGestures} alt="recording gestures" />
+      <Figure framed>
+        <Image src={recordingGestures} alt="recording gestures" />
+      </Figure>
 
       <p>
         After manually generating a couple hundred gesture examples*, I started
@@ -92,8 +97,10 @@ export default function Post() {
         inputs compared to the original gesture:
       </p>
 
-      <Image src={debugging1} alt="debugging square example" />
-      <Image src={debugging2} alt="debugging circle example" />
+      <Figure framed>
+        <Image src={debugging1} alt="debugging square example" />
+        <Image src={debugging2} alt="debugging circle example" />
+      </Figure>
 
       <p>
         The gestures are losing most of their information during preprocessing
@@ -120,7 +127,9 @@ export default function Post() {
         the training data.
       </p>
 
-      <Image src={final} alt="final demo" />
+      <Figure framed>
+        <Image src={final} alt="final demo" />
+      </Figure>
 
       <p>
         My model seems to perform on par with the{" "}

@@ -13,6 +13,7 @@
   --accent: #9a5b13;
   --accent-soft: rgb(154 91 19 / 0.35);
   --highlight: #f3dca8;
+  --code-bg: #f2ede3;
 
   --color-primary: var(--accent);
   --color-text: var(--ink);
@@ -21,6 +22,7 @@
   /* --font-zodiak and --font-satoshi are set by next/font in layout.tsx. */
   --font-serif: var(--font-zodiak), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-satoshi), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 body {
@@ -98,7 +100,11 @@ ul.no-format li {
   flex: 0 0 350px;
 }
 
+/* Grows to fill the space beside the sidebar (up to 860px) rather than
+   shrinking to its content, so wide figures have room past the text column. */
 .layout-sidebar--content {
+  flex: 1 1 0;
+  min-width: 0;
   max-width: 860px;
   margin: 0 auto;
 }
@@ -330,4 +336,92 @@ canvas {
   .post h1 {
     font-size: 2em;
   }
+}
+
+/* Figures (see components/figure.tsx). */
+.post .figure {
+  margin-top: 2.2em;
+  margin-bottom: 2.2em;
+}
+
+.post > .figure--wide {
+  max-width: none;
+}
+
+.figure img,
+.figure video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.figure--framed img,
+.figure--framed video {
+  border: 1px solid var(--rule);
+  box-shadow: 0 1px 2px rgb(60 45 20 / 0.06), 0 6px 20px -8px rgb(60 45 20 / 0.12);
+}
+
+.figure > * + * {
+  margin-top: 0.75em;
+}
+
+/* Captions: figure captions and the older .caption blocks inside demos.
+   Held to the reading column even under a wide figure. */
+figcaption,
+.caption {
+  max-width: var(--measure, 608px);
+  margin: 0.9em auto 0;
+  font-size: 0.8em;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-align: left;
+  text-wrap: pretty;
+}
+
+/* Numbers in data line up: same-width digits in tables, figures and demo
+   readouts. */
+.post table,
+.figure,
+.caption,
+output {
+  font-variant-numeric: tabular-nums;
+}
+
+.post table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  margin-top: 1.8em;
+  margin-bottom: 1.8em;
+}
+
+.post th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--ink-2);
+  border-bottom: 1px solid #cfc7b8;
+  padding: 0.5em 0.75em 0.5em 0;
+}
+
+.post td {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.55em 0.75em 0.55em 0;
+}
+
+/* Code: JetBrains Mono (set up in layout.tsx). Code blocks are styled by
+   components/code.jsx; this covers inline code. */
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
+
+.post :not(pre) > code {
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--code-bg);
 }

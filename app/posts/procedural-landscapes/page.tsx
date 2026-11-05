@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CityLandscape from "../../components/city-landscape";
+import Figure from "../../components/figure";
 
 export const metadata: Metadata = {
   title: "Procedurally Generated Landscapes | choxi",
@@ -19,7 +20,9 @@ export default function Post() {
         .
       </p>
 
-      <video src="/assets/chinese-landscape.mov#t=0.001" controls></video>
+      <Figure size="wide" framed>
+        <video src="/assets/chinese-landscape.mov#t=0.001" controls></video>
+      </Figure>
 
       <p>
         You can view{" "}
@@ -35,7 +38,9 @@ export default function Post() {
         I made my own version inspired by the landscape in Chicago right now:
       </p>
 
-      <CityLandscape />
+      <Figure size="wide">
+        <CityLandscape />
+      </Figure>
 
       <p>
         I built it with <a href="http://p5js.org">p5.js</a> to generate the

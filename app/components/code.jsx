@@ -25,10 +25,21 @@ function padLevel(body) {
 
 export default function Code(props) {
   const body = padLevel(String(props.children))
-  const customStyle = { fontSize: "0.9em", borderRadius: "0.25em", color: "#333 !important" }
+  // Warm code panel to sit on the paper background; the font comes from
+  // --font-mono in globals.css rather than Prism's Consolas stack.
+  const customStyle = {
+    fontFamily: "var(--font-mono)",
+    fontSize: "0.8em",
+    lineHeight: 1.6,
+    background: "var(--code-bg)",
+    borderRadius: "10px",
+    padding: "1.1em 1.3em",
+    margin: "1.8em auto",
+  }
+  const codeTagProps = { style: { fontFamily: "inherit" } }
 
   return (
-    <SyntaxHighlighter language={ props.lang } style={ prism } customStyle={ customStyle }>
+    <SyntaxHighlighter language={ props.lang } style={ prism } customStyle={ customStyle } codeTagProps={ codeTagProps }>
       { body }
     </SyntaxHighlighter>
   )

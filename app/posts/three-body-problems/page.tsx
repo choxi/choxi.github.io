@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Figure from "../../components/figure";
 import Orbits from "../../components/orbits";
 
 export const metadata: Metadata = {
@@ -26,7 +27,9 @@ export default function Post() {
           step forward, and repeat.
         </p>
 
-        <Orbits />
+        <Figure size="wide">
+          <Orbits />
+        </Figure>
 
         <p>
           Newton published his law of gravitation and effectively solved the

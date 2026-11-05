@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -27,13 +28,20 @@ const satoshi = localFont({
   display: "swap",
 });
 
+// Code. next/font downloads it at build time and serves it from this site too.
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${zodiak.variable} ${satoshi.variable}`}>
+    <html lang="en" className={`${zodiak.variable} ${satoshi.variable} ${jetbrainsMono.variable}`}>
       <body>{children}</body>
     </html>
   );
