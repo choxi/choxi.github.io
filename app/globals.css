@@ -7,8 +7,9 @@
   --color-text: #333;
   --color-text-light: #999;
   --spc-sm: 0.5em;
-  --font-serif: "Zodiak", Georgia, "Times New Roman", serif;
-  --font-sans: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* --font-zodiak and --font-satoshi are set by next/font in layout.tsx. */
+  --font-serif: var(--font-zodiak), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-satoshi), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body {

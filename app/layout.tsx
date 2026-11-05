@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,13 +7,25 @@ export const metadata: Metadata = {
   description: "roshan choxi's dev blog",
 };
 
-// Zodiak (titles) and Satoshi (body) come from Fontshare as variable fonts.
-// Fontshare's API returns only the first family in a request, so each family
-// gets its own stylesheet. `@1` is the upright variable file, `@2` the italic.
-const FONTS = [
-  "https://api.fontshare.com/v2/css?f[]=zodiak@1&display=swap",
-  "https://api.fontshare.com/v2/css?f[]=satoshi@1,2&display=swap",
-];
+// Zodiak (titles) and Satoshi (body), self-hosted variable fonts from
+// Fontshare (fontshare.com, ITF Free Font License). next/font serves them from
+// this site and sizes a fallback font to match, so the swap doesn't shift text.
+const zodiak = localFont({
+  src: "./fonts/Zodiak-Variable.woff2",
+  weight: "100 900",
+  style: "normal",
+  variable: "--font-zodiak",
+  display: "swap",
+});
+
+const satoshi = localFont({
+  src: [
+    { path: "./fonts/Satoshi-Variable.woff2", weight: "300 900", style: "normal" },
+    { path: "./fonts/Satoshi-VariableItalic.woff2", weight: "300 900", style: "italic" },
+  ],
+  variable: "--font-satoshi",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -20,14 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://api.fontshare.com" />
-        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
-        {FONTS.map((href) => (
-          <link key={href} rel="stylesheet" href={href} />
-        ))}
-      </head>
+    <html lang="en" className={`${zodiak.variable} ${satoshi.variable}`}>
       <body>{children}</body>
     </html>
   );
