@@ -1,5 +1,6 @@
 import GlassCard from "./components/glass-card";
-import GoldenForest from "./components/golden-forest";
+// import GoldenForest from "./components/golden-forest";
+import MoonFalls from "./components/moon-falls";
 import SocialLinks, { MapPinIcon } from "./components/social-links";
 import styles from "./home.module.css";
 
@@ -19,7 +20,8 @@ const POSTS = [
 export default function Home() {
   return (
     <main className={styles.home}>
-      <GoldenForest />
+      <MoonFalls />
+      {/* <GoldenForest /> */}
 
       <GlassCard className={styles.glass}>
         <h1 className={styles.name}>Roshan Choxi</h1>
