@@ -160,81 +160,65 @@ const isGold = (r: number, g: number, b: number) => r > 160 && g > 100 && b < 11
 const isTrunk = (r: number, g: number, b: number) =>
   g > 95 && g - r > 8 && g - b > 8 && Math.max(r, g, b) - Math.min(r, g, b) < 55;
 
-// Draws the painting into a canvas `W` wide and fills any extra columns either
-// side by wrapping it around, so each margin continues with the far edge of
-// the painting. (A mirror would leave symmetric "faces" at the seams; wrapping
-// just stands one trunk beside another.)
+// Draws the painting into a canvas `W` wide. Any extra columns either side
+// are filled with a strip of columns copied from elsewhere in the painting:
+// the strip whose edge best matches the painting's own edge there, so trunks,
+// bushes and colours carry on across the join without a hard vertical line.
+// Strips never come from the middle of the painting (the waterfall and pond)
+// or around the ring, which would show up twice.
 function paintBase(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
   const ox = Math.floor((W - IMG_W) / 2);
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, ox, 0, IMG_W, H);
   const image = ctx.getImageData(0, 0, W, H);
+  if (ox === 0) return { image, ox };
   const d = image.data;
-  const copy = (to: number, from: number) => {
-    d[to * 4] = d[from * 4];
-    d[to * 4 + 1] = d[from * 4 + 1];
-    d[to * 4 + 2] = d[from * 4 + 2];
-    d[to * 4 + 3] = 255;
+  const at = (u: number, y: number) => (y * W + ox + u) * 4; // painting column u
+  const diff = (a: number, b: number) => {
+    let s = 0;
+    for (let y = 0; y < H; y += 2) {
+      const i = at(a, y);
+      const j = at(b, y);
+      s += Math.abs(d[i] - d[j]) + Math.abs(d[i + 1] - d[j + 1]) + Math.abs(d[i + 2] - d[j + 2]);
+    }
+    return s;
   };
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < ox; x++) copy(y * W + x, y * W + x + IMG_W);
-    for (let x = ox + IMG_W; x < W; x++) copy(y * W + x, y * W + x - IMG_W);
+  const allowed = (lo: number, hi: number) =>
+    lo >= 0 && hi < IMG_W && (hi < RING.x - 12 || lo > RING.x + 12) && (hi < 140 || lo > 330);
+
+  // Left: the strip ends at column c, so columns c+1.. should resemble 0..
+  let left = -1;
+  let best = Infinity;
+  for (let c = ox - 1; c < IMG_W - 4; c++) {
+    if (!allowed(c - ox + 1, c)) continue;
+    const s = diff(c + 1, 0) + diff(c + 2, 1) + diff(c + 3, 2);
+    if (s < best) [best, left] = [s, c];
   }
-  // The wrapped edges don't match, so a foreground tree stands over each seam
-  // to hide the jump.
-  if (ox > 0) {
-    seamTree(d, ox, 1);
-    seamTree(d, ox + IMG_W, 2);
+  // Right: the strip starts at column c, so columns ..c-1 should resemble the last ones.
+  let right = -1;
+  best = Infinity;
+  for (let c = 3; c + ox <= IMG_W; c++) {
+    if (!allowed(c, c + ox - 1)) continue;
+    const s = diff(c - 1, IMG_W - 1) + diff(c - 2, IMG_W - 2) + diff(c - 3, IMG_W - 3);
+    if (s < best) [best, right] = [s, c];
   }
+
+  const copy = (x: number, y: number, from: number) => {
+    const i = (y * W + x) * 4;
+    d[i] = d[from];
+    d[i + 1] = d[from + 1];
+    d[i + 2] = d[from + 2];
+    d[i + 3] = 255;
+  };
+  // (If no strip qualifies, a reflection of the edge fills the margin instead.)
+  for (let y = 0; y < H; y++)
+    for (let j = 0; j < ox; j++) {
+      copy(ox - 1 - j, y, at(left < 0 ? j : left - j, y));
+      copy(ox + IMG_W + j, y, at(right < 0 ? IMG_W - 1 - j : right + j, y));
+    }
   return { image, ox };
 }
 
-// A tree in the painting's style: a pale, wavy trunk with a lit rim and dark
-// outline running the full height, and a mossy bush with gold tops at its
-// foot. It is wide enough, and sways little enough, to always cover `seam`.
-function seamTree(d: Uint8ClampedArray, seam: number, seed: number) {
-  const set = (x: number, y: number, c: RGB) => {
-    if (x < 0 || y < 0 || x >= W || y >= H) return;
-    const i = (y * W + x) * 4;
-    d[i] = c[0];
-    d[i + 1] = c[1];
-    d[i + 2] = c[2];
-  };
-  const OUTLINE: RGB = [18, 38, 40];
-  const RIM: RGB = [196, 176, 88];
-  const BARK: RGB = [112, 138, 102];
-  const BARK_DARK: RGB = [96, 124, 94];
-  const SHADE: RGB = [62, 95, 82];
-  for (let y = 0; y < H; y++) {
-    const cx = seam + Math.sin(y * 0.045 + seed * 2) * 2 + Math.sin(y * 0.11 + seed) * 0.6;
-    const half = 5.5 + (y / H) * 1.5; // a little thicker toward the ground
-    const l = Math.round(cx - half);
-    const r = Math.round(cx + half);
-    for (let x = l; x <= r; x++) {
-      const e = x - l;
-      let c: RGB;
-      if (x === l || x === r) c = OUTLINE;
-      else if (e === 1) c = RIM;
-      else if (r - x <= 2) c = SHADE;
-      else c = hash(x, Math.floor(y / 3), seed) > 0.7 ? BARK_DARK : BARK;
-      set(x, y, c);
-    }
-  }
-  // Bush at the foot: blue foliage mounds with gold-lit tops.
-  const BUSH_DARK: RGB = [8, 30, 56];
-  const BUSH: RGB = [20, 62, 112];
-  const BUSH_TOP: RGB = [226, 178, 40];
-  for (const [dx, cy, rad] of [[-9, 246, 11], [8, 248, 12], [0, 240, 9]] as const)
-    for (let y = cy - rad; y < H; y++)
-      for (let x = seam + dx - rad * 1.4; x <= seam + dx + rad * 1.4; x++) {
-        const nx = (x - seam - dx) / (rad * 1.4);
-        const ny = (y - cy) / rad;
-        if (nx * nx + ny * ny > 1 - hash(Math.floor(x), y, seed + 5) * 0.25) continue;
-        const X = Math.floor(x);
-        const c = ny < -0.55 && hash(X, y, seed + 6) > 0.35 ? BUSH_TOP : hash(X >> 1, y >> 1, seed + 7) > 0.55 ? BUSH : BUSH_DARK;
-        set(X, y, c);
-      }
-}
 
 function buildScene(base: Uint8ClampedArray, ox: number): Scene {
   const rand = mulberry32(7);
