@@ -8,7 +8,8 @@ import "./post-page.css";
 // and post list, and the post itself on a centred sheet.
 //
 // Both scene pieces are always rendered; the theme's CSS shows one: the full
-// scene behind the page at night, a band of sky across the top by day.
+// scene behind the page at night, a band of sky across the top by day. Both
+// themes end on a strip of the painting's foreground.
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="post-page">
@@ -17,6 +18,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <PixelScene rows={[0, 84]} className="scene-band" />
       <PostChrome />
       <main className="post-sheet">{children}</main>
+      {/* The bottom of the painting, as ground for the page to end on. */}
+      <footer className="scene-footer" aria-hidden="true">
+        <PixelScene rows={[190, 256]} />
+        <Fireflies count={10} zone={[0.15, 0.85]} />
+      </footer>
     </div>
   );
 }

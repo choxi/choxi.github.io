@@ -50,6 +50,11 @@
   inset: 0 0 auto;
   width: 100%;
   height: auto;
+  /* On narrow screens, keep it tall enough to show below the top bar by
+     cropping the sides rather than shrinking it. */
+  min-height: 200px;
+  object-fit: cover;
+  object-position: center top;
   -webkit-mask-image: linear-gradient(black 45%, transparent);
   mask-image: linear-gradient(black 45%, transparent);
 }
@@ -64,6 +69,29 @@
    show in the margins either side of the post. */
 .scene-backdrop-flies {
   position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The footer strip: full page width (the page has 16px side padding and
+   72px below), fading in from the page above. */
+.scene-footer {
+  position: relative;
+  margin: 72px -16px -72px;
+  -webkit-mask-image: linear-gradient(transparent, black 45%);
+  mask-image: linear-gradient(transparent, black 45%);
+}
+
+.scene-footer .pixel-scene {
+  width: 100%;
+  height: auto;
+  min-height: 140px;
+  object-fit: cover;
+}
+
+.scene-footer .fireflies {
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -91,7 +119,7 @@
 /* Day: the band is 84 of the painting's 455 columns tall at full width, so
    the post starts just above where it fades out. */
 [data-theme="day"] .post-page {
-  padding-top: max(96px, calc(100vw * 84 / 455 - 24px));
+  padding-top: max(150px, calc(100vw * 84 / 455 - 24px));
 }
 
 @media (max-width: 575px) {
@@ -131,6 +159,7 @@
 }
 
 .topbar-name {
+  white-space: nowrap;
   font-family: var(--font-serif);
   font-size: 21px;
   letter-spacing: -0.01em;
@@ -165,6 +194,25 @@
 
 .topbar-button:hover {
   background: var(--hover-bg);
+}
+
+/* Narrow screens: icon-only buttons. The labels stay in the page for screen
+   readers, just not on screen. */
+@media (max-width: 419px) {
+  .topbar-button {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .topbar-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .topbar-button:focus-visible,

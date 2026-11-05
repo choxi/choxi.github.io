@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import Sidebar from "./sidebar";
 import { TablerIcon } from "./social-links";
 
@@ -15,14 +15,19 @@ import { TablerIcon } from "./social-links";
 
 type Theme = "night" | "day";
 
+// The theme lives on <html data-theme> (set before paint by the script in
+// layout.tsx), so read it from there and re-render when it changes.
+const readTheme = (): Theme => (document.documentElement.dataset.theme === "day" ? "day" : "night");
+const subscribeTheme = (onChange: () => void) => {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => observer.disconnect();
+};
+
 // Switches between the night (dark glass) and day (moonlit paper) themes in
 // globals.css and remembers the choice.
 function ThemeSwitch() {
-  const [theme, setTheme] = useState<Theme>("night");
-
-  useEffect(() => {
-    setTheme(document.documentElement.dataset.theme === "day" ? "day" : "night");
-  }, []);
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "night" as Theme);
 
   const toggle = () => {
     const next: Theme = theme === "night" ? "day" : "night";
@@ -30,7 +35,6 @@ function ThemeSwitch() {
     try {
       localStorage.setItem("theme", next);
     } catch {}
-    setTheme(next);
   };
 
   const label = theme === "night" ? "Switch to the day theme" : "Switch to the night theme";
