@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import Sidebar from "./sidebar";
 import { TablerIcon } from "./social-links";
 
-// The post pages' chrome: a slim top bar with your name (back to the landing
-// page) and a "Posts" button that opens the sidebar as a drawer. The bar slides
-// away while you scroll down into a post and comes back when you scroll up.
+// The post pages' chrome: two glass controls floating at the top, a menu
+// button on the left that opens the sidebar as a drawer (with your name,
+// links and posts), and a day/night switch on the right. They slide away
+// while you scroll down into a post and come back when you scroll up.
 //
 // The drawer is a native <dialog> opened with showModal(), which gives focus
 // trapping, Escape to close and an inert page behind it for free.
@@ -24,33 +24,44 @@ const subscribeTheme = (onChange: () => void) => {
   return () => observer.disconnect();
 };
 
-// Switches between the night (dark glass) and day (moonlit paper) themes in
-// globals.css and remembers the choice.
+const SunIcon = () => (
+  <TablerIcon size={16}>
+    <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+    <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+  </TablerIcon>
+);
+const MoonIcon = () => (
+  <TablerIcon size={16}>
+    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" />
+  </TablerIcon>
+);
+
+// A day/night switch: a glass track with a sun at one end and a moon at the
+// other, and a knob that slides over the one that's on. It's a switch for
+// screen readers too ("Night theme", on or off). Remembers the choice.
 function ThemeSwitch() {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "night" as Theme);
+  const night = theme === "night";
 
   const toggle = () => {
-    const next: Theme = theme === "night" ? "day" : "night";
+    const next: Theme = night ? "day" : "night";
     document.documentElement.dataset.theme = next;
     try {
       localStorage.setItem("theme", next);
     } catch {}
   };
 
-  const label = theme === "night" ? "Switch to the day theme" : "Switch to the night theme";
-
   return (
-    <button type="button" className="topbar-button" onClick={toggle} aria-label={label} title={label}>
-      {theme === "night" ? (
-        <TablerIcon size={19}>
-          <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" />
-        </TablerIcon>
-      ) : (
-        <TablerIcon size={19}>
-          <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-          <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
-        </TablerIcon>
-      )}
+    <button type="button" role="switch" aria-checked={night} aria-label="Night theme" title={night ? "Night" : "Day"} className="theme-switch glass" onClick={toggle}>
+      <span className="theme-switch-icon theme-switch-sun" aria-hidden="true">
+        <SunIcon />
+      </span>
+      <span className="theme-switch-icon theme-switch-moon" aria-hidden="true">
+        <MoonIcon />
+      </span>
+      <span className="theme-switch-knob" aria-hidden="true">
+        {night ? <MoonIcon /> : <SunIcon />}
+      </span>
     </button>
   );
 }
@@ -117,27 +128,22 @@ export default function PostChrome() {
   return (
     <>
       <header className="topbar" data-hidden={hidden || undefined}>
-        <Link href="/" className="topbar-name">
-          Roshan Choxi
-        </Link>
-        <div className="topbar-actions">
-          <ThemeSwitch />
-          <button
-            type="button"
-            className="topbar-button"
-            onClick={open}
-            aria-label="Open menu"
-            title="Posts"
-            aria-haspopup="dialog"
-            aria-controls="site-drawer"
-          >
-            <TablerIcon size={19}>
-              <path d="M4 6l16 0" />
-              <path d="M4 12l16 0" />
-              <path d="M4 18l16 0" />
-            </TablerIcon>
-          </button>
-        </div>
+        <button
+          type="button"
+          className="topbar-button glass"
+          onClick={open}
+          aria-label="Open menu"
+          title="Posts"
+          aria-haspopup="dialog"
+          aria-controls="site-drawer"
+        >
+          <TablerIcon size={19}>
+            <path d="M4 6l16 0" />
+            <path d="M4 12l16 0" />
+            <path d="M4 18l16 0" />
+          </TablerIcon>
+        </button>
+        <ThemeSwitch />
       </header>
 
       <dialog

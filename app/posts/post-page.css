@@ -9,7 +9,14 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100svh;
-  padding-top: 96px;
+  /* The post starts below the sky (240px tall), not over it. */
+  padding-top: 220px;
+}
+
+@media (max-width: 575px) {
+  .post-page {
+    padding-top: 160px;
+  }
 }
 
 /* Wide enough for a wide figure (788px inside) with the reading column
@@ -118,21 +125,23 @@
 
 /* ---------- Top bar ---------- */
 
+/* No panel: just the menu button on the left and the day/night switch on the
+   right, floating over the sky. They slide up out of view together. */
 .topbar {
   position: fixed;
   inset: 0 0 auto;
   z-index: 20;
-  height: 60px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 0 clamp(16px, 3vw, 28px);
-  background: var(--bar-bg);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  backdrop-filter: blur(12px) saturate(1.4);
-  border-bottom: 1px solid var(--rule);
+  padding: 0 clamp(14px, 3vw, 28px);
+  pointer-events: none;
   transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.topbar > * {
+  pointer-events: auto;
 }
 
 .topbar[data-hidden] {
@@ -144,47 +153,130 @@
   transform: none;
 }
 
-.topbar-name {
-  white-space: nowrap;
-  font-family: var(--font-serif);
-  font-size: 21px;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+/* Liquid glass, after the landing card (home.module.css): a thin tint, a
+   backdrop that's slightly blurred and saturated so the sky's colour comes
+   through, and rim light and bevel in the shadows. Dark glass at night,
+   frosted glass by day. */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(8px) saturate(1.7) brightness(var(--glass-brightness));
+  backdrop-filter: blur(8px) saturate(1.7) brightness(var(--glass-brightness));
+  box-shadow:
+    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / var(--glass-rim)),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / calc(var(--glass-rim) * 0.4)),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.08),
+    inset 0 6px 8px -6px rgb(255 255 255 / 0.2),
+    0 0 0 0.5px rgb(0 0 0 / var(--glass-edge)),
+    0 4px 14px rgb(0 0 0 / var(--glass-drop));
 }
 
-.topbar-name:hover {
-  color: var(--ink);
-  opacity: 0.75;
+[data-theme="night"] .glass {
+  --glass-bg: color-mix(in srgb, #1e1e22 34%, transparent);
+  --glass-brightness: 0.75;
+  --glass-rim: 0.46;
+  --glass-edge: 0.3;
+  --glass-drop: 0.22;
 }
 
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+[data-theme="day"] .glass {
+  --glass-bg: rgb(255 255 255 / 0.4);
+  --glass-brightness: 1.06;
+  --glass-rim: 0.9;
+  --glass-edge: 0.1;
+  --glass-drop: 0.1;
 }
 
-/* Icon-only buttons; their names are in aria-label for screen readers. */
+/* The menu button; its name is in aria-label for screen readers. */
 .topbar-button {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   padding: 0;
+  border: 0;
   border-radius: 999px;
-  border: 1px solid var(--rule);
-  background: transparent;
   color: var(--ink);
   cursor: pointer;
-  transition: background-color 150ms ease;
+  transition: transform 150ms ease;
 }
 
-.topbar-button:hover {
-  background: var(--hover-bg);
+.topbar-button:active,
+.theme-switch:active {
+  transform: scale(0.96);
 }
 
-.topbar-button:focus-visible {
+.topbar-button:focus-visible,
+.theme-switch:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
+}
+
+/* The day/night switch: a glass track with a sun on the left and a moon on
+   the right, and a knob that slides over whichever is on. */
+.theme-switch {
+  position: relative;
+  width: 76px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.theme-switch-icon {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  transform: translateY(-50%);
+  opacity: 0.6;
+}
+
+.theme-switch-sun {
+  left: 13px;
+}
+
+.theme-switch-moon {
+  right: 13px;
+}
+
+.theme-switch-knob {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--knob-bg);
+  color: var(--knob-ink);
+  box-shadow:
+    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / 0.7),
+    0 1px 3px rgb(0 0 0 / 0.25),
+    0 2px 8px rgb(0 0 0 / 0.15);
+  transition: transform 280ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.theme-switch[aria-checked="true"] .theme-switch-knob {
+  transform: translateX(34px);
+}
+
+[data-theme="night"] .theme-switch {
+  --knob-bg: rgb(255 255 255 / 0.18);
+  --knob-ink: var(--accent);
+}
+
+[data-theme="day"] .theme-switch {
+  --knob-bg: rgb(255 255 255 / 0.92);
+  --knob-ink: #d08a12;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch-knob {
+    transition: none;
+  }
 }
 
 /* ---------- Drawer ---------- */

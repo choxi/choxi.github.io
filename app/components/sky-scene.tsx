@@ -59,10 +59,6 @@ function plan(w: number, h: number) {
     // Thicker near the top, thinning out toward the fade.
     const y = Math.floor(rand() ** 1.6 * h * 0.85);
     if (Math.hypot(x - body.x, y - body.y) < body.r + 6) continue;
-    // Keep the reading column (608px wide, centred) clear below the top bar,
-    // so no star sits behind the title. On phones the column is the whole
-    // width, so there only the band where the title starts is kept clear.
-    if (Math.abs(x * PX - (w * PX) / 2) < 330 && y * PX > (narrow ? 104 : 64)) continue;
     stars.push({
       x,
       y,
