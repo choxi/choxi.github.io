@@ -15,7 +15,7 @@ import { useEffect, useRef } from "react";
 //   - pixel fish (koi by day, glowing fish at night) swim back and forth,
 //     slipping behind the rocks,
 //   - at night the mushrooms, coral and painted fireflies pulse with a soft
-//     stepped glow; by day a dragonfly hovers and darts over the pond.
+//     stepped glow; by day dragonflies hover and dart over the pond.
 // Fireflies drift over the night scene from posts/layout.tsx.
 //
 // The scene follows the theme on <html data-theme>. It pauses off screen and
@@ -174,7 +174,7 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
   return { base, water, waterIdx, columns, foam, glow, halo };
 }
 
-const DRAGONFLY = { body: [34, 132, 146] as RGB, head: [22, 86, 100] as RGB, wing: [214, 236, 244] as RGB };
+// Places a dragonfly may hover: over the pond, by the falls, over the plants.
 const DRAGONFLY_SPOTS: [number, number][] = [
   [205, 47],
   [262, 44],
@@ -183,6 +183,19 @@ const DRAGONFLY_SPOTS: [number, number][] = [
   [95, 28],
   [430, 30],
   [240, 40],
+  [150, 36],
+  [395, 42],
+  [330, 50],
+  [60, 34],
+  [470, 26],
+];
+const DRAGONFLY_WING: RGB = [214, 236, 244];
+// Three dragonflies: teal, blue and a red one, each with its own pace (step:
+// seconds per hover-and-dart) and route (start spot, and how far it skips).
+const DRAGONFLIES = [
+  { body: [34, 132, 146] as RGB, head: [22, 86, 100] as RGB, step: 3.2, offset: 0, start: 0, stride: 5 },
+  { body: [48, 92, 196] as RGB, head: [28, 54, 130] as RGB, step: 4.1, offset: 1.3, start: 4, stride: 7 },
+  { body: [208, 74, 52] as RGB, head: [140, 44, 34] as RGB, step: 3.7, offset: 2.6, start: 9, stride: 5 },
 ];
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, theme: Theme, t: number) {
@@ -304,30 +317,33 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, theme: Theme, t: number
     return;
   }
 
-  // Day: a dragonfly hovers, then darts to its next spot.
-  const STEP = 3.2;
-  const DART = 0.45;
-  const k = t / STEP;
-  const n = Math.floor(k);
-  const from = DRAGONFLY_SPOTS[(n * 3) % DRAGONFLY_SPOTS.length];
-  const to = DRAGONFLY_SPOTS[((n + 1) * 3) % DRAGONFLY_SPOTS.length];
-  const phaseT = (k - n) * STEP;
-  const m = phaseT < STEP - DART ? 0 : (phaseT - (STEP - DART)) / DART;
-  const ease = m * m * (3 - 2 * m);
-  const dx = Math.round(from[0] + (to[0] - from[0]) * ease);
-  const dy = Math.round(from[1] + (to[1] - from[1]) * ease + Math.sin(t * 5) * 0.6);
-  const facing = to[0] >= from[0] ? 1 : -1;
+  // Day: dragonflies hover, then dart to their next spot, each on its own
+  // timing and route through the spots.
   const at = (x: number, y: number) => (x >= 0 && y >= 0 && x < W && y < H ? y * W + x : -1);
-  for (let q = -4; q <= 1; q++) {
-    const i = at(dx + q * facing, dy);
-    if (i >= 0) put(i, q === 1 ? DRAGONFLY.head : DRAGONFLY.body);
-  }
-  const up = Math.floor(t * 14) % 2 === 0;
-  for (const wx of [-1, 0]) {
-    const a = at(dx + wx * facing, dy - 1);
-    const b = at(dx + (wx - 1) * facing, dy + (up ? -2 : 1));
-    if (a >= 0) put(a, DRAGONFLY.wing, 230);
-    if (b >= 0) put(b, DRAGONFLY.wing, 190);
+  const DART = 0.45;
+  for (const d of DRAGONFLIES) {
+    const k = (t + d.offset) / d.step;
+    const n = Math.floor(k);
+    const len = DRAGONFLY_SPOTS.length;
+    const from = DRAGONFLY_SPOTS[(n * d.stride + d.start) % len];
+    const to = DRAGONFLY_SPOTS[((n + 1) * d.stride + d.start) % len];
+    const phaseT = (k - n) * d.step;
+    const m = phaseT < d.step - DART ? 0 : (phaseT - (d.step - DART)) / DART;
+    const ease = m * m * (3 - 2 * m);
+    const dx = Math.round(from[0] + (to[0] - from[0]) * ease);
+    const dy = Math.round(from[1] + (to[1] - from[1]) * ease + Math.sin(t * 5 + d.offset) * 0.6);
+    const facing = to[0] >= from[0] ? 1 : -1;
+    for (let q = -4; q <= 1; q++) {
+      const i = at(dx + q * facing, dy);
+      if (i >= 0) put(i, q === 1 ? d.head : d.body);
+    }
+    const up = Math.floor(t * 14 + d.offset * 3) % 2 === 0;
+    for (const wx of [-1, 0]) {
+      const a = at(dx + wx * facing, dy - 1);
+      const b = at(dx + (wx - 1) * facing, dy + (up ? -2 : 1));
+      if (a >= 0) put(a, DRAGONFLY_WING, 230);
+      if (b >= 0) put(b, DRAGONFLY_WING, 190);
+    }
   }
 }
 
