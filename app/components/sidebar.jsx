@@ -29,26 +29,28 @@ export default function Sidebar() {
 
   return (
     <div className="sidebar">
-      <Link href="/" className="sidebar-name">
-        Roshan Choxi
-      </Link>
-      <div className="sidebar-bio">
-        <p>
-          Founder at{" "}
-          <a
-            href="https://reverieapps.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Reverie
-          </a>
-        </p>
-        <p>
-          <span className="inline-flex items-center gap-1 align-bottom">
-            <MapPinIcon size={15} />
-            Chicago
-          </span>
-        </p>
+      <div>
+        <Link href="/" className="sidebar-name">
+          Roshan Choxi
+        </Link>
+        <div className="sidebar-bio">
+          <p>
+            Founder at{" "}
+            <a
+              href="https://reverieapps.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Reverie
+            </a>
+          </p>
+          <p>
+            <span className="inline-flex items-center gap-1 align-bottom">
+              <MapPinIcon size={15} />
+              Chicago
+            </span>
+          </p>
+        </div>
       </div>
 
       <SocialLinks className="sidebar-social" />
