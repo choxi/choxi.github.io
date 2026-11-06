@@ -281,21 +281,37 @@
 
 /* ---------- Drawer ---------- */
 
+/* A floating panel of liquid glass, the same material as the top bar's
+   controls (.glass) but with a stronger tint so its text reads clearly over
+   whatever is behind it. */
 .drawer {
   position: fixed;
-  inset: 0 auto 0 0;
-  width: min(360px, 88vw);
-  height: 100dvh;
+  inset: 12px auto 12px 12px;
+  width: min(360px, calc(100vw - 48px));
+  height: calc(100dvh - 24px);
   max-width: none;
   max-height: none;
   margin: 0;
   padding: 28px 28px 36px;
   border: 0;
-  border-right: 1px solid var(--rule);
-  background: var(--drawer-bg);
+  border-radius: 28px;
   color: var(--ink);
   overflow-y: auto;
-  box-shadow: 0 0 60px rgb(0 0 0 / 0.25);
+}
+
+[data-theme="night"] .drawer.glass {
+  --glass-bg: color-mix(in srgb, #0f2224 74%, transparent);
+  --glass-brightness: 0.7;
+}
+
+[data-theme="day"] .drawer.glass {
+  --glass-bg: rgb(250 249 252 / 0.66);
+  --glass-brightness: 1.04;
+}
+
+.drawer.glass {
+  -webkit-backdrop-filter: blur(18px) saturate(1.7) brightness(var(--glass-brightness));
+  backdrop-filter: blur(18px) saturate(1.7) brightness(var(--glass-brightness));
 }
 
 /* The drawer itself takes focus when it opens (see post-chrome.tsx); it
@@ -308,18 +324,18 @@
   animation: drawer-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* The page behind stays sharp and undimmed; the backdrop only catches the
+   click that closes the drawer. */
 .drawer::backdrop {
-  background: rgb(6 16 18 / 0.5);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: transparent;
 }
 
 .drawer[open]::backdrop {
   animation: backdrop-in 280ms ease;
 }
 
-/* Closing: slides back out to the left while the page brightens, then
-   post-chrome.tsx closes the dialog. */
+/* Closing: slides back out to the left, then post-chrome.tsx closes the
+   dialog. */
 .drawer[open][data-closing] {
   animation: drawer-out 220ms cubic-bezier(0.4, 0, 1, 1) forwards;
 }
@@ -328,15 +344,16 @@
   animation: backdrop-out 220ms ease forwards;
 }
 
+/* -100% plus its 12px inset and shadow, so it's fully off screen. */
 @keyframes drawer-in {
   from {
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% - 40px));
   }
 }
 
 @keyframes drawer-out {
   to {
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% - 40px));
   }
 }
 
@@ -356,7 +373,8 @@ html:has(.drawer[open]) {
   overflow: hidden;
 }
 
-/* A plain accent-coloured ✕. */
+/* Closes the drawer: a plain accent-coloured menu icon, matching the button
+   that opened it. */
 .drawer-close {
   position: absolute;
   top: 20px;

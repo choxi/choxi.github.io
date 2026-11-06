@@ -19,6 +19,10 @@ type Theme = "day" | "night";
 
 const PX = 4;
 const FPS_INTERVAL = 1000 / 12;
+// Everything in the sky runs at this fraction of its natural pace, so the
+// twinkling, the breathing glow, the rays and the drifting clouds stay
+// gentle at the top of the page.
+const SPEED = 0.4;
 
 function mulberry32(seed: number) {
   return () => {
@@ -235,7 +239,7 @@ export default function SkyScene({ className }: { className?: string }) {
     let visible = true;
 
     const render = () => {
-      if (layout) draw(ctx, layout, currentTheme(), still ? 0 : (performance.now() - start) / 1000);
+      if (layout) draw(ctx, layout, currentTheme(), still ? 0 : ((performance.now() - start) / 1000) * SPEED);
     };
 
     const fit = () => {

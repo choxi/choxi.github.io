@@ -149,7 +149,7 @@ export default function PostChrome() {
       <dialog
         id="site-drawer"
         ref={dialog}
-        className="drawer"
+        className="drawer glass"
         aria-label="Menu"
         tabIndex={-1}
         onClick={onDialogClick}
@@ -161,8 +161,9 @@ export default function PostChrome() {
       >
         <button type="button" className="drawer-close" onClick={close} aria-label="Close menu">
           <TablerIcon size={20}>
-            <path d="M18 6l-12 12" />
-            <path d="M6 6l12 12" />
+            <path d="M4 6l16 0" />
+            <path d="M4 12l16 0" />
+            <path d="M4 18l16 0" />
           </TablerIcon>
         </button>
         <Sidebar />
