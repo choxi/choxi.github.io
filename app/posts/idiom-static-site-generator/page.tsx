@@ -12,6 +12,18 @@ export default function Post() {
       <h1 className="spc-n-zero">
         Idiom: A Simple Static Site Generator in React
       </h1>
+      <div className="bg-amber-200 px-4 py-1 rounded-md box-border">
+        <p>
+          Warning: I abandoned this project and moved this site to NextJS. It
+          was a fun experiment to build my own frontend framework, but I just
+          ended up relearning the lesson that building things is easy and
+          maintaining them is hard. I'm leaving this post up as a kind of{" "}
+          <Link href="https://en.wikipedia.org/wiki/Ozymandias">
+            statue of Ozymandias
+          </Link>{" "}
+          to warn others of excessive hubris.
+        </p>
+      </div>
       <p>
         One of my favorite aspects of React is that it extends HTML and allows
         you to define your own elements to build up your own markup language. I
