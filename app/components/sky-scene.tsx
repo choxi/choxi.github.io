@@ -7,9 +7,9 @@ import { useEffect, useRef } from "react";
 //
 // night: a pixel moon with a soft stepped halo, and stars that twinkle, a few
 //        of the brighter ones flaring into little crosses.
-// day:   a pixel sun with a warm halo and shimmering rays, low in a dusky
+// day:   a red pixel sun with a rosy halo and shimmering rays, low in a dusky
 //        purple, rose and vanilla sky (the sky itself is a background fade in
-//        post-page.css).
+//        post-page.css), with sunset-tinted clouds drifting slowly by.
 //
 // Drawn on a coarse pixel grid (PX screen pixels per art pixel) on a
 // transparent canvas, over that fade. Layouts are seeded and rebuilt only
@@ -57,6 +57,14 @@ function glowOffsets(r: number) {
 // ---------------------------------------------------------------------------
 
 type Star = { x: number; y: number; phase: number; speed: number; big: boolean; color: RGB };
+type Cloud = {
+  x: number;
+  y: number; // its flat base
+  speed: number;
+  pixels: { dx: number; dy: number; tone: 0 | 1 | 2 }[]; // tone: 0 lit top, 1 body, 2 shaded base
+  w: number;
+  alpha: number;
+};
 
 const STAR_COLORS: RGB[] = [
   [255, 255, 245],
@@ -80,7 +88,48 @@ function plan(w: number, h: number) {
     stars.push({ x, y, phase: rand() * 6.28, speed: 0.6 + rand() * 1.8, big: rand() < 0.12, color: STAR_COLORS[Math.floor(rand() * STAR_COLORS.length)] });
   }
 
-  return { w, h, body, stars };
+  // Clouds (day): cumulus shapes, a tall middle puff with smaller ones
+  // stepping down either side, all on one flat base. Each cloud's pixels are
+  // worked out once here (so overlapping puffs don't double up when drawn
+  // semi-transparent) and then just slid across.
+  const clouds: Cloud[] = [];
+  const cloudCount = narrow ? 3 : 5;
+  for (let n = 0; n < cloudCount; n++) {
+    const size = 5 + rand() * 3.5; // radius of the middle puff
+    const radii = rand() < 0.5 ? [0.62, 1, 0.72] : [0.55, 0.88, 1, 0.66];
+    const puffs: [number, number][] = []; // [centre x, radius]
+    let x = 0;
+    radii.forEach((k, i) => {
+      const r = size * (k + (rand() - 0.5) * 0.12);
+      if (i > 0) x += (r + puffs[i - 1][1]) * 0.62;
+      puffs.push([x, r]);
+    });
+    const left = -puffs[0][1];
+    const right = x + puffs[puffs.length - 1][1];
+    const pixels = new Map<string, { dx: number; dy: number; tone: 0 | 1 | 2 }>();
+    for (let px = Math.floor(left); px <= Math.ceil(right); px++)
+      for (let py = -Math.ceil(size * 1.6); py <= 0; py++) {
+        // Inside a puff (each sits with its centre a little above the base),
+        // or in the flat band along the bottom between the outer puffs.
+        const inPuff = puffs.some(([cx, r]) => Math.hypot(px - cx, py + r * 0.55) <= r);
+        const inBase = py >= -2 && px >= left + 1 && px <= right - 1;
+        if (!inPuff && !inBase) continue;
+        // Shading: the bottom row shaded, the upper-left of each puff lit.
+        const top = puffs.some(([cx, r]) => Math.hypot(px - cx + r * 0.25, py + r * 0.95) <= r * 0.55);
+        pixels.set(`${px},${py}`, { dx: px - Math.floor(left), dy: py, tone: py === 0 ? 2 : top ? 0 : 1 });
+      }
+    clouds.push({
+      x: (n / cloudCount) * (w + 60) + rand() * 20,
+      // Below the top bar, above where the sky fades out.
+      y: Math.round(h * (0.36 + rand() * 0.2)),
+      speed: 0.8 + rand() * 1.2,
+      pixels: [...pixels.values()],
+      w: Math.ceil(right - left) + 1,
+      alpha: 0.7 + rand() * 0.15,
+    });
+  }
+
+  return { w, h, body, stars, clouds };
 }
 
 type Plan = ReturnType<typeof plan>;
@@ -90,14 +139,20 @@ type Plan = ReturnType<typeof plan>;
 // ---------------------------------------------------------------------------
 
 const MOON = { lit: [236, 240, 224] as RGB, shade: [200, 210, 198] as RGB, crater: [184, 194, 184] as RGB, glow: [190, 255, 220] as RGB };
-// A low, warm sun to suit the dusky sky: a vanilla core, an apricot body, a
-// coral rim, and a rose-gold glow.
+// A low, red sun to suit the dusky sky: a peach core, a coral-red body, a
+// deep red rim, and a rosy glow.
 const SUN = {
-  core: [255, 244, 214] as RGB,
-  body: [255, 210, 140] as RGB,
-  rim: [244, 150, 110] as RGB,
-  ray: [255, 196, 150] as RGB,
-  glow: [255, 186, 160] as RGB,
+  core: [255, 214, 176] as RGB,
+  body: [246, 120, 90] as RGB,
+  rim: [214, 70, 66] as RGB,
+  ray: [244, 130, 110] as RGB,
+  glow: [250, 130, 120] as RGB,
+};
+// Sunset clouds: lit peach on top, rose through the middle, lavender beneath.
+const CLOUD = {
+  top: [255, 228, 214] as RGB,
+  body: [246, 200, 208] as RGB,
+  shade: [222, 186, 214] as RGB,
 };
 
 function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
@@ -178,6 +233,15 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
       const c = d > r - 1.3 ? SUN.rim : Math.hypot(dx + r * 0.3, dy + r * 0.3) < r * 0.45 ? SUN.core : SUN.body;
       put(body.x + dx, body.y + dy, c);
     }
+
+  // Clouds drift slowly right in front of the sun, wrapping round, a little
+  // see-through.
+  const tones = [CLOUD.top, CLOUD.body, CLOUD.shade];
+  for (const c of p.clouds) {
+    const span = p.w + c.w + 20;
+    const x0 = Math.round((((c.x + t * c.speed) % span) + span) % span - c.w - 10);
+    for (const px of c.pixels) put(x0 + px.dx, c.y + px.dy, tones[px.tone], c.alpha);
+  }
 }
 
 // ---------------------------------------------------------------------------
