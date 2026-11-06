@@ -108,16 +108,12 @@
   --ground-tint: rgb(14 52 66 / 0.85);
 }
 
-[data-theme="day"] .pond-scene {
-  min-height: 220px;
-}
 
-/* By day the painting brings its own tall, empty sky, so it needs no extra
-   room above it. Its wash mirrors the header's dusky sky: clear at the top,
-   warming through rose to a vanilla glow at the horizon, where the low sun
-   reflects off the pond. */
+/* By day the wash mirrors the header's dusky sky: clear at the top, warming
+   through rose to a vanilla glow at the horizon, where the low sun reflects
+   off the pond. Only the colour differs by theme; the footer's size doesn't,
+   so switching themes doesn't change the page's height. */
 [data-theme="day"] .post-ground {
-  padding-top: 0;
   background: linear-gradient(
     to bottom,
     transparent 0%,

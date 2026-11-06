@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 
 // The scene at the bottom of each post: a painted pond with a waterfall,
-// rocks and plants (public/assets/pond-day.webp, 2000x667, and
-// pond-night.webp, about 2000x295, both with transparent skies), brought to
-// life on a canvas.
+// rocks and plants (public/assets/pond-day.webp and pond-night.webp, both
+// 2000x297 with transparent skies, so the footer is the same height in
+// either theme), brought to life on a canvas.
 //
 // Each painting is sampled down to a grid 500 pixels wide (about the size of
 // its art pixels) and scaled back up with crisp pixels. On load it's scanned
@@ -19,8 +19,8 @@ import { useEffect, useRef } from "react";
 //     stepped glow; by day dragonflies hover and dart over the pond.
 // Fireflies drift over the night scene from posts/layout.tsx.
 //
-// The two paintings have different shapes and layouts, so each has its own
-// entry in LAYOUTS. The scene follows the theme on <html data-theme>. It
+// The two paintings share a size but not a layout, so each has its own entry
+// in LAYOUTS. The scene follows the theme on <html data-theme>. It
 // pauses off screen and holds still for people who prefer reduced motion.
 
 type RGB = [number, number, number];
@@ -68,10 +68,10 @@ const LAYOUTS: Record<Theme, Layout> = {
     dragonflySpots: [],
   },
   day: {
-    h: 167,
-    pond: { x0: 118, x1: 440, top: 141, bottom: 166 },
-    falls: { x0: 348, x1: 425, top: 122, bottom: 154 },
-    foam: { x0: 345, x1: 430, top: 148, bottom: 157 },
+    h: 73,
+    pond: { x0: 104, x1: 440, top: 59, bottom: 72 },
+    falls: { x0: 348, x1: 421, top: 44, bottom: 65 },
+    foam: { x0: 345, x1: 425, top: 60, bottom: 67 },
     // Blue-grey water (blue at least as strong as red, green not far behind,
     // which leaves out the purple and sunlit rocks), plus the golden streak
     // where the low sun reflects down the middle of the pond.
@@ -80,23 +80,23 @@ const LAYOUTS: Record<Theme, Layout> = {
     // cascades, which are just as bright.
     isFallWater: ([r, g, b]) => b > 140 && b >= r - 8 && g >= r - 14,
     fishLanes: [
-      { cx: 190, cy: 157, range: 34, speed: 0.18, phase: 0 },
-      { cx: 255, cy: 162, range: 38, speed: 0.14, phase: 2.4 },
-      { cx: 300, cy: 151, range: 20, speed: 0.23, phase: 4.1 },
+      { cx: 190, cy: 66, range: 28, speed: 0.18, phase: 0 },
+      { cx: 250, cy: 69, range: 32, speed: 0.14, phase: 2.4 },
+      { cx: 300, cy: 63, range: 18, speed: 0.23, phase: 4.1 },
     ],
     dragonflySpots: [
-      [160, 130],
-      [230, 128],
-      [290, 132],
-      [330, 120],
-      [60, 118],
-      [470, 112],
-      [250, 118],
-      [120, 124],
-      [400, 116],
-      [315, 138],
-      [90, 105],
-      [440, 122],
+      [160, 50],
+      [230, 52],
+      [290, 54],
+      [330, 44],
+      [60, 40],
+      [470, 38],
+      [250, 46],
+      [120, 48],
+      [400, 42],
+      [315, 56],
+      [90, 34],
+      [440, 46],
     ],
   },
 };
