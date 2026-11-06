@@ -32,9 +32,9 @@
 
 /* ---------- The sky at the top of the page ---------- */
 
-/* A wash of colour at the top that fades into the page, with the night sky
-   or the day's forest canopy drawn over it (sky-scene.tsx). Sits behind the
-   top bar and the post. */
+/* A wash of colour at the top that fades into the page, with the moon and
+   stars or the sun drawn over it (sky-scene.tsx). Sits behind the top bar and
+   the post. */
 .post-sky {
   position: absolute;
   inset: 0 0 auto;
@@ -47,9 +47,16 @@
   --sky-tint: rgb(14 52 66 / 0.85);
 }
 
-/* By day, the cool green shade under the canopy. */
+/* By day, a dusky sky behind the sun: soft purple at the top, warming to
+   rose, then vanilla, then fading into the page. */
 [data-theme="day"] .post-sky {
-  --sky-tint: rgb(214 228 204 / 0.9);
+  background: linear-gradient(
+    to bottom,
+    rgb(186 160 214 / 0.62) 0%,
+    rgb(232 164 176 / 0.55) 36%,
+    rgb(250 224 190 / 0.6) 66%,
+    transparent 100%
+  );
 }
 
 .sky-scene {
