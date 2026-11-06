@@ -31,7 +31,7 @@
   pointer-events: none;
 }
 
-/* Fireflies only come out at night; by day the garden has butterflies. */
+/* Fireflies only come out at night; by day the scene has a dragonfly. */
 [data-theme="day"] .ground-flies {
   display: none;
 }
@@ -41,7 +41,13 @@
 .post-ground {
   position: relative;
   margin-top: auto;
-  height: 168px;
+  height: 240px;
+}
+
+@media (max-width: 575px) {
+  .post-ground {
+    height: 200px;
+  }
 }
 
 .post-ground canvas {
