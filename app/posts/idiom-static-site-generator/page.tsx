@@ -12,7 +12,7 @@ export default function Post() {
       <h1 className="spc-n-zero">
         Idiom: A Simple Static Site Generator in React
       </h1>
-      <div className="bg-amber-200 px-4 py-1 rounded-md box-border">
+      <div className="border-l-4 border-l-amber-200 px-4">
         <p>
           Warning: I abandoned this project and moved this site to NextJS. It
           was a fun experiment to build my own frontend framework, but I just
