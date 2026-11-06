@@ -42,16 +42,15 @@ function ThemeSwitch() {
   return (
     <button type="button" className="topbar-button" onClick={toggle} aria-label={label} title={label}>
       {theme === "night" ? (
-        <TablerIcon size={18}>
+        <TablerIcon size={19}>
           <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008" />
         </TablerIcon>
       ) : (
-        <TablerIcon size={18}>
+        <TablerIcon size={19}>
           <path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
           <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
         </TablerIcon>
       )}
-      <span>{theme === "night" ? "Night" : "Day"}</span>
     </button>
   );
 }
@@ -78,8 +77,35 @@ export default function PostChrome() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const open = () => dialog.current?.showModal();
-  const close = () => dialog.current?.close();
+  const open = () => {
+    const d = dialog.current;
+    if (!d) return;
+    d.showModal();
+    // Focus the drawer itself rather than its close button, so opening it
+    // with a click doesn't ring the button in a focus outline. Tab still
+    // reaches every control inside.
+    d.focus();
+  };
+
+  // Slide the drawer shut, then close the dialog once the animation ends.
+  const close = () => {
+    const d = dialog.current;
+    if (!d?.open || d.dataset.closing !== undefined) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      d.close();
+      return;
+    }
+    d.dataset.closing = "";
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      delete d.dataset.closing;
+      d.close();
+    };
+    d.addEventListener("animationend", finish, { once: true });
+    window.setTimeout(finish, 400); // in case the animation never runs
+  };
 
   // A click on the dimmed page beside the drawer lands on the dialog itself,
   // outside its box.
@@ -96,18 +122,37 @@ export default function PostChrome() {
         </Link>
         <div className="topbar-actions">
           <ThemeSwitch />
-          <button type="button" className="topbar-button" onClick={open} aria-haspopup="dialog" aria-controls="site-drawer">
-            <TablerIcon size={18}>
+          <button
+            type="button"
+            className="topbar-button"
+            onClick={open}
+            aria-label="Open menu"
+            title="Posts"
+            aria-haspopup="dialog"
+            aria-controls="site-drawer"
+          >
+            <TablerIcon size={19}>
               <path d="M4 6l16 0" />
               <path d="M4 12l16 0" />
               <path d="M4 18l16 0" />
             </TablerIcon>
-            <span>Posts</span>
           </button>
         </div>
       </header>
 
-      <dialog id="site-drawer" ref={dialog} className="drawer" aria-label="Menu" onClick={onDialogClick}>
+      <dialog
+        id="site-drawer"
+        ref={dialog}
+        className="drawer"
+        aria-label="Menu"
+        tabIndex={-1}
+        onClick={onDialogClick}
+        // Escape slides it shut too, instead of the dialog's instant close.
+        onCancel={(e) => {
+          e.preventDefault();
+          close();
+        }}
+      >
         <button type="button" className="drawer-close" onClick={close} aria-label="Close menu">
           <TablerIcon size={20}>
             <path d="M18 6l-12 12" />
