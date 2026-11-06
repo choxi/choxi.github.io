@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="post-sheet">{children}</main>
       <footer className="post-ground" aria-hidden="true">
         <PondScene />
-        <Fireflies className="ground-flies" count={12} zone={[0.15, 0.7]} />
+        <Fireflies className="ground-flies" count={14} zone={[0.3, 0.82]} />
       </footer>
     </div>
   );

@@ -3,16 +3,16 @@
 import { useEffect, useRef } from "react";
 
 // The scene at the bottom of each post: a painted pond with a waterfall,
-// rocks and plants (public/assets/pond-day.webp and pond-night.webp, 2000x293
-// with transparent skies), brought to life on a canvas.
+// rocks and plants (public/assets/pond-day.webp and pond-night.webp, about
+// 2000x295 with transparent skies), brought to life on a canvas.
 //
 // Each painting is sampled down to a 500x73 grid, about the size of its art
 // pixels, and scaled back up with crisp pixels. On load it's scanned for its
-// water, waterfall, fish and (at night) glowing plants; each frame copies
-// that base and animates them:
+// water, waterfall and (at night) glowing plants; each frame copies that base
+// and animates them:
 //   - the pond's surface shimmers and catches glints,
 //   - the waterfall's painted pixels pour downward, with foam at its foot,
-//   - the painted fish are lifted off the water and swim back and forth,
+//   - pixel fish (koi by day, glowing fish at night) swim back and forth,
 //     slipping behind the rocks,
 //   - at night the mushrooms, coral and painted fireflies pulse with a soft
 //     stepped glow; by day a dragonfly hovers and darts over the pond.
@@ -30,38 +30,68 @@ const FPS_INTERVAL = 1000 / 15;
 const SRC: Record<Theme, string> = { day: "/assets/pond-day.webp", night: "/assets/pond-night.webp" };
 
 // Where things are in the paintings, in grid pixels. The two share a layout.
-const POND = { x0: 100, x1: 420, top: 53 }; // open water lies inside this, below `top`
+const POND = { x0: 100, x1: 420, top: 52 }; // open water lies inside this, below `top`
 const FALLS = { x0: 326, x1: 388, top: 38, bottom: 63 };
 const FOAM = { x0: 330, x1: 392, top: 57, bottom: 64 };
-// Boxes around each painted fish, roomy enough to hold it.
-const FISH_BOXES: Record<Theme, [number, number, number, number][]> = {
-  day: [
-    [190, 60, 220, 69],
-    [226, 61, 256, 71],
-    [255, 61, 286, 70],
-  ],
-  night: [
-    [180, 62, 205, 70],
-    [213, 66, 240, 73],
-    [266, 63, 292, 73],
-  ],
-};
 
 const hash = (x: number, y: number, z = 0) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
   return s - Math.floor(s);
 };
 
-type Fish = { sprite: { dx: number; dy: number; c: RGB }[]; cx: number; cy: number; range: number; speed: number; phase: number; glow: RGB };
+// ---------------------------------------------------------------------------
+// Fish: pixel sprites drawn over the water (the paintings have none of their
+// own). Facing right; mirrored when swimming left. Each letter is a colour
+// role; the tail has two frames so it flicks.
+//   f fin   b body   s spot   h head   e eye   w belly   t tail
+// ---------------------------------------------------------------------------
+
+const FISH_SHAPE = [
+  "....ff....",
+  "..bbbbbhh.",
+  ".bbssbbhhe",
+  "..wwwwwhh.",
+];
+// Tail pixels, [column, row] in the shape's grid: spread, then closed.
+const TAIL_FRAMES: [number, number][][] = [
+  [[0, 2], [-1, 1], [-2, 1], [-1, 3], [-2, 3]],
+  [[0, 2], [-1, 2], [-2, 1], [-2, 3]],
+];
+const FISH_ANCHOR = { col: 5, row: 2 }; // the shape's centre
+
+type FishLook = Record<"f" | "b" | "s" | "h" | "e" | "w" | "t", RGB>;
+const FISH_LOOKS: Record<Theme, FishLook[]> = {
+  day: [
+    // Orange koi with white patches.
+    { f: [222, 96, 40], b: [244, 120, 46], s: [250, 244, 232], h: [248, 140, 64], e: [40, 28, 28], w: [252, 236, 214], t: [226, 102, 42] },
+    // White koi with orange patches.
+    { f: [236, 228, 216], b: [250, 246, 238], s: [242, 126, 50], h: [246, 140, 70], e: [40, 28, 28], w: [255, 252, 246], t: [232, 224, 212] },
+    // Golden koi.
+    { f: [214, 156, 40], b: [242, 190, 60], s: [250, 222, 120], h: [246, 204, 90], e: [40, 28, 28], w: [252, 236, 186], t: [220, 164, 46] },
+  ],
+  night: [
+    // Glowing fish, like the landing scene's.
+    { f: [90, 210, 230], b: [120, 240, 255], s: [210, 255, 255], h: [170, 250, 255], e: [12, 40, 60], w: [190, 255, 255], t: [90, 220, 240] },
+    { f: [150, 120, 230], b: [180, 160, 255], s: [235, 225, 255], h: [210, 195, 255], e: [20, 20, 50], w: [225, 215, 255], t: [160, 130, 240] },
+    { f: [80, 200, 170], b: [120, 250, 210], s: [210, 255, 240], h: [170, 255, 230], e: [10, 40, 40], w: [200, 255, 240], t: [90, 220, 190] },
+  ],
+};
+
+// Each fish swims back and forth along its own lane of the pond.
+const FISH_LANES = [
+  { cx: 205, cy: 64, range: 26, speed: 0.2, phase: 0 },
+  { cx: 262, cy: 68, range: 30, speed: 0.16, phase: 2.4 },
+  { cx: 300, cy: 61, range: 18, speed: 0.25, phase: 4.1 },
+];
+
 type Column = { idx: number[]; colors: RGB[]; speed: number; phase: number };
 
 type Scene = {
-  base: Uint8ClampedArray; // the painting with its fish lifted off
+  base: Uint8ClampedArray; // the painting, sampled down
   water: Uint8Array; // open water: 1 where fish may swim and the surface shimmers
   waterIdx: number[];
   columns: Column[];
   foam: number[];
-  fish: Fish[];
   glow: { i: number; phase: number }[]; // glowing pixels at night
   halo: Float32Array | null; // r, g, b, strength per pixel, around the glow
 };
@@ -69,12 +99,9 @@ type Scene = {
 function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
   const at = (i: number): RGB => [base[i * 4], base[i * 4 + 1], base[i * 4 + 2]];
   const alpha = (i: number) => base[i * 4 + 3];
-  const set = (i: number, c: RGB) => {
-    base[i * 4] = c[0];
-    base[i * 4 + 1] = c[1];
-    base[i * 4 + 2] = c[2];
-  };
-  const isWaterColor = ([r, g, b]: RGB) => b > r + 40 && g > r + 30 && b > 70;
+  // The night pond is much darker, so it gets a looser test.
+  const isWaterColor = ([r, g, b]: RGB) =>
+    theme === "day" ? b > r + 40 && g > r + 30 && b > 70 : b > r + 25 && g > r + 15 && b > 40;
   const inFalls = (x: number, y: number) => x >= FALLS.x0 && x <= FALLS.x1 && y >= FALLS.top && y <= FALLS.bottom;
 
   // Open water: water-coloured pixels inside the pond, outside the falls.
@@ -84,50 +111,6 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
       const i = y * W + x;
       if (alpha(i) > 200 && !inFalls(x, y) && isWaterColor(at(i))) water[i] = 1;
     }
-
-  // Fish: inside each box, the pixels that aren't plain water (their outlines
-  // included), plus, at night, the bright cyan of their glowing bodies. Lift
-  // them off as a sprite and paint the water back in from either side.
-  const fish: Fish[] = [];
-  FISH_BOXES[theme].forEach(([x0, y0, x1, y1], n) => {
-    const isFish = (r: number, g: number, b: number) =>
-      !isWaterColor([r, g, b]) || (theme === "day" ? r + g + b > 560 : r + g + b > 330);
-    const pts: { x: number; y: number; c: RGB }[] = [];
-    for (let y = y0; y <= Math.min(y1, H - 1); y++)
-      for (let x = x0; x <= x1; x++) {
-        const i = y * W + x;
-        const c = at(i);
-        if (alpha(i) > 200 && isFish(...c)) pts.push({ x, y, c });
-      }
-    if (pts.length < 4) return;
-    const cx = Math.round(pts.reduce((s, p) => s + p.x, 0) / pts.length);
-    const cy = Math.round(pts.reduce((s, p) => s + p.y, 0) / pts.length);
-    const taken = new Set(pts.map((p) => p.y * W + p.x));
-    for (const p of pts) {
-      // Nearest water on the left and right of this pixel, blended.
-      let l: RGB | null = null;
-      let r: RGB | null = null;
-      for (let k = 1; k < 30 && (!l || !r); k++) {
-        const li = p.y * W + p.x - k;
-        const ri = p.y * W + p.x + k;
-        if (!l && p.x - k >= 0 && !taken.has(li) && isWaterColor(at(li))) l = at(li);
-        if (!r && p.x + k < W && !taken.has(ri) && isWaterColor(at(ri))) r = at(ri);
-      }
-      const fill = l && r ? ([(l[0] + r[0]) / 2, (l[1] + r[1]) / 2, (l[2] + r[2]) / 2] as RGB) : (l ?? r);
-      if (fill) set(p.y * W + p.x, fill);
-      water[p.y * W + p.x] = 1;
-    }
-    const avg = pts.reduce((s, p) => [s[0] + p.c[0], s[1] + p.c[1], s[2] + p.c[2]], [0, 0, 0]).map((v) => v / pts.length) as RGB;
-    fish.push({
-      sprite: pts.map((p) => ({ dx: p.x - cx, dy: p.y - cy, c: p.c })),
-      cx,
-      cy,
-      range: 14 + n * 5,
-      speed: 0.22 + n * 0.05,
-      phase: n * 2.1,
-      glow: avg,
-    });
-  });
 
   const waterIdx: number[] = [];
   for (let i = 0; i < W * H; i++) if (water[i]) waterIdx.push(i);
@@ -166,7 +149,7 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
       }
     // A stepped halo around the glowing pixels, built once.
     halo = new Float32Array(W * H * 4);
-    const R = 6;
+    const R = 8;
     for (const { i } of glow) {
       const gx = i % W;
       const gy = (i / W) | 0;
@@ -178,7 +161,7 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
           const x = gx + dx;
           const y = gy + dy;
           if (x < 0 || y < 0 || x >= W || y >= H) continue;
-          const f = (Math.ceil((1 - d) ** 2 * 4) / 4) * 0.05;
+          const f = (Math.ceil((1 - d) ** 2 * 4) / 4) * 0.08;
           const j = (y * W + x) * 4;
           halo[j] += c[0] * f;
           halo[j + 1] += c[1] * f;
@@ -188,7 +171,7 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
     }
   }
 
-  return { base, water, waterIdx, columns, foam, fish, glow, halo };
+  return { base, water, waterIdx, columns, foam, glow, halo };
 }
 
 const DRAGONFLY = { body: [34, 132, 146] as RGB, head: [22, 86, 100] as RGB, wing: [214, 236, 244] as RGB };
@@ -245,35 +228,44 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, theme: Theme, t: number
   }
   for (const i of s.foam) if (hash(i, Math.floor(t * 10)) > 0.9) lift(i, 0.5);
 
-  // Fish swim back and forth, drawn only over open water so they pass
-  // behind the rocks. The paintings' fish face right.
-  for (const f of s.fish) {
-    const a = t * f.speed + f.phase;
-    const X = Math.round(f.cx + Math.sin(a) * f.range);
-    const Y = Math.round(f.cy + Math.sin(a * 1.7) * 0.8);
+  // Fish swim back and forth along their lanes, turning at each end, drawn
+  // only over open water so they pass behind the rocks.
+  FISH_LANES.forEach((lane, n) => {
+    const look = FISH_LOOKS[theme][n % FISH_LOOKS[theme].length];
+    const a = t * lane.speed + lane.phase;
+    const X = Math.round(lane.cx + Math.sin(a) * lane.range);
+    const Y = Math.round(lane.cy + Math.sin(a * 1.7) * 0.8);
     const dir = Math.cos(a) >= 0 ? 1 : -1;
+    const water = (x: number, y: number) => (x >= 0 && y >= 0 && x < W && y < H && s.water[y * W + x] ? y * W + x : -1);
+
     if (night) {
-      for (let dy = -3; dy <= 3; dy++)
-        for (let dx = -6; dx <= 6; dx++) {
-          const x = X + dx;
-          const y = Y + dy;
-          if (x < 0 || y < 0 || x >= W || y >= H) continue;
-          const i = y * W + x;
-          if (!s.water[i]) continue;
-          const k = Math.max(0, 1 - Math.hypot(dx / 6, dy / 3)) * 0.22;
-          frame[i * 4] += f.glow[0] * k;
-          frame[i * 4 + 1] += f.glow[1] * k;
-          frame[i * 4 + 2] += f.glow[2] * k;
+      // A soft glow on the water around the fish.
+      for (let dy = -5; dy <= 5; dy++)
+        for (let dx = -10; dx <= 10; dx++) {
+          const i = water(X + dx, Y + dy);
+          if (i < 0) continue;
+          const d = Math.hypot(dx / 10, dy / 5);
+          if (d >= 1) continue;
+          const k = (1 - d) ** 2 * 0.6;
+          frame[i * 4] += look.b[0] * k;
+          frame[i * 4 + 1] += look.b[1] * k;
+          frame[i * 4 + 2] += look.b[2] * k;
         }
     }
-    for (const p of f.sprite) {
-      const x = X + p.dx * dir;
-      const y = Y + p.dy;
-      if (x < 0 || y < 0 || x >= W || y >= H) continue;
-      const i = y * W + x;
-      if (s.water[i]) put(i, p.c);
-    }
-  }
+
+    const px = (col: number, row: number, c: RGB) => {
+      const i = water(X + (col - FISH_ANCHOR.col) * dir, Y + row - FISH_ANCHOR.row);
+      if (i >= 0) put(i, c);
+    };
+    FISH_SHAPE.forEach((line, row) => {
+      for (let col = 0; col < line.length; col++) {
+        const role = line[col] as keyof FishLook;
+        if (role in look) px(col, row, look[role]);
+      }
+    });
+    const flick = Math.floor(t * 5 + n) % 2;
+    for (const [col, row] of TAIL_FRAMES[flick]) px(col, row, look.t);
+  });
 
   if (night && s.halo) {
     // The plants' glow breathes, each patch on its own rhythm.
@@ -291,7 +283,7 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, theme: Theme, t: number
         frame[j] = halo[j] / f;
         frame[j + 1] = halo[j + 1] / f;
         frame[j + 2] = halo[j + 2] / f;
-        frame[j + 3] = Math.max(a, strength * 160);
+        frame[j + 3] = Math.max(a, strength * 220);
       } else {
         frame[j] += halo[j] * k;
         frame[j + 1] += halo[j + 1] * k;
@@ -301,7 +293,7 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, theme: Theme, t: number
     // The glowing pixels themselves brighten and dim a little.
     for (const g of s.glow) {
       const k = 0.5 + 0.5 * Math.sin(t * 1.1 + g.phase);
-      if (k > 0.6) lift(g.i, (k - 0.6) * 0.5);
+      if (k > 0.6) lift(g.i, (k - 0.6) * 0.8);
       else {
         const dim = 0.85 + k * 0.25;
         frame[g.i * 4] *= dim;

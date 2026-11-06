@@ -38,13 +38,34 @@
 
 /* ---------- The pond scene at the bottom of the page ---------- */
 
-/* The paintings have transparent skies, so the page shows through above the
-   art; the fade softens the treetops into the page. */
+/* A soft wash of the scene's colour rises from behind it into the page, so
+   the post fades into the scene rather than stopping at its treetops. The
+   paintings' transparent skies let it show through. */
 .post-ground {
   position: relative;
   margin-top: auto;
-  -webkit-mask-image: linear-gradient(transparent, black 40%);
-  mask-image: linear-gradient(transparent, black 40%);
+  padding-top: 160px;
+  background: linear-gradient(to bottom, transparent, var(--ground-tint) 75%);
+}
+
+@media (max-width: 575px) {
+  .post-ground {
+    padding-top: 100px;
+  }
+}
+
+[data-theme="night"] .post-ground {
+  --ground-tint: rgb(14 52 66 / 0.85);
+}
+
+[data-theme="day"] .post-ground {
+  --ground-tint: rgb(196 228 226 / 0.9);
+}
+
+/* The treetops soften into that wash. */
+.post-ground .pond-scene {
+  -webkit-mask-image: linear-gradient(transparent, black 30%);
+  mask-image: linear-gradient(transparent, black 30%);
 }
 
 .pond-scene {
