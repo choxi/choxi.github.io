@@ -489,7 +489,7 @@ html:has(.drawer[open]) {
 }
 
 .sidebar-social {
-  color: var(--accent);
+  color: var(--link);
 }
 
 .sidebar-label {
@@ -521,7 +521,7 @@ html:has(.drawer[open]) {
 }
 
 .sidebar-posts a:hover {
-  color: var(--accent);
+  color: var(--link);
 }
 
 .sidebar-posts a[aria-current="page"] {

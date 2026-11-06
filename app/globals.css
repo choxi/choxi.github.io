@@ -11,9 +11,11 @@
    Both are plain backgrounds; the pixel art is a few glowing plants at the
    bottom of each post (glow-plants.tsx), plus fireflies.
 
-   Accents: lavender from the blossoms for links, mint from the falls for
-   hover and selection. Text colours and accents pass WCAG AA on each
-   theme's surface. */
+   Accents: lavender from the blossoms for the controls (focus rings, the
+   switch, the current post), and the falls' mint, deepened to teal by day,
+   for links. Links aren't purple because browsers use purple for visited
+   links, so a purple link reads as one you've already followed. Text
+   colours and accents pass WCAG AA on each theme's surface. */
 :root,
 [data-theme="night"] {
   --paper: #0a1a1c;
@@ -24,6 +26,9 @@
   --accent: #c9b6f7;
   --accent-soft: rgb(201 182 247 / 0.4);
   --accent-hover: #96ffd2;
+  --link: #96ffd2;
+  --link-soft: rgb(150 255 210 / 0.4);
+  --link-hover: #e2fff3;
   --highlight: rgb(150 255 210 / 0.28);
   --code-bg: rgb(255 255 255 / 0.06);
   --bar-bg: rgb(10 26 28 / 0.72);
@@ -54,6 +59,9 @@
   --accent: #6646b8;
   --accent-soft: rgb(102 70 184 / 0.3);
   --accent-hover: #1f7564;
+  --link: #17705f;
+  --link-soft: rgb(23 112 95 / 0.35);
+  --link-hover: #0c4a3f;
   --highlight: #e4dafb;
   --code-bg: #edeaf3;
   --bar-bg: rgb(246 244 249 / 0.82);
@@ -117,12 +125,12 @@ body {
 
 a {
   text-decoration: none;
-  color: var(--color-primary);
+  color: var(--link);
   transition: color 150ms ease, text-decoration-color 150ms ease;
 }
 
 a:hover {
-  color: var(--accent-hover);
+  color: var(--link-hover);
 }
 
 a:focus-visible {
@@ -273,7 +281,7 @@ canvas {
    colour alone; it firms up on hover. */
 .post a {
   text-decoration: underline;
-  text-decoration-color: var(--accent-soft);
+  text-decoration-color: var(--link-soft);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
