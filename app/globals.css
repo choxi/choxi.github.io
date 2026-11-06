@@ -12,8 +12,8 @@
    bottom of each post (glow-plants.tsx), plus fireflies.
 
    Accents: lavender from the blossoms for the controls (focus rings, the
-   switch, the current post), and the falls' mint, deepened to teal by day,
-   for links. Links aren't purple because browsers use purple for visited
+   switch), and for links the falls' mint at night and the sunset sun's
+   coral by day. Links aren't purple because browsers use purple for visited
    links, so a purple link reads as one you've already followed. Text
    colours and accents pass WCAG AA on each theme's surface. */
 :root,
@@ -59,9 +59,9 @@
   --accent: #6646b8;
   --accent-soft: rgb(102 70 184 / 0.3);
   --accent-hover: #1f7564;
-  --link: #17705f;
-  --link-soft: rgb(23 112 95 / 0.35);
-  --link-hover: #0c4a3f;
+  --link: #b4432f;
+  --link-soft: rgb(180 67 47 / 0.35);
+  --link-hover: #852c1d;
   --highlight: #e4dafb;
   --code-bg: #edeaf3;
   --bar-bg: rgb(246 244 249 / 0.82);

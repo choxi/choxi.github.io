@@ -453,13 +453,13 @@ html:has(.drawer[open]) {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--link);
   cursor: pointer;
   transition: color 150ms ease;
 }
 
 .drawer-close:hover {
-  color: var(--accent-hover);
+  color: var(--link-hover);
 }
 
 .drawer-close:focus-visible {
@@ -526,7 +526,7 @@ html:has(.drawer[open]) {
 }
 
 .sidebar-posts a[aria-current="page"] {
-  color: var(--accent);
+  color: var(--link);
 }
 
 .sidebar-posts a[aria-current="page"]::before {
