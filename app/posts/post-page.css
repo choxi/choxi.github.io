@@ -108,14 +108,31 @@
   --ground-tint: rgb(14 52 66 / 0.85);
 }
 
-[data-theme="day"] .post-ground {
-  --ground-tint: rgb(196 228 226 / 0.9);
+[data-theme="day"] .pond-scene {
+  min-height: 220px;
 }
 
+/* By day the painting brings its own tall, empty sky, so it needs no extra
+   room above it. Its wash mirrors the header's dusky sky: clear at the top,
+   warming through rose to a vanilla glow at the horizon, where the low sun
+   reflects off the pond. */
+[data-theme="day"] .post-ground {
+  padding-top: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(236 188 196 / 0.38) 45%,
+    rgb(250 224 194 / 0.72) 80%,
+    rgb(250 230 204 / 0.8) 100%
+  );
+}
+
+/* The canvas takes the painting's shape from its width and height
+   attributes (pond-scene.tsx sets them per painting). */
 .pond-scene {
   display: block;
   width: 100%;
-  aspect-ratio: 500 / 73;
+  height: auto;
   /* On narrow screens it keeps some height and crops the sides (keeping the
      pond and falls) rather than shrinking to a sliver. */
   min-height: 150px;
