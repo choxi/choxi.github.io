@@ -10,9 +10,18 @@ import SocialLinks, { MapPinIcon } from "./social-links";
 
 const POSTS = [
   { href: "/posts/three-body-problems", title: "Three Body Problems" },
-  { href: "/posts/idiom-static-site-generator", title: "Idiom: A Simple Static Site Generator in React" },
-  { href: "/posts/procedural-landscapes", title: "Procedurally Generated Landscapes" },
-  { href: "/posts/gesture-detection-using-tensorflowjs", title: "Gesture Detection Using Tensorflow.js" },
+  {
+    href: "/posts/idiom-static-site-generator",
+    title: "Idiom: A Simple Static Site Generator in React",
+  },
+  {
+    href: "/posts/procedural-landscapes",
+    title: "Procedurally Generated Landscapes",
+  },
+  {
+    href: "/posts/gesture-detection-using-tensorflowjs",
+    title: "Gesture Detection Using Tensorflow.js",
+  },
 ];
 
 export default function Sidebar() {
@@ -26,7 +35,11 @@ export default function Sidebar() {
       <div className="sidebar-bio">
         <p>
           Founder at{" "}
-          <a href="https://reverieapps.com" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://reverieapps.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Reverie
           </a>
         </p>
@@ -47,7 +60,10 @@ export default function Sidebar() {
         <ul className="sidebar-posts">
           {POSTS.map((post) => (
             <li key={post.href}>
-              <Link href={post.href} aria-current={pathname === post.href ? "page" : undefined}>
+              <Link
+                href={post.href}
+                aria-current={pathname === post.href ? "page" : undefined}
+              >
                 {post.title}
               </Link>
             </li>

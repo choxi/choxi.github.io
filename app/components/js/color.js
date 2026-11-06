@@ -1,36 +1,36 @@
-import Utils from "./utils"
+import Utils from "./utils";
 
 class Color {
-  constructor(r, g, b, a=255) {
-    this.r = r
-    this.g = g
-    this.b = b
-    this.a = a
+  constructor(r, g, b, a = 255) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.a = a;
   }
 
   toP5(p) {
-    return p.color(this.r, this.g, this.b, this.a)
+    return p.color(this.r, this.g, this.b, this.a);
   }
 
   alpha(newAlpha) {
-    return new Color(this.r, this.g, this.b, newAlpha)
+    return new Color(this.r, this.g, this.b, newAlpha);
   }
 
-  static random(palette=Color.palettes.flat) {
-    let keys = Object.keys(palette)
-    let keyIndex = Utils.random(0, keys.length)
-    let key = keys[keyIndex]
+  static random(palette = Color.palettes.flat) {
+    let keys = Object.keys(palette);
+    let keyIndex = Utils.random(0, keys.length);
+    let key = keys[keyIndex];
 
-    return palette[key]
+    return palette[key];
   }
 
   static lerp(colorA, colorB, weight) {
-    let newR = weight * colorA.r + (1 - weight) * colorB.r
-    let newG = weight * colorA.g + (1 - weight) * colorB.g
-    let newB = weight * colorA.b + (1 - weight) * colorB.b
-    let newA = weight * colorA.a + (1 - weight) * colorB.a
+    let newR = weight * colorA.r + (1 - weight) * colorB.r;
+    let newG = weight * colorA.g + (1 - weight) * colorB.g;
+    let newB = weight * colorA.b + (1 - weight) * colorB.b;
+    let newA = weight * colorA.a + (1 - weight) * colorB.a;
 
-    return new Color(newR, newG, newB, newA)
+    return new Color(newR, newG, newB, newA);
   }
 }
 
@@ -42,14 +42,14 @@ class Color {
 //     })
 //     colors
 
-Color.red = new Color(255, 0, 0)
-Color.green = new Color(0, 255, 0)
-Color.blue = new Color(0, 0, 255)
+Color.red = new Color(255, 0, 0);
+Color.green = new Color(0, 255, 0);
+Color.blue = new Color(0, 0, 255);
 
 Color.palettes = {
   tron: {
     blue: new Color(95, 212, 230),
-    white: new Color(239, 233, 234)
+    white: new Color(239, 233, 234),
   },
 
   gray: {
@@ -62,7 +62,7 @@ Color.palettes = {
     g: new Color(120, 120, 120),
     h: new Color(140, 140, 140),
     i: new Color(160, 160, 160),
-    j: new Color(180, 180, 180)
+    j: new Color(180, 180, 180),
   },
 
   flat: {
@@ -85,8 +85,8 @@ Color.palettes = {
     sunFlower: new Color(241, 196, 15),
     turquoise: new Color(26, 188, 156),
     wetAsphalt: new Color(52, 73, 94),
-    wisteria: new Color(142, 68, 173)
-  }
-}
+    wisteria: new Color(142, 68, 173),
+  },
+};
 
-export default Color
+export default Color;

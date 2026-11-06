@@ -67,7 +67,8 @@
   --bar-bg: rgb(246 244 249 / 0.82);
   --drawer-bg: #f6f4f9;
   --hover-bg: rgb(27 32 35 / 0.06);
-  --shadow: 0 1px 2px rgb(40 30 70 / 0.06), 0 6px 20px -8px rgb(40 30 70 / 0.14);
+  --shadow:
+    0 1px 2px rgb(40 30 70 / 0.06), 0 6px 20px -8px rgb(40 30 70 / 0.14);
   --motif-a: #1f7564;
   --motif-b: #6646b8;
   color-scheme: light;
@@ -89,8 +90,10 @@
   --spc-sm: 0.5em;
   /* --font-zodiak and --font-satoshi are set by next/font in layout.tsx. */
   --font-serif: var(--font-zodiak), Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-satoshi), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans:
+    var(--font-satoshi), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 body {
@@ -126,7 +129,9 @@ body {
 a {
   text-decoration: none;
   color: var(--link);
-  transition: color 150ms ease, text-decoration-color 150ms ease;
+  transition:
+    color 150ms ease,
+    text-decoration-color 150ms ease;
 }
 
 a:hover {
@@ -378,7 +383,12 @@ canvas {
    Sits above each section heading, and replaces <hr>. */
 .post {
   --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 3' shape-rendering='crispEdges'%3E%3Cpath d='M7 0h1v1H7zM6 1h3v1H6zM7 2h1v1H7zM1 1h1v1H1zM4 1h1v1H4zM10 1h1v1h-1zM13 1h1v1h-1z'/%3E%3C/svg%3E");
-  --motif-paint: linear-gradient(90deg, var(--motif-a) 0 33.4%, var(--motif-b) 33.4% 66.6%, var(--motif-a) 66.6%);
+  --motif-paint: linear-gradient(
+    90deg,
+    var(--motif-a) 0 33.4%,
+    var(--motif-b) 33.4% 66.6%,
+    var(--motif-a) 66.6%
+  );
 }
 
 .post h2::before,

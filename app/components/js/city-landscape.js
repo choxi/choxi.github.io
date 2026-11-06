@@ -44,7 +44,7 @@ export default class CityLandscape {
         height,
         gradient.color(25),
         gradient.color(0),
-        1
+        1,
       );
 
       for (var i = 0; i < 500; i++) {
@@ -72,7 +72,7 @@ export default class CityLandscape {
         -height / 2 + 200 - totalT / 10,
         200,
         200,
-        40
+        40,
       );
 
       // Current and next buildings screen

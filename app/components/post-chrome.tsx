@@ -1,7 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type PointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import { useGlassLens } from "./glass-card";
 import Sidebar from "./sidebar";
 import { TablerIcon } from "./social-links";
@@ -18,10 +25,14 @@ type Theme = "night" | "day";
 
 // The theme lives on <html data-theme> (set before paint by the script in
 // layout.tsx), so read it from there and re-render when it changes.
-const readTheme = (): Theme => (document.documentElement.dataset.theme === "day" ? "day" : "night");
+const readTheme = (): Theme =>
+  document.documentElement.dataset.theme === "day" ? "day" : "night";
 const subscribeTheme = (onChange: () => void) => {
   const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
   return () => observer.disconnect();
 };
 
@@ -41,7 +52,11 @@ const MoonIcon = () => (
 // other, and a knob that slides over the one that's on. It's a switch for
 // screen readers too ("Night theme", on or off). Remembers the choice.
 function ThemeSwitch() {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "night" as Theme);
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    readTheme,
+    () => "night" as Theme,
+  );
   const night = theme === "night";
 
   const toggle = () => {
@@ -53,7 +68,15 @@ function ThemeSwitch() {
   };
 
   return (
-    <button type="button" role="switch" aria-checked={night} aria-label="Night theme" title={night ? "Night" : "Day"} className="theme-switch glass" onClick={toggle}>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={night}
+      aria-label="Night theme"
+      title={night ? "Night" : "Day"}
+      className="theme-switch glass"
+      onClick={toggle}
+    >
       <span className="theme-switch-icon theme-switch-sun" aria-hidden="true">
         <SunIcon />
       </span>
@@ -132,11 +155,21 @@ export default function PostChrome() {
   // Swipe it shut: on touch, the drawer follows your finger left; let go past
   // a short distance (or with a quick flick) and it closes, otherwise it
   // springs back.
-  const drag = useRef<{ id: number; x0: number; t0: number; dx: number } | null>(null);
+  const drag = useRef<{
+    id: number;
+    x0: number;
+    t0: number;
+    dx: number;
+  } | null>(null);
   const dragged = useRef(false);
   const onPointerDown = (e: PointerEvent<HTMLDialogElement>) => {
     if (e.pointerType === "mouse") return;
-    drag.current = { id: e.pointerId, x0: e.clientX, t0: performance.now(), dx: 0 };
+    drag.current = {
+      id: e.pointerId,
+      x0: e.clientX,
+      t0: performance.now(),
+      dx: 0,
+    };
     dragged.current = false;
   };
   const onPointerMove = (e: PointerEvent<HTMLDialogElement>) => {
@@ -170,7 +203,13 @@ export default function PostChrome() {
       return;
     }
     const r = e.currentTarget.getBoundingClientRect();
-    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
+    if (
+      e.clientX < r.left ||
+      e.clientX > r.right ||
+      e.clientY < r.top ||
+      e.clientY > r.bottom
+    )
+      close();
   };
 
   return (
@@ -211,7 +250,12 @@ export default function PostChrome() {
           close();
         }}
       >
-        <button type="button" className="drawer-close" onClick={close} aria-label="Close menu">
+        <button
+          type="button"
+          className="drawer-close"
+          onClick={close}
+          aria-label="Close menu"
+        >
           <TablerIcon size={20}>
             <path d="M4 6l16 0" />
             <path d="M4 12l16 0" />

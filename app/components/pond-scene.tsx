@@ -28,7 +28,10 @@ type Theme = "day" | "night";
 
 const W = 500;
 const FPS_INTERVAL = 1000 / 15;
-const SRC: Record<Theme, string> = { day: "/assets/pond-day.webp", night: "/assets/pond-night.webp" };
+const SRC: Record<Theme, string> = {
+  day: "/assets/pond-day.webp",
+  night: "/assets/pond-night.webp",
+};
 
 const hash = (x: number, y: number, z = 0) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
@@ -47,7 +50,13 @@ type Layout = {
   foam: Box; // where the falls hit the pond
   isWater: (x: number, y: number, c: RGB) => boolean;
   isFallWater: (c: RGB) => boolean;
-  fishLanes: { cx: number; cy: number; range: number; speed: number; phase: number }[];
+  fishLanes: {
+    cx: number;
+    cy: number;
+    range: number;
+    speed: number;
+    phase: number;
+  }[];
   dragonflySpots: [number, number][]; // places a dragonfly may hover (day)
 };
 
@@ -75,7 +84,9 @@ const LAYOUTS: Record<Theme, Layout> = {
     // Blue-grey water (blue at least as strong as red, green not far behind,
     // which leaves out the purple and sunlit rocks), plus the golden streak
     // where the low sun reflects down the middle of the pond.
-    isWater: (x, _y, [r, g, b]) => (b >= r - 2 && g >= r - 6 && b > 90) || (x >= 205 && x <= 290 && r > 190 && g / r > 0.78),
+    isWater: (x, _y, [r, g, b]) =>
+      (b >= r - 2 && g >= r - 6 && b > 90) ||
+      (x >= 205 && x <= 290 && r > 190 && g / r > 0.78),
     // White-blue water; not the sunlit orange tops of the rocks between the
     // cascades, which are just as bright.
     isFallWater: ([r, g, b]) => b > 140 && b >= r - 8 && g >= r - 14,
@@ -108,16 +119,22 @@ const LAYOUTS: Record<Theme, Layout> = {
 //   f fin   b body   s spot   h head   e eye   w belly   t tail
 // ---------------------------------------------------------------------------
 
-const FISH_SHAPE = [
-  "....ff....",
-  "..bbbbbhh.",
-  ".bbssbbhhe",
-  "..wwwwwhh.",
-];
+const FISH_SHAPE = ["....ff....", "..bbbbbhh.", ".bbssbbhhe", "..wwwwwhh."];
 // Tail pixels, [column, row] in the shape's grid: spread, then closed.
 const TAIL_FRAMES: [number, number][][] = [
-  [[0, 2], [-1, 1], [-2, 1], [-1, 3], [-2, 3]],
-  [[0, 2], [-1, 2], [-2, 1], [-2, 3]],
+  [
+    [0, 2],
+    [-1, 1],
+    [-2, 1],
+    [-1, 3],
+    [-2, 3],
+  ],
+  [
+    [0, 2],
+    [-1, 2],
+    [-2, 1],
+    [-2, 3],
+  ],
 ];
 const FISH_ANCHOR = { col: 5, row: 2 }; // the shape's centre
 
@@ -125,17 +142,65 @@ type FishLook = Record<"f" | "b" | "s" | "h" | "e" | "w" | "t", RGB>;
 const FISH_LOOKS: Record<Theme, FishLook[]> = {
   day: [
     // Orange koi with white patches.
-    { f: [222, 96, 40], b: [244, 120, 46], s: [250, 244, 232], h: [248, 140, 64], e: [40, 28, 28], w: [252, 236, 214], t: [226, 102, 42] },
+    {
+      f: [222, 96, 40],
+      b: [244, 120, 46],
+      s: [250, 244, 232],
+      h: [248, 140, 64],
+      e: [40, 28, 28],
+      w: [252, 236, 214],
+      t: [226, 102, 42],
+    },
     // White koi with orange patches.
-    { f: [236, 228, 216], b: [250, 246, 238], s: [242, 126, 50], h: [246, 140, 70], e: [40, 28, 28], w: [255, 252, 246], t: [232, 224, 212] },
+    {
+      f: [236, 228, 216],
+      b: [250, 246, 238],
+      s: [242, 126, 50],
+      h: [246, 140, 70],
+      e: [40, 28, 28],
+      w: [255, 252, 246],
+      t: [232, 224, 212],
+    },
     // Golden koi.
-    { f: [214, 156, 40], b: [242, 190, 60], s: [250, 222, 120], h: [246, 204, 90], e: [40, 28, 28], w: [252, 236, 186], t: [220, 164, 46] },
+    {
+      f: [214, 156, 40],
+      b: [242, 190, 60],
+      s: [250, 222, 120],
+      h: [246, 204, 90],
+      e: [40, 28, 28],
+      w: [252, 236, 186],
+      t: [220, 164, 46],
+    },
   ],
   night: [
     // Glowing fish, like the landing scene's.
-    { f: [90, 210, 230], b: [120, 240, 255], s: [210, 255, 255], h: [170, 250, 255], e: [12, 40, 60], w: [190, 255, 255], t: [90, 220, 240] },
-    { f: [150, 120, 230], b: [180, 160, 255], s: [235, 225, 255], h: [210, 195, 255], e: [20, 20, 50], w: [225, 215, 255], t: [160, 130, 240] },
-    { f: [80, 200, 170], b: [120, 250, 210], s: [210, 255, 240], h: [170, 255, 230], e: [10, 40, 40], w: [200, 255, 240], t: [90, 220, 190] },
+    {
+      f: [90, 210, 230],
+      b: [120, 240, 255],
+      s: [210, 255, 255],
+      h: [170, 250, 255],
+      e: [12, 40, 60],
+      w: [190, 255, 255],
+      t: [90, 220, 240],
+    },
+    {
+      f: [150, 120, 230],
+      b: [180, 160, 255],
+      s: [235, 225, 255],
+      h: [210, 195, 255],
+      e: [20, 20, 50],
+      w: [225, 215, 255],
+      t: [160, 130, 240],
+    },
+    {
+      f: [80, 200, 170],
+      b: [120, 250, 210],
+      s: [210, 255, 240],
+      h: [170, 255, 230],
+      e: [10, 40, 40],
+      w: [200, 255, 240],
+      t: [90, 220, 190],
+    },
   ],
 };
 
@@ -148,7 +213,16 @@ type Column = { idx: number[]; colors: RGB[]; speed: number; phase: number };
 // One glowing thing (a mushroom cap, a coral sprig, a speck): its pixels, and
 // its halo as r, g, b, strength per pixel in a box at (x0, y0). Each pulses on
 // its own phase and speed.
-type Glow = { pixels: number[]; x0: number; y0: number; w: number; h: number; halo: Float32Array; phase: number; speed: number };
+type Glow = {
+  pixels: number[];
+  x0: number;
+  y0: number;
+  w: number;
+  h: number;
+  halo: Float32Array;
+  phase: number;
+  speed: number;
+};
 
 type Scene = {
   theme: Theme;
@@ -164,16 +238,22 @@ type Scene = {
 function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
   const L = LAYOUTS[theme];
   const H = L.h;
-  const at = (i: number): RGB => [base[i * 4], base[i * 4 + 1], base[i * 4 + 2]];
+  const at = (i: number): RGB => [
+    base[i * 4],
+    base[i * 4 + 1],
+    base[i * 4 + 2],
+  ];
   const alpha = (i: number) => base[i * 4 + 3];
-  const inBox = (b: Box, x: number, y: number) => x >= b.x0 && x <= b.x1 && y >= b.top && y <= b.bottom;
+  const inBox = (b: Box, x: number, y: number) =>
+    x >= b.x0 && x <= b.x1 && y >= b.top && y <= b.bottom;
 
   // Open water: water-coloured pixels inside the pond, outside the falls.
   const water = new Uint8Array(W * H);
   for (let y = L.pond.top; y <= Math.min(L.pond.bottom, H - 1); y++)
     for (let x = L.pond.x0; x <= L.pond.x1; x++) {
       const i = y * W + x;
-      if (alpha(i) > 200 && !inBox(L.falls, x, y) && L.isWater(x, y, at(i))) water[i] = 1;
+      if (alpha(i) > 200 && !inBox(L.falls, x, y) && L.isWater(x, y, at(i)))
+        water[i] = 1;
     }
   const waterIdx: number[] = [];
   for (let i = 0; i < W * H; i++) if (water[i]) waterIdx.push(i);
@@ -186,13 +266,20 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
       const i = y * W + x;
       if (alpha(i) > 200 && L.isFallWater(at(i))) idx.push(i);
     }
-    if (idx.length >= 5) columns.push({ idx, colors: idx.map(at), speed: 16 + hash(x, 1) * 10, phase: hash(x, 2) * 40 });
+    if (idx.length >= 5)
+      columns.push({
+        idx,
+        colors: idx.map(at),
+        speed: 16 + hash(x, 1) * 10,
+        phase: hash(x, 2) * 40,
+      });
   }
   const foam: number[] = [];
   for (let y = L.foam.top; y <= Math.min(L.foam.bottom, H - 1); y++)
     for (let x = L.foam.x0; x <= L.foam.x1; x++) {
       const i = y * W + x;
-      if (alpha(i) > 200 && (L.isWater(x, y, at(i)) || L.isFallWater(at(i)))) foam.push(i);
+      if (alpha(i) > 200 && (L.isWater(x, y, at(i)) || L.isFallWater(at(i))))
+        foam.push(i);
     }
 
   // Night glow: bright blue-white pixels in the plants (not the water or the
@@ -267,7 +354,16 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
           }
       }
       const n = glows.length;
-      glows.push({ pixels, x0, y0, w: bw, h: bh, halo, phase: hash(n, 7) * 6.28, speed: 0.45 + hash(n, 8) * 0.5 });
+      glows.push({
+        pixels,
+        x0,
+        y0,
+        w: bw,
+        h: bh,
+        halo,
+        phase: hash(n, 7) * 6.28,
+        speed: 0.45 + hash(n, 8) * 0.5,
+      });
     }
   }
 
@@ -282,9 +378,30 @@ const DRAGONFLY_WING: RGB = [214, 236, 244];
 // Three dragonflies: teal, blue and a red one, each with its own pace (step:
 // seconds per hover-and-dart) and route (start spot, and how far it skips).
 const DRAGONFLIES = [
-  { body: [34, 132, 146] as RGB, head: [22, 86, 100] as RGB, step: 3.2, offset: 0, start: 0, stride: 5 },
-  { body: [48, 92, 196] as RGB, head: [28, 54, 130] as RGB, step: 4.1, offset: 1.3, start: 4, stride: 7 },
-  { body: [208, 74, 52] as RGB, head: [140, 44, 34] as RGB, step: 3.7, offset: 2.6, start: 9, stride: 5 },
+  {
+    body: [34, 132, 146] as RGB,
+    head: [22, 86, 100] as RGB,
+    step: 3.2,
+    offset: 0,
+    start: 0,
+    stride: 5,
+  },
+  {
+    body: [48, 92, 196] as RGB,
+    head: [28, 54, 130] as RGB,
+    step: 4.1,
+    offset: 1.3,
+    start: 4,
+    stride: 7,
+  },
+  {
+    body: [208, 74, 52] as RGB,
+    head: [140, 44, 34] as RGB,
+    step: 3.7,
+    offset: 2.6,
+    start: 9,
+    stride: 5,
+  },
 ];
 
 function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
@@ -319,7 +436,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     frame[i * 4 + 2] = base[j * 4 + 2];
   }
   // Glints come and go.
-  for (const i of s.waterIdx) if (hash(i, tick) > 0.996) lift(i, night ? 0.45 : 0.6);
+  for (const i of s.waterIdx)
+    if (hash(i, tick) > 0.996) lift(i, night ? 0.45 : 0.6);
 
   // The falls pour: each column's painted pixels scroll down.
   for (const col of s.columns) {
@@ -334,7 +452,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
 
   // Fish swim back and forth along their lanes, turning at each end, drawn
   // only over open water so they pass behind the rocks.
-  const water = (x: number, y: number) => (x >= 0 && y >= 0 && x < W && y < H && s.water[y * W + x] ? y * W + x : -1);
+  const water = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < W && y < H && s.water[y * W + x] ? y * W + x : -1;
   L.fishLanes.forEach((lane, n) => {
     const look = FISH_LOOKS[theme][n % FISH_LOOKS[theme].length];
     const a = t * lane.speed + lane.phase;
@@ -358,7 +477,10 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     }
 
     const px = (col: number, row: number, c: RGB) => {
-      const i = water(X + (col - FISH_ANCHOR.col) * dir, Y + row - FISH_ANCHOR.row);
+      const i = water(
+        X + (col - FISH_ANCHOR.col) * dir,
+        Y + row - FISH_ANCHOR.row,
+      );
       if (i >= 0) put(i, c);
     };
     FISH_SHAPE.forEach((line, row) => {
@@ -414,7 +536,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   // timing and route through the spots.
   const spots = L.dragonflySpots;
   if (!spots.length) return;
-  const at = (x: number, y: number) => (x >= 0 && y >= 0 && x < W && y < H ? y * W + x : -1);
+  const at = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < W && y < H ? y * W + x : -1;
   const DART = 0.45;
   for (const d of DRAGONFLIES) {
     const k = (t + d.offset) / d.step;
@@ -425,7 +548,9 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const m = phaseT < d.step - DART ? 0 : (phaseT - (d.step - DART)) / DART;
     const ease = m * m * (3 - 2 * m);
     const dx = Math.round(from[0] + (to[0] - from[0]) * ease);
-    const dy = Math.round(from[1] + (to[1] - from[1]) * ease + Math.sin(t * 5 + d.offset) * 0.6);
+    const dy = Math.round(
+      from[1] + (to[1] - from[1]) * ease + Math.sin(t * 5 + d.offset) * 0.6,
+    );
     const facing = to[0] >= from[0] ? 1 : -1;
     for (let q = -4; q <= 1; q++) {
       const i = at(dx + q * facing, dy);
@@ -464,7 +589,8 @@ function loadScene(theme: Theme) {
   return scenes[theme]!;
 }
 
-const currentTheme = (): Theme => (document.documentElement.dataset.theme === "day" ? "day" : "night");
+const currentTheme = (): Theme =>
+  document.documentElement.dataset.theme === "day" ? "day" : "night";
 
 export default function PondScene({ className }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -484,7 +610,11 @@ export default function PondScene({ className }: { className?: string }) {
 
     const draw = () => {
       if (!scene || !image) return;
-      renderFrame(scene, image.data, still ? 0 : (performance.now() - start) / 1000);
+      renderFrame(
+        scene,
+        image.data,
+        still ? 0 : (performance.now() - start) / 1000,
+      );
       ctx.putImageData(image, 0, 0);
     };
 
@@ -519,7 +649,10 @@ export default function PondScene({ className }: { className?: string }) {
       const next = currentTheme();
       if (next !== theme) show(next);
     });
-    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    themeWatch.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
 
     return () => {
       cancelled = true;
@@ -529,5 +662,13 @@ export default function PondScene({ className }: { className?: string }) {
     };
   }, []);
 
-  return <canvas ref={ref} width={W} height={LAYOUTS.night.h} className={["pond-scene", className].filter(Boolean).join(" ")} aria-hidden="true" />;
+  return (
+    <canvas
+      ref={ref}
+      width={W}
+      height={LAYOUTS.night.h}
+      className={["pond-scene", className].filter(Boolean).join(" ")}
+      aria-hidden="true"
+    />
+  );
 }

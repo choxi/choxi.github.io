@@ -14,8 +14,15 @@ type Props = {
   children: ReactNode;
 };
 
-export default function Figure({ size = "text", framed = false, caption, children }: Props) {
-  const className = ["figure", `figure--${size}`, framed && "figure--framed"].filter(Boolean).join(" ");
+export default function Figure({
+  size = "text",
+  framed = false,
+  caption,
+  children,
+}: Props) {
+  const className = ["figure", `figure--${size}`, framed && "figure--framed"]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <figure className={className}>

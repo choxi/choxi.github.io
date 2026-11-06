@@ -109,17 +109,17 @@ export default class Orbits extends React.Component {
                   const force = vector
                     .unit()
                     .multiply(
-                      (body.mass * otherBody.mass) / Math.pow(distance, 2)
+                      (body.mass * otherBody.mass) / Math.pow(distance, 2),
                     );
 
                   totalForce = totalForce.add(force);
                 });
 
                 const newVelocity = body.velocity.add(
-                  totalForce.multiply(deltaT)
+                  totalForce.multiply(deltaT),
                 );
                 const newPosition = body.position.add(
-                  newVelocity.multiply(deltaT)
+                  newVelocity.multiply(deltaT),
                 );
 
                 if (body.id === 1) {
@@ -129,8 +129,8 @@ export default class Orbits extends React.Component {
                       newPosition,
                       newVelocity,
                       this.state.mass,
-                      body.color
-                    )
+                      body.color,
+                    ),
                   );
                 } else {
                   newBodies.push(
@@ -139,8 +139,8 @@ export default class Orbits extends React.Component {
                       newPosition,
                       newVelocity,
                       body.mass,
-                      body.color
-                    )
+                      body.color,
+                    ),
                   );
                 }
 

@@ -19,7 +19,9 @@
   height: 38px;
   border-radius: 10px;
   color: inherit;
-  transition: opacity 150ms ease, background-color 150ms ease;
+  transition:
+    opacity 150ms ease,
+    background-color 150ms ease;
 }
 
 .link:hover {

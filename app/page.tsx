@@ -10,7 +10,10 @@ const POSTS = [
     href: "/posts/idiom-static-site-generator",
     title: "Idiom: A Simple Static Site Generator in React",
   },
-  { href: "/posts/procedural-landscapes", title: "Procedurally Generated Landscapes" },
+  {
+    href: "/posts/procedural-landscapes",
+    title: "Procedurally Generated Landscapes",
+  },
   {
     href: "/posts/gesture-detection-using-tensorflowjs",
     title: "Gesture Detection Using Tensorflow.js",
@@ -27,7 +30,12 @@ export default function Home() {
         <h1 className={styles.name}>Roshan Choxi</h1>
         <p className={styles.intro}>
           Founder at{" "}
-          <a href="https://reverieapps.com" target="_blank" rel="noopener noreferrer" className={styles.inline}>
+          <a
+            href="https://reverieapps.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.inline}
+          >
             Reverie
           </a>
           <br />

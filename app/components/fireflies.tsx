@@ -27,12 +27,28 @@ const COLORS: RGB[] = [
 const FPS_INTERVAL = 1000 / 20;
 // Stepped glow around each firefly: [dx, dy, strength].
 const GLOW: [number, number, number][] = [
-  [-1, 0, 0.55], [1, 0, 0.55], [0, -1, 0.55], [0, 1, 0.55],
-  [-1, -1, 0.25], [1, -1, 0.25], [-1, 1, 0.25], [1, 1, 0.25],
-  [-2, 0, 0.2], [2, 0, 0.2], [0, -2, 0.2], [0, 2, 0.2],
+  [-1, 0, 0.55],
+  [1, 0, 0.55],
+  [0, -1, 0.55],
+  [0, 1, 0.55],
+  [-1, -1, 0.25],
+  [1, -1, 0.25],
+  [-1, 1, 0.25],
+  [1, 1, 0.25],
+  [-2, 0, 0.2],
+  [2, 0, 0.2],
+  [0, -2, 0.2],
+  [0, 2, 0.2],
 ];
 
-type Fly = { x: number; y: number; phase: number; sx: number; sy: number; color: RGB };
+type Fly = {
+  x: number;
+  y: number;
+  phase: number;
+  sx: number;
+  sy: number;
+  color: RGB;
+};
 
 type Props = {
   count?: number;
@@ -45,14 +61,23 @@ type Props = {
   className?: string;
 };
 
-export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", edges, pixel, className }: Props) {
+export default function Fireflies({
+  count = 20,
+  zone = [0, 1],
+  grid = "width",
+  edges,
+  pixel,
+  className,
+}: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [z0, z1] = zone;
 
   useEffect(() => {
     const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     let flies: Fly[] = [];
     let w = 0;
     let h = 0;
@@ -65,7 +90,11 @@ export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", e
     const fit = () => {
       const box = canvas.getBoundingClientRect();
       if (!box.width || !box.height) return;
-      const px = pixel ?? (grid === "cover" ? Math.max(box.width / SCENE_W, box.height / SCENE_H) : box.width / SCENE_W);
+      const px =
+        pixel ??
+        (grid === "cover"
+          ? Math.max(box.width / SCENE_W, box.height / SCENE_H)
+          : box.width / SCENE_W);
       w = Math.ceil(box.width / px);
       h = Math.ceil(box.height / px);
       canvas.width = w;
@@ -92,7 +121,9 @@ export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", e
       for (const f of flies) {
         const X = Math.round(f.x * w + Math.sin(t * f.sx + f.phase) * 16);
         const Y = Math.round(f.y * h + Math.sin(t * f.sy + f.phase * 2) * 9);
-        const blink = reduceMotion ? 0.8 : Math.max(0, Math.sin(t * 1.1 + f.phase * 3));
+        const blink = reduceMotion
+          ? 0.8
+          : Math.max(0, Math.sin(t * 1.1 + f.phase * 3));
         if (blink < 0.15) continue;
         const [r, g, b] = f.color;
         for (const [dx, dy, k] of GLOW) {
@@ -132,5 +163,11 @@ export default function Fireflies({ count = 20, zone = [0, 1], grid = "width", e
     };
   }, [count, z0, z1, grid, edges, pixel]);
 
-  return <canvas ref={ref} className={["fireflies", className].filter(Boolean).join(" ")} aria-hidden="true" />;
+  return (
+    <canvas
+      ref={ref}
+      className={["fireflies", className].filter(Boolean).join(" ")}
+      aria-hidden="true"
+    />
+  );
 }

@@ -77,7 +77,11 @@ function lensMap(width: number, height: number, radius: number, rim: number) {
 
 let filterCount = 0;
 
-const node = (tag: string, attrs: Record<string, string | number>, parent?: Element) => {
+const node = (
+  tag: string,
+  attrs: Record<string, string | number>,
+  parent?: Element,
+) => {
   const el = document.createElementNS(SVG, tag);
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
   parent?.append(el);
@@ -92,14 +96,35 @@ function buildFilter(width: number, height: number, map: string, rim: number) {
     "aria-hidden": "true",
     width: 0,
     height: 0,
-    style: "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none",
+    style:
+      "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none",
   });
   const filter = node(
     "filter",
-    { id, filterUnits: "userSpaceOnUse", "color-interpolation-filters": "sRGB", x: 0, y: 0, width, height },
+    {
+      id,
+      filterUnits: "userSpaceOnUse",
+      "color-interpolation-filters": "sRGB",
+      x: 0,
+      y: 0,
+      width,
+      height,
+    },
     host,
   );
-  node("feImage", { href: map, x: 0, y: 0, width, height, preserveAspectRatio: "none", result: "map" }, filter);
+  node(
+    "feImage",
+    {
+      href: map,
+      x: 0,
+      y: 0,
+      width,
+      height,
+      preserveAspectRatio: "none",
+      result: "map",
+    },
+    filter,
+  );
   const scale = 2 * EDGE * rim;
   ["r", "g", "b"].forEach((name, channel) => {
     node(
@@ -113,8 +138,14 @@ function buildFilter(width: number, height: number, map: string, rim: number) {
       },
       filter,
     );
-    const keep = Array.from({ length: 20 }, (_, cell) => Number(cell === channel * 6 || cell === 18)).join(" ");
-    node("feColorMatrix", { type: "matrix", values: keep, result: name }, filter);
+    const keep = Array.from({ length: 20 }, (_, cell) =>
+      Number(cell === channel * 6 || cell === 18),
+    ).join(" ");
+    node(
+      "feColorMatrix",
+      { type: "matrix", values: keep, result: name },
+      filter,
+    );
   });
   node("feBlend", { in: "r", in2: "g", mode: "screen" }, filter);
   node("feBlend", { in2: "b", mode: "screen" }, filter);
@@ -136,15 +167,25 @@ export function useGlassLens(ref: RefObject<HTMLElement | null>) {
     const fit = () => {
       const width = Math.round(el.offsetWidth);
       const height = Math.round(el.offsetHeight);
-      const radius = Math.round(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0);
-      const rim = Math.round(Math.max(4, Math.min(RIM, Math.min(width, height) / 3.5)));
+      const radius = Math.round(
+        parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0,
+      );
+      const rim = Math.round(
+        Math.max(4, Math.min(RIM, Math.min(width, height) / 3.5)),
+      );
       const key = `${width}x${height}:${radius}:${rim}`;
       if (current?.key === key || width < 32 || height < 32) return;
-      const next = { ...buildFilter(width, height, lensMap(width, height, radius, rim), rim), key };
+      const next = {
+        ...buildFilter(width, height, lensMap(width, height, radius, rim), rim),
+        key,
+      };
       el.style.setProperty("--glass-lens", `url(#${next.id})`);
       // Let the new filter draw before the old one goes.
       const old = current;
-      if (old) requestAnimationFrame(() => requestAnimationFrame(() => old.host.remove()));
+      if (old)
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => old.host.remove()),
+        );
       current = next;
     };
 
@@ -164,7 +205,13 @@ export function useGlassLens(ref: RefObject<HTMLElement | null>) {
   }, [ref]);
 }
 
-export default function GlassCard({ className, children }: { className?: string; children: ReactNode }) {
+export default function GlassCard({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useGlassLens(ref);
 

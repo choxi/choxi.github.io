@@ -56,7 +56,14 @@ function glowOffsets(r: number) {
 // Layout
 // ---------------------------------------------------------------------------
 
-type Star = { x: number; y: number; phase: number; speed: number; big: boolean; color: RGB };
+type Star = {
+  x: number;
+  y: number;
+  phase: number;
+  speed: number;
+  big: boolean;
+  color: RGB;
+};
 type Cloud = {
   x: number;
   y: number; // its flat base
@@ -76,7 +83,11 @@ function plan(w: number, h: number) {
   const rand = mulberry32(3);
   const narrow = w * PX < 700;
   // The moon and sun sit up and to the right.
-  const body = { x: Math.round(w * (narrow ? 0.82 : 0.8)), y: Math.round(h * (narrow ? 0.48 : 0.42)), r: narrow ? 6 : 8 };
+  const body = {
+    x: Math.round(w * (narrow ? 0.82 : 0.8)),
+    y: Math.round(h * (narrow ? 0.48 : 0.42)),
+    r: narrow ? 6 : 8,
+  };
 
   const stars: Star[] = [];
   const count = Math.round((w * h) / 140);
@@ -85,7 +96,14 @@ function plan(w: number, h: number) {
     // Thicker near the top, thinning out toward the fade.
     const y = Math.floor(rand() ** 1.6 * h * 0.85);
     if (Math.hypot(x - body.x, y - body.y) < body.r + 6) continue;
-    stars.push({ x, y, phase: rand() * 6.28, speed: 0.6 + rand() * 1.8, big: rand() < 0.12, color: STAR_COLORS[Math.floor(rand() * STAR_COLORS.length)] });
+    stars.push({
+      x,
+      y,
+      phase: rand() * 6.28,
+      speed: 0.6 + rand() * 1.8,
+      big: rand() < 0.12,
+      color: STAR_COLORS[Math.floor(rand() * STAR_COLORS.length)],
+    });
   }
 
   // Clouds (day): cumulus shapes, a tall middle puff with smaller ones
@@ -106,17 +124,29 @@ function plan(w: number, h: number) {
     });
     const left = -puffs[0][1];
     const right = x + puffs[puffs.length - 1][1];
-    const pixels = new Map<string, { dx: number; dy: number; tone: 0 | 1 | 2 }>();
+    const pixels = new Map<
+      string,
+      { dx: number; dy: number; tone: 0 | 1 | 2 }
+    >();
     for (let px = Math.floor(left); px <= Math.ceil(right); px++)
       for (let py = -Math.ceil(size * 1.6); py <= 0; py++) {
         // Inside a puff (each sits with its centre a little above the base),
         // or in the flat band along the bottom between the outer puffs.
-        const inPuff = puffs.some(([cx, r]) => Math.hypot(px - cx, py + r * 0.55) <= r);
+        const inPuff = puffs.some(
+          ([cx, r]) => Math.hypot(px - cx, py + r * 0.55) <= r,
+        );
         const inBase = py >= -2 && px >= left + 1 && px <= right - 1;
         if (!inPuff && !inBase) continue;
         // Shading: the bottom row shaded, the upper-left of each puff lit.
-        const top = puffs.some(([cx, r]) => Math.hypot(px - cx + r * 0.25, py + r * 0.95) <= r * 0.55);
-        pixels.set(`${px},${py}`, { dx: px - Math.floor(left), dy: py, tone: py === 0 ? 2 : top ? 0 : 1 });
+        const top = puffs.some(
+          ([cx, r]) =>
+            Math.hypot(px - cx + r * 0.25, py + r * 0.95) <= r * 0.55,
+        );
+        pixels.set(`${px},${py}`, {
+          dx: px - Math.floor(left),
+          dy: py,
+          tone: py === 0 ? 2 : top ? 0 : 1,
+        });
       }
     clouds.push({
       x: (n / cloudCount) * (w + 60) + rand() * 20,
@@ -138,7 +168,12 @@ type Plan = ReturnType<typeof plan>;
 // Drawing
 // ---------------------------------------------------------------------------
 
-const MOON = { lit: [236, 240, 224] as RGB, shade: [200, 210, 198] as RGB, crater: [184, 194, 184] as RGB, glow: [190, 255, 220] as RGB };
+const MOON = {
+  lit: [236, 240, 224] as RGB,
+  shade: [200, 210, 198] as RGB,
+  crater: [184, 194, 184] as RGB,
+  glow: [190, 255, 220] as RGB,
+};
 // A low, red sun to suit the dusky sky: a peach core, a coral-red body, a
 // deep red rim, and a rosy glow.
 const SUN = {
@@ -181,7 +216,8 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
 
     // The moon's halo breathes.
     const breathe = 0.85 + 0.15 * Math.sin(t * 0.6);
-    for (const [dx, dy, f] of glowOffsets(r * 4)) put(body.x + dx, body.y + dy, MOON.glow, f * 0.2 * breathe);
+    for (const [dx, dy, f] of glowOffsets(r * 4))
+      put(body.x + dx, body.y + dy, MOON.glow, f * 0.2 * breathe);
 
     // The moon: lit from the upper left, with a few craters.
     for (let dy = -r; dy <= r; dy++)
@@ -210,7 +246,8 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
 
   // Day: the sun's warm glow breathes.
   const breathe = 0.85 + 0.15 * Math.sin(t * 0.5);
-  for (const [dx, dy, f] of glowOffsets(r * 4)) put(body.x + dx, body.y + dy, SUN.glow, f * 0.32 * breathe);
+  for (const [dx, dy, f] of glowOffsets(r * 4))
+    put(body.x + dx, body.y + dy, SUN.glow, f * 0.32 * breathe);
 
   // Rays: eight short spokes, alternating long and short, taking turns to
   // shimmer.
@@ -221,7 +258,12 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
     const len = (long ? 4 : 2) + Math.round(pulse * 1.5);
     for (let k = 0; k < len; k++) {
       const d = r + 2 + k;
-      put(body.x + Math.cos(a) * d, body.y + Math.sin(a) * d, SUN.ray, 0.85 - (k / (len + 1)) * 0.6);
+      put(
+        body.x + Math.cos(a) * d,
+        body.y + Math.sin(a) * d,
+        SUN.ray,
+        0.85 - (k / (len + 1)) * 0.6,
+      );
     }
   }
 
@@ -230,7 +272,12 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
     for (let dx = -r; dx <= r; dx++) {
       const d = Math.hypot(dx, dy);
       if (d > r - 0.3) continue;
-      const c = d > r - 1.3 ? SUN.rim : Math.hypot(dx + r * 0.3, dy + r * 0.3) < r * 0.45 ? SUN.core : SUN.body;
+      const c =
+        d > r - 1.3
+          ? SUN.rim
+          : Math.hypot(dx + r * 0.3, dy + r * 0.3) < r * 0.45
+            ? SUN.core
+            : SUN.body;
       put(body.x + dx, body.y + dy, c);
     }
 
@@ -239,14 +286,18 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
   const tones = [CLOUD.top, CLOUD.body, CLOUD.shade];
   for (const c of p.clouds) {
     const span = p.w + c.w + 20;
-    const x0 = Math.round((((c.x + t * c.speed) % span) + span) % span - c.w - 10);
-    for (const px of c.pixels) put(x0 + px.dx, c.y + px.dy, tones[px.tone], c.alpha);
+    const x0 = Math.round(
+      ((((c.x + t * c.speed) % span) + span) % span) - c.w - 10,
+    );
+    for (const px of c.pixels)
+      put(x0 + px.dx, c.y + px.dy, tones[px.tone], c.alpha);
   }
 }
 
 // ---------------------------------------------------------------------------
 
-const currentTheme = (): Theme => (document.documentElement.dataset.theme === "day" ? "day" : "night");
+const currentTheme = (): Theme =>
+  document.documentElement.dataset.theme === "day" ? "day" : "night";
 
 export default function SkyScene({ className }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -262,7 +313,13 @@ export default function SkyScene({ className }: { className?: string }) {
     let visible = true;
 
     const render = () => {
-      if (layout) draw(ctx, layout, currentTheme(), still ? 0 : ((performance.now() - start) / 1000) * SPEED);
+      if (layout)
+        draw(
+          ctx,
+          layout,
+          currentTheme(),
+          still ? 0 : ((performance.now() - start) / 1000) * SPEED,
+        );
     };
 
     const fit = () => {
@@ -287,7 +344,10 @@ export default function SkyScene({ className }: { className?: string }) {
     seen.observe(canvas);
 
     const themeWatch = new MutationObserver(render);
-    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    themeWatch.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
@@ -305,5 +365,11 @@ export default function SkyScene({ className }: { className?: string }) {
     };
   }, []);
 
-  return <canvas ref={ref} className={["sky-scene", className].filter(Boolean).join(" ")} aria-hidden="true" />;
+  return (
+    <canvas
+      ref={ref}
+      className={["sky-scene", className].filter(Boolean).join(" ")}
+      aria-hidden="true"
+    />
+  );
 }

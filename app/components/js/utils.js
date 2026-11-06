@@ -1,52 +1,52 @@
-import Vector from "./vector"
-import Color from "./color"
+import Vector from "./vector";
+import Color from "./color";
 
-const Y_AXIS = 1
-const X_AXIS = 2
+const Y_AXIS = 1;
+const X_AXIS = 2;
 
 export default class Utils {
   static isBrowser() {
-    return typeof window !== `undefined`
+    return typeof window !== `undefined`;
   }
 
   static isSafari() {
-    const ua = navigator.userAgent.toLowerCase()
+    const ua = navigator.userAgent.toLowerCase();
 
-    if (ua.indexOf('safari') != -1) {
-      if (ua.indexOf('chrome') > -1) {
-        return false
+    if (ua.indexOf("safari") != -1) {
+      if (ua.indexOf("chrome") > -1) {
+        return false;
       } else {
-        return true
+        return true;
       }
     }
   }
 
   static debugBezier(p, a1, c1, c2, a2) {
-    p.push()
-    p.noFill()
-    p.stroke(255, 102, 0)
-    p.line(a1.x, a1.y, c1.x, c1.y)
-    p.line(c2.x, c2.y, a2.x, a2.y)
-    p.stroke(0, 0, 0)
-    p.bezier(a1.x, a1.y, c1.x, c1.y, c2.x, c2.y, a2.x, a2.y)
-    p.pop()
+    p.push();
+    p.noFill();
+    p.stroke(255, 102, 0);
+    p.line(a1.x, a1.y, c1.x, c1.y);
+    p.line(c2.x, c2.y, a2.x, a2.y);
+    p.stroke(0, 0, 0);
+    p.bezier(a1.x, a1.y, c1.x, c1.y, c2.x, c2.y, a2.x, a2.y);
+    p.pop();
   }
 
   static fromCenter(center, distance, theta) {
-    let point = new Vector(distance, 0).rotate(theta)
-    return center.add(point)
+    let point = new Vector(distance, 0).rotate(theta);
+    return center.add(point);
   }
 
   static clamp(number, min, max) {
     if (number < min) {
-      return min
+      return min;
     }
 
     if (number > max) {
-      return max
+      return max;
     }
 
-    return number
+    return number;
   }
 
   // This implementation is intended to match p5.random()
@@ -56,26 +56,28 @@ export default class Utils {
   //
   static random(range, endRange) {
     if (endRange == undefined) {
-      endRange = range
-      range = 0
+      endRange = range;
+      range = 0;
     }
 
-    let rangeWidth = endRange - range
+    let rangeWidth = endRange - range;
 
-    return Math.floor(Math.random() * rangeWidth) + range
+    return Math.floor(Math.random() * rangeWidth) + range;
   }
 
-  static randomColor(palette=Color.palettes.flat) {
-    let names = Object.keys(palette)
-    let index = Utils.random(names.length)
-    let name = names[index]
-    if (name == undefined) { debugger }
-    let color = palette[name]
-    return color
+  static randomColor(palette = Color.palettes.flat) {
+    let names = Object.keys(palette);
+    let index = Utils.random(names.length);
+    let name = names[index];
+    if (name == undefined) {
+      debugger;
+    }
+    let color = palette[name];
+    return color;
   }
 
   static setGradient(p, x, y, w, h, c1, c2, axis) {
-    p.noStroke()
+    p.noStroke();
     if (axis === Y_AXIS) {
       // Top to bottom gradient
       for (let i = y; i <= y + h; i++) {
@@ -98,7 +100,7 @@ export default class Utils {
   static drawGradient(x, y, colorA, colorB, radius) {
     for (let r = radius; r > 0; --r) {
       // let blended = blendColors(colorA, colorB, r / radius)
-      let blended = lerpColor(colorA, colorB, r / radius)
+      let blended = lerpColor(colorA, colorB, r / radius);
       fill(blended);
       ellipse(x, y, r, r);
     }
@@ -115,12 +117,12 @@ export default class Utils {
   }
 
   static toGPUCoordinate(x, y) {
-    const height = Utils.isBrowser() ? window.innerHeight : 0
-    const width = Utils.isBrowser() ? window.innerWidth : 0
+    const height = Utils.isBrowser() ? window.innerHeight : 0;
+    const width = Utils.isBrowser() ? window.innerWidth : 0;
 
-    let centeredX = x - width / 2
-    let centeredY = y - height / 2
+    let centeredX = x - width / 2;
+    let centeredY = y - height / 2;
 
-    return { x: centeredX, y: centeredY }
+    return { x: centeredX, y: centeredY };
   }
 }

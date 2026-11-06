@@ -136,7 +136,11 @@ export default function NightMesh() {
 
     // One oversized triangle covers the viewport.
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 3, -1, -1, 3]),
+      gl.STATIC_DRAW,
+    );
     const loc = gl.getAttribLocation(program, "a_pos");
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
@@ -145,7 +149,9 @@ export default function NightMesh() {
     const uTime = gl.getUniformLocation(program, "u_time");
 
     // The image is soft, so rendering at 1x keeps it cheap without visible loss.
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const start = performance.now();
     let raf = 0;
 
@@ -186,5 +192,11 @@ export default function NightMesh() {
     };
   }, []);
 
-  return <div ref={ref} aria-hidden="true" style={{ position: "fixed", inset: 0, background: "#06090f" }} />;
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      style={{ position: "fixed", inset: 0, background: "#06090f" }}
+    />
+  );
 }

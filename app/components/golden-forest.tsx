@@ -31,7 +31,11 @@ const MIST: RGB = [120, 200, 220];
 const MIST_VIOLET: RGB = [160, 140, 240];
 const FOAM: RGB = [200, 238, 255];
 const SPARKLE: RGB = [240, 252, 255];
-const FIREFLIES: RGB[] = [[255, 226, 120], [160, 255, 170], [130, 235, 255]];
+const FIREFLIES: RGB[] = [
+  [255, 226, 120],
+  [160, 255, 170],
+  [130, 235, 255],
+];
 
 const FALL_LIGHT: RGB = [196, 236, 248];
 const FALL_FOAM: RGB = [232, 250, 255];
@@ -72,10 +76,14 @@ const inStream = (x: number, y: number) =>
 const POND_TOP = 206;
 // The pond's round body, which the stream's own outline is widened to.
 const POND_BODY = { x: 272, y: 229, rx: 58, ry: 21 };
-const KEEP_ROCKS: [number, number, number][] = [[202, 217, 13], [298, 238, 9]];
+const KEEP_ROCKS: [number, number, number][] = [
+  [202, 217, 13],
+  [298, 238, 9],
+];
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-const bayer = (x: number, y: number) => (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+const bayer = (x: number, y: number) =>
+  (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
 
 const hash = (x: number, y: number, z = 0) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
@@ -123,7 +131,15 @@ function glowOffsets(r: number) {
   return list;
 }
 
-type Light = { x: number; y: number; r: number; color: RGB; phase: number; speed: number; strength: number };
+type Light = {
+  x: number;
+  y: number;
+  r: number;
+  color: RGB;
+  phase: number;
+  speed: number;
+  strength: number;
+};
 
 type Scene = {
   ox: number;
@@ -139,25 +155,55 @@ type Scene = {
   pond: number[];
   isPond: Uint8Array;
   inflow: { x: number; y: number }; // where the cascade enters the pond
-  fish: { cx: number; cy: number; rx: number; ry: number; phase: number; speed: number; color: RGB }[];
+  fish: {
+    cx: number;
+    cy: number;
+    rx: number;
+    ry: number;
+    phase: number;
+    speed: number;
+    color: RGB;
+  }[];
   mist: number[];
   ringPx: number[];
   lights: Light[];
-  falling: { x: number; y: number; vy: number; phase: number; big: boolean; color: RGB }[];
+  falling: {
+    x: number;
+    y: number;
+    vy: number;
+    phase: number;
+    big: boolean;
+    color: RGB;
+  }[];
   motes: { a: number; r: number; speed: number; rise: number; phase: number }[];
-  flies: { x: number; y: number; phase: number; sx: number; sy: number; color: RGB }[];
+  flies: {
+    x: number;
+    y: number;
+    phase: number;
+    sx: number;
+    sy: number;
+    color: RGB;
+  }[];
 };
 
-const isGold = (r: number, g: number, b: number) => r > 160 && g > 100 && b < 110 && r - b > 100;
+const isGold = (r: number, g: number, b: number) =>
+  r > 160 && g > 100 && b < 110 && r - b > 100;
 // The pale grey-green trunks, which stay in front of anything painted in.
 const isTrunk = (r: number, g: number, b: number) =>
-  g > 95 && g - r > 8 && g - b > 8 && Math.max(r, g, b) - Math.min(r, g, b) < 55;
+  g > 95 &&
+  g - r > 8 &&
+  g - b > 8 &&
+  Math.max(r, g, b) - Math.min(r, g, b) < 55;
 
 function buildScene(base: Uint8ClampedArray): Scene {
   const ox = 0; // the painting fills the canvas
   const rand = mulberry32(7);
   const N = W * H;
-  const at = (i: number): RGB => [base[i * 4], base[i * 4 + 1], base[i * 4 + 2]];
+  const at = (i: number): RGB => [
+    base[i * 4],
+    base[i * 4 + 1],
+    base[i * 4 + 2],
+  ];
   const px = (x: number, y: number, c: RGB) => {
     x = Math.floor(x);
     y = Math.floor(y);
@@ -188,7 +234,8 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const fallCols: Scene["fallCols"] = [];
   const lip: number[] = [];
   const splash: number[] = [];
-  const isFallWater = (r: number, g: number, b: number) => b > 120 && b > r + 50 && g > 90;
+  const isFallWater = (r: number, g: number, b: number) =>
+    b > 120 && b > r + 50 && g > 90;
 
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
@@ -197,19 +244,27 @@ function buildScene(base: Uint8ClampedArray): Scene {
       const u = x - ox; // painting x
       const nearRing = Math.hypot(x - ring.x, y - ring.y) < RING.r + 2.5;
       // The canopy fills the top of the painting; the bushes below are left still.
-      if (y < 105 && x > 0 && x < W - 1 && (gold[i] || gold[i - 1] || gold[i + 1])) canopy.push(i);
+      if (
+        y < 105 &&
+        x > 0 &&
+        x < W - 1 &&
+        (gold[i] || gold[i - 1] || gold[i + 1])
+      )
+        canopy.push(i);
       if (gold[i] && !nearRing) {
         leaves.push(i);
         if (y < 90 && hash(x, y, 2) > 0.93) leafOrigins.push([x, y]);
       }
-      const inFall = y >= FALL.top && y < FALL.foot && u >= FALL.x0 && u <= FALL.x1;
+      const inFall =
+        y >= FALL.top && y < FALL.foot && u >= FALL.x0 && u <= FALL.x1;
       // The cascade below the fall and the stream: blue water down to the bottom edge.
       if (inStream(u, y) && b > 110 && b > r + 60) {
         water.push(i);
         isWater[i] = 1;
       } else if (inFall && isFallWater(r, g, b)) isWater[i] = 1;
       // The misty clearing behind the stream: pale blue between the near trunks.
-      else if (y > 50 && y < 195 && u > 175 && u < 310 && b > r + 30 && g > 40) mist.push(i);
+      else if (y > 50 && y < 195 && u > 175 && u < 310 && b > r + 30 && g > 40)
+        mist.push(i);
       if (inFall && isWater[i] && y > FALL.foot - 8) splash.push(i);
       if (nearRing && gold[i]) ringPx.push(i);
     }
@@ -217,11 +272,17 @@ function buildScene(base: Uint8ClampedArray): Scene {
   // pixels are its lip; below that, down to where it lands, the water scrolls.
   for (let x = FALL.x0 + ox; x <= FALL.x1 + ox; x++) {
     const run: number[] = [];
-    for (let y = FALL.top; y < FALL.foot - 8; y++) if (isWater[y * W + x]) run.push(y * W + x);
+    for (let y = FALL.top; y < FALL.foot - 8; y++)
+      if (isWater[y * W + x]) run.push(y * W + x);
     if (run.length < 6) continue;
     lip.push(run[0], run[1]);
     const idx = run.slice(2);
-    fallCols.push({ idx, colors: idx.map(at), phase: rand() * 40, speed: 16 + rand() * 8 });
+    fallCols.push({
+      idx,
+      colors: idx.map(at),
+      phase: rand() * 40,
+      speed: 16 + rand() * 8,
+    });
   }
 
   // ---- Pond ----
@@ -239,17 +300,22 @@ function buildScene(base: Uint8ClampedArray): Scene {
         l = Math.min(l, u);
         r = Math.max(r, u);
       }
-    rows.push(Number.isFinite(l) ? [l, r] : rows[rows.length - 1] ?? [230, 250]);
+    rows.push(
+      Number.isFinite(l) ? [l, r] : (rows[rows.length - 1] ?? [230, 250]),
+    );
   }
   const keptRock = (u: number, y: number) =>
-    KEEP_ROCKS.some(([rx, ry, s]) => ((u - rx) / s) ** 2 + ((y - ry) / (s * 0.55)) ** 2 <= 1);
+    KEEP_ROCKS.some(
+      ([rx, ry, s]) => ((u - rx) / s) ** 2 + ((y - ry) / (s * 0.55)) ** 2 <= 1,
+    );
   for (let y = POND_TOP; y < H; y++) {
     // Average each shore over nearby rows, and round off the pond's top.
     let l = 0;
     let r = 0;
     let n = 0;
     for (let k = -4; k <= 4; k++) {
-      const row = rows[Math.min(rows.length - 1, Math.max(0, y - POND_TOP + k))];
+      const row =
+        rows[Math.min(rows.length - 1, Math.max(0, y - POND_TOP + k))];
       l += row[0];
       r += row[1];
       n++;
@@ -260,7 +326,10 @@ function buildScene(base: Uint8ClampedArray): Scene {
     // Widen the row out to the pond's round body, with a wobbling shore.
     const e = (y - POND_BODY.y) / POND_BODY.ry;
     if (Math.abs(e) < 1) {
-      const reach = POND_BODY.rx * Math.sqrt(1 - e * e) * (0.92 + vnoise(y * 0.3, 4) * 0.16);
+      const reach =
+        POND_BODY.rx *
+        Math.sqrt(1 - e * e) *
+        (0.92 + vnoise(y * 0.3, 4) * 0.16);
       lo = Math.min(lo, POND_BODY.x - reach);
       hi = Math.max(hi, POND_BODY.x + reach);
     }
@@ -276,8 +345,16 @@ function buildScene(base: Uint8ClampedArray): Scene {
       // Long horizontal swirls of lighter and deeper water, like the painted
       // stream, and a dark wet rim along the shore.
       const edge = Math.min(u - (mid - half), mid + half - u);
-      const swirl = vnoise(x * 0.13, y * 0.45) * 0.7 + vnoise(x * 0.3 + 9, y * 0.9) * 0.3;
-      const c = edge < 1.5 ? POND_DEEP : swirl > 0.6 ? POND_LIGHT : swirl < 0.4 ? POND_DEEP : POND;
+      const swirl =
+        vnoise(x * 0.13, y * 0.45) * 0.7 + vnoise(x * 0.3 + 9, y * 0.9) * 0.3;
+      const c =
+        edge < 1.5
+          ? POND_DEEP
+          : swirl > 0.6
+            ? POND_LIGHT
+            : swirl < 0.4
+              ? POND_DEEP
+              : POND;
       px(x, y, c);
     }
   }
@@ -320,19 +397,33 @@ function buildScene(base: Uint8ClampedArray): Scene {
         }
       } else if (y > 110 && !isWater[i] && b > r + 20 && b > g) {
         const n = vnoise(x * 0.03 + 40, y * 0.045);
-        if (n > 0.58) r += (b - r) * 0.5 * Math.min(1, (n - 0.58) * 4); // violet
+        if (n > 0.58)
+          r += (b - r) * 0.5 * Math.min(1, (n - 0.58) * 4); // violet
         else if (n < 0.34) g += (b - g) * 0.45 * Math.min(1, (0.34 - n) * 4); // teal
       }
       px(x, y, [r, g, b]);
     }
 
   const lights: Light[] = [];
-  const addLight = (x: number, y: number, r: number, color: RGB, strength = 1, speed = 0.6 + rand() * 1.2) =>
-    lights.push({ x, y, r, color, phase: rand() * 6.28, speed, strength });
+  const addLight = (
+    x: number,
+    y: number,
+    r: number,
+    color: RGB,
+    strength = 1,
+    speed = 0.6 + rand() * 1.2,
+  ) => lights.push({ x, y, r, color, phase: rand() * 6.28, speed, strength });
 
   // Mist glowing off the waterfall, brightest where it lands.
   addLight(FALL.footX + ox, FALL.foot - 2, 18, MIST, 0.9, 0.4);
-  addLight(FALL.footX + ox - 12, (FALL.top + FALL.foot) / 2, 14, MIST, 0.4, 0.5);
+  addLight(
+    FALL.footX + ox - 12,
+    (FALL.top + FALL.foot) / 2,
+    14,
+    MIST,
+    0.4,
+    0.5,
+  );
 
   // ---- Bioluminescent plants ----
   // Glowing mushrooms, bulb stalks and ferns tucked into the undergrowth.
@@ -357,7 +448,8 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const fern = (x: number, y: number, color: RGB) => {
     for (let b = -3; b <= 3; b++) {
       const h = 2 + Math.floor(rand() * 4) - Math.abs(b) / 2;
-      for (let d = 0; d < h; d++) px(x + b + Math.round((b * d) / 6), y - d, d >= h - 1 ? color : STEM);
+      for (let d = 0; d < h; d++)
+        px(x + b + Math.round((b * d) / 6), y - d, d >= h - 1 ? color : STEM);
     }
     addLight(x, y - 3, 7, color, 0.8);
   };
@@ -385,7 +477,8 @@ function buildScene(base: Uint8ClampedArray): Scene {
       const y = Math.round(y0 + rand() * (y1 - y0));
       if (x < 4 || x >= W - 4) continue;
       const i = y * W + x;
-      if (isWater[i] || trunk[i] || Math.hypot(x - ring.x, y - ring.y) < 16) continue;
+      if (isWater[i] || trunk[i] || Math.hypot(x - ring.x, y - ring.y) < 16)
+        continue;
       plant(x, y);
       placed++;
     }
@@ -395,7 +488,10 @@ function buildScene(base: Uint8ClampedArray): Scene {
   const falling: Scene["falling"] = [];
   const fallColors = [GOLD, GOLD, AMBER, CORAL];
   for (let n = 0; n < Math.round(W * 0.09); n++) {
-    const [x, y] = leafOrigins[Math.floor(rand() * leafOrigins.length)] ?? [rand() * W, 20];
+    const [x, y] = leafOrigins[Math.floor(rand() * leafOrigins.length)] ?? [
+      rand() * W,
+      20,
+    ];
     falling.push({
       x,
       y: y + rand() * (H - y),
@@ -408,7 +504,13 @@ function buildScene(base: Uint8ClampedArray): Scene {
 
   const motes: Scene["motes"] = [];
   for (let n = 0; n < 16; n++)
-    motes.push({ a: rand() * 6.28, r: 5 + rand() * 9, speed: 0.3 + rand() * 0.6, rise: 2 + rand() * 4, phase: rand() });
+    motes.push({
+      a: rand() * 6.28,
+      r: 5 + rand() * 9,
+      speed: 0.3 + rand() * 0.6,
+      rise: 2 + rand() * 4,
+      phase: rand(),
+    });
 
   const flies: Scene["flies"] = [];
   for (let n = 0; n < Math.round(W * 0.07); n++)
@@ -422,8 +524,24 @@ function buildScene(base: Uint8ClampedArray): Scene {
     });
 
   return {
-    ox, base, canopy, leaves, water, fallCols, lip, splash, pond, isPond, inflow, fish,
-    mist, ringPx, lights, falling, motes, flies,
+    ox,
+    base,
+    canopy,
+    leaves,
+    water,
+    fallCols,
+    lip,
+    splash,
+    pond,
+    isPond,
+    inflow,
+    fish,
+    mist,
+    ringPx,
+    lights,
+    falling,
+    motes,
+    flies,
   };
 }
 
@@ -450,7 +568,11 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   for (const i of s.canopy) {
     const x = i % W;
     const y = (i / W) | 0;
-    const dx = Math.round(Math.sin(t * 1.3 - x * 0.04 + y * 0.18) * gust * (0.6 + (1 - y / 105) * 0.7));
+    const dx = Math.round(
+      Math.sin(t * 1.3 - x * 0.04 + y * 0.18) *
+        gust *
+        (0.6 + (1 - y / 105) * 0.7),
+    );
     if (dx === 0) continue;
     const j = i - dx;
     frame[i * 4] = base[j * 4];
@@ -467,7 +589,9 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
 
   // Stream: ripples and foam flecks run downstream toward the viewer.
   const flowing = (i: number, x: number, y: number, flow: number) => {
-    const w = Math.sin(flow * 0.8 - t * 4.5) + Math.sin(flow * 0.31 + x * 0.2 - t * 2.4) * 0.6;
+    const w =
+      Math.sin(flow * 0.8 - t * 4.5) +
+      Math.sin(flow * 0.31 + x * 0.2 - t * 2.4) * 0.6;
     if (w > 1.1) put(i, FOAM);
     else if (w > 0.6) add(i, FOAM, 0.3);
     else if (w < -1.15) {
@@ -492,11 +616,13 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   for (const col of s.fallCols) {
     const n = col.idx.length;
     const shift = Math.floor(t * col.speed + col.phase);
-    for (let j = 0; j < n; j++) put(col.idx[j], col.colors[(((j - shift) % n) + n) % n]);
+    for (let j = 0; j < n; j++)
+      put(col.idx[j], col.colors[(((j - shift) % n) + n) % n]);
     const x = col.idx[0] % W;
     if (hash(x, 9) > 0.6) {
       const head = (t * col.speed * 1.4 + col.phase * 3) % (n + 6);
-      for (let j = 0; j < n; j++) if (j <= head && head - j < 3) put(col.idx[j], FALL_LIGHT);
+      for (let j = 0; j < n; j++)
+        if (j <= head && head - j < 3) put(col.idx[j], FALL_LIGHT);
     }
   }
   for (const i of s.lip) if (hash(i, fast) > 0.6) put(i, FALL_FOAM);
@@ -507,7 +633,9 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   for (const i of s.pond) {
     const x = i % W;
     const y = (i / W) | 0;
-    const w = Math.sin(x * 0.12 + t * 0.5 + Math.sin(y * 0.7) * 2) * Math.sin(y * 1.3 - t * 0.8);
+    const w =
+      Math.sin(x * 0.12 + t * 0.5 + Math.sin(y * 0.7) * 2) *
+      Math.sin(y * 1.3 - t * 0.8);
     if (w > 0.8) add(i, POND_GLINT, 0.3);
     const d = Math.hypot(x - inflow.x, (y - inflow.y) * 2.6);
     for (let k = 0; k < 3; k++) {
@@ -523,7 +651,11 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   // they slip out of sight behind rocks and under the bank.
   const tint = (c: RGB, k: number): RGB =>
     k > 1
-      ? [c[0] + (255 - c[0]) * (k - 1), c[1] + (255 - c[1]) * (k - 1), c[2] + (255 - c[2]) * (k - 1)]
+      ? [
+          c[0] + (255 - c[0]) * (k - 1),
+          c[1] + (255 - c[1]) * (k - 1),
+          c[2] + (255 - c[2]) * (k - 1),
+        ]
       : [c[0] * k, c[1] * k, c[2] * k];
   for (const f of s.fish) {
     const a = t * f.speed + f.phase;
@@ -538,10 +670,21 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const belly = tint(f.color, 0.8);
     const flick = Math.sin(t * 8 + f.phase) > 0 ? 1 : 0;
     const body: [number, number, RGB][] = [
-      [1, 0, head], [0, 0, head], [0, 1, head],
-      [-1, 0, f.color], [-2, 0, f.color], [-3, 0, f.color], [-4, 0, f.color],
-      [-1, 1, belly], [-2, 1, belly], [-3, 1, belly], [-4, 1, belly],
-      [-5, -1 + flick, f.color], [-6, -1 + flick, belly], [-5, 2 - flick, f.color], [-6, 2 - flick, belly],
+      [1, 0, head],
+      [0, 0, head],
+      [0, 1, head],
+      [-1, 0, f.color],
+      [-2, 0, f.color],
+      [-3, 0, f.color],
+      [-4, 0, f.color],
+      [-1, 1, belly],
+      [-2, 1, belly],
+      [-3, 1, belly],
+      [-4, 1, belly],
+      [-5, -1 + flick, f.color],
+      [-6, -1 + flick, belly],
+      [-5, 2 - flick, f.color],
+      [-6, 2 - flick, belly],
     ];
     for (const [dx, dy, c] of body) {
       const j = (Y + dy) * W + X + dx * dir;
@@ -567,9 +710,16 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   for (const i of s.mist) {
     const x = i % W;
     const y = (i / W) | 0;
-    const n = vnoise(x * 0.045 + t * 0.12, y * 0.09 - t * 0.03) * 0.65 + vnoise(x * 0.11 - t * 0.2, y * 0.17) * 0.35;
+    const n =
+      vnoise(x * 0.045 + t * 0.12, y * 0.09 - t * 0.03) * 0.65 +
+      vnoise(x * 0.11 - t * 0.2, y * 0.17) * 0.35;
     const k = Math.max(0, n - 0.45) * 1.6;
-    if (k > bayer(x, y) * 0.5) add(i, vnoise(x * 0.02 - t * 0.05, y * 0.03) > 0.55 ? MIST_VIOLET : MIST, 0.07 + k * 0.12);
+    if (k > bayer(x, y) * 0.5)
+      add(
+        i,
+        vnoise(x * 0.02 - t * 0.05, y * 0.03) > 0.55 ? MIST_VIOLET : MIST,
+        0.07 + k * 0.12,
+      );
   }
 
   // Glow from the plants and the waterfall's mist, pulsing slowly.
@@ -587,14 +737,17 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
   const rx = RING.x + s.ox;
   const pulse = 0.5 + 0.5 * Math.sin(t * 1.6);
   for (const i of s.ringPx) add(i, GOLD_PALE, 0.15 + pulse * 0.35);
-  for (const o of glowOffsets(18)) add((RING.y + o.dy) * W + rx + o.dx, GOLD, o.f * (0.06 + pulse * 0.08));
+  for (const o of glowOffsets(18))
+    add((RING.y + o.dy) * W + rx + o.dx, GOLD, o.f * (0.06 + pulse * 0.08));
 
   // Gold dust rises in a slow spiral around the ring and fades out.
   for (const m of s.motes) {
     const life = (t * 0.12 * m.speed * 2 + m.phase) % 1;
     const a = m.a + t * m.speed;
     const X = Math.round(rx + Math.cos(a) * m.r * (1 - life * 0.4));
-    const Y = Math.round(RING.y + 6 + Math.sin(a) * m.r * 0.5 - life * m.rise * 6);
+    const Y = Math.round(
+      RING.y + 6 + Math.sin(a) * m.r * 0.5 - life * m.rise * 6,
+    );
     const k = Math.sin(life * Math.PI);
     if (X < 0 || X >= W || Y < 0 || Y >= H) continue;
     add(Y * W + X, GOLD, 0.4 + k * 0.6);
@@ -621,7 +774,8 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, t: number) {
     const blink = Math.max(0, Math.sin(t * 1.1 + f.phase * 3));
     if (blink < 0.15 || X < 2 || Y < 2 || X >= W - 2 || Y >= H - 2) continue;
     put(Y * W + X, f.color);
-    for (const o of glowOffsets(3)) add((Y + o.dy) * W + X + o.dx, f.color, o.f * blink * 0.3);
+    for (const o of glowOffsets(3))
+      add((Y + o.dy) * W + X + o.dx, f.color, o.f * blink * 0.3);
   }
 }
 
@@ -643,7 +797,9 @@ export default function GoldenForest() {
     host.appendChild(canvas);
     const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const start = performance.now();
     let scene: Scene | null = null;
     let image: ImageData | null = null;
@@ -690,5 +846,11 @@ export default function GoldenForest() {
     };
   }, []);
 
-  return <div ref={ref} aria-hidden="true" style={{ position: "fixed", inset: 0, background: "#07131a" }} />;
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      style={{ position: "fixed", inset: 0, background: "#07131a" }}
+    />
+  );
 }

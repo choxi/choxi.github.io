@@ -25,7 +25,7 @@ export default class P5 extends React.Component {
 
     this.canvas = new p5(
       (p) => children(p, pageWidth, pageHeight),
-      "p5-canvas"
+      "p5-canvas",
     );
   }
 
