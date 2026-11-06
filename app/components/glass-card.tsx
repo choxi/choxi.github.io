@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 
 // A card whose rim refracts the scene behind it, like the edge of a thick
 // glass slab: the backdrop bends inward near the border and splits slightly
@@ -122,12 +122,14 @@ function buildFilter(width: number, height: number, map: string, rim: number) {
   return { id, host };
 }
 
-export default function GlassCard({ className, children }: { className?: string; children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-
+// Gives an element the refracting rim: builds a lens filter to fit it and
+// sets --glass-lens on it, rebuilding when it resizes (including when it
+// first appears, e.g. a dialog opening). Its CSS must end its backdrop-filter
+// with `var(--glass-lens,)`.
+export function useGlassLens(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
-    const el = ref.current!;
-    if (!lensSupported()) return;
+    const el = ref.current;
+    if (!el || !lensSupported()) return;
     let current: { id: string; host: Element; key: string } | null = null;
     let timer = 0;
 
@@ -159,7 +161,12 @@ export default function GlassCard({ className, children }: { className?: string;
       el.style.removeProperty("--glass-lens");
       current?.host.remove();
     };
-  }, []);
+  }, [ref]);
+}
+
+export default function GlassCard({ className, children }: { className?: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useGlassLens(ref);
 
   return (
     <div ref={ref} className={className}>

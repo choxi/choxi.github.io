@@ -9,13 +9,13 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100svh;
-  /* The post starts below the sky (240px tall), not over it. */
-  padding-top: 220px;
+  /* The post starts well below the sky (240px tall), not over it. */
+  padding-top: 280px;
 }
 
 @media (max-width: 575px) {
   .post-page {
-    padding-top: 160px;
+    padding-top: 200px;
   }
 }
 
@@ -126,7 +126,10 @@
 /* ---------- Top bar ---------- */
 
 /* No panel: just the menu button on the left and the day/night switch on the
-   right, floating over the sky. They slide up out of view together. */
+   right, floating over the sky. While you scroll down they slide up and fade
+   out; scrolling up slides them back down. Each control moves itself (rather
+   than the bar moving them), since Safari won't animate glass inside a
+   moving parent and they'd just pop in and out. */
 .topbar {
   position: fixed;
   inset: 0 0 auto;
@@ -137,20 +140,23 @@
   justify-content: space-between;
   padding: 0 clamp(14px, 3vw, 28px);
   pointer-events: none;
-  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .topbar > * {
   pointer-events: auto;
 }
 
-.topbar[data-hidden] {
-  transform: translateY(-100%);
+.topbar[data-hidden] > * {
+  translate: 0 -72px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Keyboard users tabbing into a hidden bar bring it back. */
-.topbar:focus-within {
-  transform: none;
+.topbar:focus-within > * {
+  translate: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Liquid glass, after the landing card (home.module.css): a thin tint, a
@@ -197,7 +203,15 @@
   border-radius: 999px;
   color: var(--ink);
   cursor: pointer;
-  transition: transform 150ms ease;
+}
+
+/* The press and the slide in and out on scroll. */
+.topbar-button,
+.theme-switch {
+  transition:
+    transform 150ms ease,
+    translate 340ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 260ms ease;
 }
 
 .topbar-button:active,
@@ -222,7 +236,6 @@
   border-radius: 999px;
   color: var(--ink-2);
   cursor: pointer;
-  transition: transform 150ms ease;
 }
 
 .theme-switch-icon {
@@ -281,37 +294,68 @@
 
 /* ---------- Drawer ---------- */
 
-/* A floating panel of liquid glass, the same material as the top bar's
-   controls (.glass) but with a stronger tint so its text reads clearly over
-   whatever is behind it. */
+/* A floating panel of the landing card's liquid glass (home.module.css): a
+   thin tint over a backdrop that's barely blurred but dimmed and saturated,
+   rim light and bevel in the shadows, and in Chromium the refracting rim lens
+   from glass-card.tsx (--glass-lens). By day the same glass, frosted light.
+   It's never wider than the screen minus about 90px, so there's always some
+   page showing on the right to tap or swipe it shut. */
 .drawer {
   position: fixed;
   inset: 12px auto 12px 12px;
-  width: min(360px, calc(100vw - 48px));
+  width: min(340px, calc(100vw - 104px));
   height: calc(100dvh - 24px);
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: 28px 28px 36px;
+  padding: 28px 24px 36px;
   border: 0;
   border-radius: 28px;
   color: var(--ink);
   overflow-y: auto;
+  /* Vertical swipes scroll it; horizontal ones are ours (post-chrome.tsx). */
+  touch-action: pan-y;
+  background: var(--drawer-glass);
+  -webkit-backdrop-filter: var(--drawer-filter);
+  backdrop-filter: var(--drawer-filter) var(--glass-lens,);
+  isolation: isolate;
+  box-shadow:
+    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / var(--drawer-rim)),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / calc(var(--drawer-rim) * 0.4)),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.06),
+    0 0 0 0.5px rgb(0 0 0 / 0.28),
+    0 4px 14px rgb(0 0 0 / 0.22),
+    inset 0 6px 8px -6px rgb(255 255 255 / 0.18),
+    inset 4px 0 8px -6px rgb(255 255 255 / 0.07),
+    inset -4px 0 8px -6px rgb(255 255 255 / 0.04),
+    inset 0 -6px 8px -6px rgb(0 0 0 / 0.08);
 }
 
-[data-theme="night"] .drawer.glass {
-  --glass-bg: color-mix(in srgb, #0f2224 74%, transparent);
-  --glass-brightness: 0.7;
+[data-theme="night"] .drawer {
+  --drawer-glass: color-mix(in srgb, #1e1e22 34%, transparent);
+  --drawer-filter: blur(2px) saturate(1.6) brightness(0.62);
+  --drawer-rim: 0.46;
 }
 
-[data-theme="day"] .drawer.glass {
-  --glass-bg: rgb(250 249 252 / 0.66);
-  --glass-brightness: 1.04;
+/* By day the post's dark text would show through clear glass and fight the
+   drawer's own, so it's frosted a little more. */
+[data-theme="day"] .drawer {
+  --drawer-glass: rgb(255 255 255 / 0.55);
+  --drawer-filter: blur(4px) saturate(1.6) brightness(1.12);
+  --drawer-rim: 0.9;
 }
 
-.drawer.glass {
-  -webkit-backdrop-filter: blur(18px) saturate(1.7) brightness(var(--glass-brightness));
-  backdrop-filter: blur(18px) saturate(1.7) brightness(var(--glass-brightness));
+/* Without transparency: a solid panel in the same tint. */
+@media (prefers-reduced-transparency: reduce) {
+  [data-theme="night"] .drawer {
+    --drawer-glass: #1e1e22;
+    --drawer-filter: none;
+  }
+
+  [data-theme="day"] .drawer {
+    --drawer-glass: #faf9fc;
+    --drawer-filter: none;
+  }
 }
 
 /* The drawer itself takes focus when it opens (see post-chrome.tsx); it
@@ -472,8 +516,13 @@ html:has(.drawer[open]) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .topbar {
-    transition: none;
+  .topbar-button,
+  .theme-switch {
+    transition: opacity 200ms ease;
+  }
+
+  .topbar[data-hidden] > * {
+    translate: none;
   }
 
   .drawer[open],

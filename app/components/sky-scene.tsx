@@ -22,7 +22,7 @@ const FPS_INTERVAL = 1000 / 12;
 // Everything in the sky runs at this fraction of its natural pace, so the
 // twinkling, the breathing glow, the rays and the drifting clouds stay
 // gentle at the top of the page.
-const SPEED = 0.4;
+const SPEED = 0.2;
 
 function mulberry32(seed: number) {
   return () => {
@@ -41,7 +41,14 @@ const rgb = (c: RGB, a = 1) => `rgb(${c[0]} ${c[1]} ${c[2]} / ${a})`;
 // ---------------------------------------------------------------------------
 
 type Star = { x: number; y: number; phase: number; speed: number; big: boolean; color: RGB };
-type Cloud = { x: number; y: number; speed: number; puffs: [number, number, number][]; w: number };
+type Cloud = {
+  x: number;
+  y: number; // its flat base
+  speed: number;
+  pixels: { dx: number; dy: number; tone: 0 | 1 | 2 }[]; // tone: 0 lit top, 1 body, 2 shaded base
+  w: number;
+  alpha: number;
+};
 
 const STAR_COLORS: RGB[] = [
   [255, 255, 245],
@@ -73,21 +80,46 @@ function plan(w: number, h: number) {
     });
   }
 
-  // Clouds: a few lumpy puffs with flat bottoms, drifting right and wrapping.
+  // Clouds: classic cumulus shapes, a tall middle puff with smaller ones
+  // stepping down either side, all sitting on one flat base. Each cloud's
+  // pixels are worked out once here (so overlapping puffs don't double up
+  // when drawn semi-transparent) and then just slid across.
   const clouds: Cloud[] = [];
   const cloudCount = narrow ? 3 : 5;
   for (let n = 0; n < cloudCount; n++) {
-    const size = 4 + rand() * 4;
-    const puffs: [number, number, number][] = [];
-    const lumps = 3 + Math.floor(rand() * 3);
-    for (let k = 0; k < lumps; k++) puffs.push([k * size * 0.9, -rand() * size * 0.5, size * (0.7 + rand() * 0.5)]);
+    const size = 4 + rand() * 3; // radius of the middle puff
+    const lumps = rand() < 0.5 ? 3 : 4;
+    // Puff radii rise to the middle and fall away, like a dome.
+    const radii = lumps === 3 ? [0.62, 1, 0.72] : [0.55, 0.88, 1, 0.66];
+    const puffs: [number, number][] = []; // [centre x, radius]
+    let x = 0;
+    radii.forEach((k, i) => {
+      const r = size * (k + (rand() - 0.5) * 0.12);
+      if (i > 0) x += (r + puffs[i - 1][1]) * 0.62;
+      puffs.push([x, r]);
+    });
+    const left = -puffs[0][1];
+    const right = x + puffs[puffs.length - 1][1];
+    const pixels = new Map<string, { dx: number; dy: number; tone: 0 | 1 | 2 }>();
+    for (let px = Math.floor(left); px <= Math.ceil(right); px++)
+      for (let py = -Math.ceil(size * 1.6); py <= 0; py++) {
+        // Inside a puff (each sits with its centre a little above the base),
+        // or in the flat band along the bottom between the outer puffs.
+        const inPuff = puffs.some(([cx, r]) => Math.hypot(px - cx, py + r * 0.55) <= r);
+        const inBase = py >= -2 && px >= left + 1 && px <= right - 1;
+        if (!inPuff && !inBase) continue;
+        // Shading: the bottom row shaded, the upper-left of each puff bright.
+        const top = puffs.some(([cx, r]) => Math.hypot(px - cx + r * 0.25, py + r * 0.95) <= r * 0.55);
+        pixels.set(`${px},${py}`, { dx: px - Math.floor(left), dy: py, tone: py === 0 ? 2 : top ? 0 : 1 });
+      }
     clouds.push({
       x: (n / cloudCount) * (w + 60) + rand() * 20,
       // Below the top bar, above where the sky fades out.
-      y: Math.round(h * (0.33 + rand() * 0.2)),
+      y: Math.round(h * (0.36 + rand() * 0.18)),
       speed: 0.8 + rand() * 1.2,
-      puffs,
-      w: lumps * size * 0.9 + size * 2,
+      pixels: [...pixels.values()],
+      w: Math.ceil(right - left) + 1,
+      alpha: 0.72 + rand() * 0.14,
     });
   }
 
@@ -200,24 +232,12 @@ function draw(ctx: CanvasRenderingContext2D, p: Plan, theme: Theme, t: number) {
       put(body.x + dx, body.y + dy, c);
     }
 
-  // Clouds drift right, wrapping round. Each is a few overlapping puffs with
-  // a flat bottom, white on top and faintly shaded underneath.
+  // Clouds drift right, wrapping round, slightly see-through.
+  const tones = [CLOUD.top, CLOUD.body, CLOUD.shade];
   for (const c of p.clouds) {
     const span = p.w + c.w + 20;
-    const x0 = (((c.x + t * c.speed) % span) + span) % span - c.w - 10;
-    const base = c.y;
-    for (const [px, py, pr] of c.puffs) {
-      const cx = x0 + pr + px;
-      const cy = base + py;
-      for (let dy = -Math.ceil(pr); dy <= 0; dy++)
-        for (let dx = -Math.ceil(pr); dx <= Math.ceil(pr); dx++) {
-          if (Math.hypot(dx, dy) > pr) continue;
-          const y = cy + dy;
-          if (y > base) continue;
-          const col = y >= base - 1 ? CLOUD.shade : dy < -pr * 0.55 ? CLOUD.top : CLOUD.body;
-          put(cx + dx, y, col, 0.95);
-        }
-    }
+    const x0 = Math.round((((c.x + t * c.speed) % span) + span) % span - c.w - 10);
+    for (const px of c.pixels) put(x0 + px.dx, c.y + px.dy, tones[px.tone], c.alpha);
   }
 }
 

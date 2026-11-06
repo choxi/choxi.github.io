@@ -92,9 +92,13 @@ type Scene = {
   waterIdx: number[];
   columns: Column[];
   foam: number[];
-  glow: { i: number; phase: number }[]; // glowing pixels at night
-  halo: Float32Array | null; // r, g, b, strength per pixel, around the glow
+  glows: Glow[]; // at night, each glowing thing and its halo
 };
+
+// One glowing thing (a mushroom cap, a coral sprig, a speck): its pixels, and
+// its halo as r, g, b, strength per pixel in a box at (x0, y0). Each pulses on
+// its own phase and speed.
+type Glow = { pixels: number[]; x0: number; y0: number; w: number; h: number; halo: Float32Array; phase: number; speed: number };
 
 function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
   const at = (i: number): RGB => [base[i * 4], base[i * 4 + 1], base[i * 4 + 2]];
@@ -134,10 +138,12 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
     }
 
   // Night glow: bright blue-white pixels in the plants (not the water or the
-  // falls), plus the painted fireflies' yellow specks.
-  const glow: Scene["glow"] = [];
-  let halo: Float32Array | null = null;
+  // falls), plus the painted fireflies' yellow specks. They're grouped into
+  // separate glowing things (a mushroom cap, a coral sprig, a speck) so each
+  // can pulse on its own rhythm instead of all together.
+  const glows: Glow[] = [];
   if (theme === "night") {
+    const lit = new Uint8Array(W * H);
     for (let y = 0; y < H; y++)
       for (let x = 0; x < W; x++) {
         const i = y * W + x;
@@ -145,33 +151,69 @@ function buildScene(base: Uint8ClampedArray, theme: Theme): Scene {
         const [r, g, b] = at(i);
         const blue = r + g + b > 400 && b > 170;
         const speck = r > 180 && g > 160 && b < 150;
-        if (blue || speck) glow.push({ i, phase: Math.floor(x / 24) * 1.7 + (speck ? 3 : 0) });
+        if (blue || speck) lit[i] = 1;
       }
-    // A stepped halo around the glowing pixels, built once.
-    halo = new Float32Array(W * H * 4);
-    const R = 8;
-    for (const { i } of glow) {
-      const gx = i % W;
-      const gy = (i / W) | 0;
-      const c = at(i);
-      for (let dy = -R; dy <= R; dy++)
-        for (let dx = -R; dx <= R; dx++) {
-          const d = Math.hypot(dx, dy) / R;
-          if (d >= 1) continue;
-          const x = gx + dx;
-          const y = gy + dy;
-          if (x < 0 || y < 0 || x >= W || y >= H) continue;
-          const f = (Math.ceil((1 - d) ** 2 * 4) / 4) * 0.08;
-          const j = (y * W + x) * 4;
-          halo[j] += c[0] * f;
-          halo[j + 1] += c[1] * f;
-          halo[j + 2] += c[2] * f;
-          halo[j + 3] += f;
-        }
+
+    // Group lit pixels that are within 2px of each other.
+    const seen = new Uint8Array(W * H);
+    const R = 8; // halo radius
+    for (let start = 0; start < W * H; start++) {
+      if (!lit[start] || seen[start]) continue;
+      const pixels: number[] = [];
+      const stack = [start];
+      seen[start] = 1;
+      while (stack.length) {
+        const i = stack.pop()!;
+        pixels.push(i);
+        const x = i % W;
+        const y = (i / W) | 0;
+        for (let dy = -2; dy <= 2; dy++)
+          for (let dx = -2; dx <= 2; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+            const j = ny * W + nx;
+            if (lit[j] && !seen[j]) {
+              seen[j] = 1;
+              stack.push(j);
+            }
+          }
+      }
+
+      // Its halo: a stepped glow around each of its pixels, kept in a box
+      // just big enough to hold it.
+      const xs = pixels.map((i) => i % W);
+      const ys = pixels.map((i) => (i / W) | 0);
+      const x0 = Math.max(0, Math.min(...xs) - R);
+      const y0 = Math.max(0, Math.min(...ys) - R);
+      const bw = Math.min(W - 1, Math.max(...xs) + R) - x0 + 1;
+      const bh = Math.min(H - 1, Math.max(...ys) + R) - y0 + 1;
+      const halo = new Float32Array(bw * bh * 4);
+      for (const i of pixels) {
+        const gx = i % W;
+        const gy = (i / W) | 0;
+        const c = at(i);
+        for (let dy = -R; dy <= R; dy++)
+          for (let dx = -R; dx <= R; dx++) {
+            const d = Math.hypot(dx, dy) / R;
+            if (d >= 1) continue;
+            const x = gx + dx - x0;
+            const y = gy + dy - y0;
+            if (x < 0 || y < 0 || x >= bw || y >= bh) continue;
+            const f = (Math.ceil((1 - d) ** 2 * 4) / 4) * 0.08;
+            const j = (y * bw + x) * 4;
+            halo[j] += c[0] * f;
+            halo[j + 1] += c[1] * f;
+            halo[j + 2] += c[2] * f;
+            halo[j + 3] += f;
+          }
+      }
+      const n = glows.length;
+      glows.push({ pixels, x0, y0, w: bw, h: bh, halo, phase: hash(n, 7) * 6.28, speed: 0.45 + hash(n, 8) * 0.5 });
     }
   }
 
-  return { base, water, waterIdx, columns, foam, glow, halo };
+  return { base, water, waterIdx, columns, foam, glows };
 }
 
 // Places a dragonfly may hover: over the pond, by the falls, over the plants.
@@ -280,38 +322,40 @@ function renderFrame(s: Scene, frame: Uint8ClampedArray, theme: Theme, t: number
     for (const [col, row] of TAIL_FRAMES[flick]) px(col, row, look.t);
   });
 
-  if (night && s.halo) {
-    // The plants' glow breathes, each patch on its own rhythm.
-    const pulse = (x: number) => 0.55 + 0.45 * Math.sin(t * 0.7 + Math.floor(x / 120) * 2.3);
-    const halo = s.halo;
-    for (let i = 0; i < W * H; i++) {
-      const j = i * 4;
-      const f = halo[j + 3];
-      if (f <= 0) continue;
-      const k = pulse(i % W);
-      const a = frame[j + 3];
-      if (a < 40) {
-        // Over the transparent sky the glow is its own colour.
-        const strength = Math.min(1, f * k);
-        frame[j] = halo[j] / f;
-        frame[j + 1] = halo[j + 1] / f;
-        frame[j + 2] = halo[j + 2] / f;
-        frame[j + 3] = Math.max(a, strength * 220);
-      } else {
-        frame[j] += halo[j] * k;
-        frame[j + 1] += halo[j + 1] * k;
-        frame[j + 2] += halo[j + 2] * k;
-      }
-    }
-    // The glowing pixels themselves brighten and dim a little.
-    for (const g of s.glow) {
-      const k = 0.5 + 0.5 * Math.sin(t * 1.1 + g.phase);
-      if (k > 0.6) lift(g.i, (k - 0.6) * 0.8);
-      else {
-        const dim = 0.85 + k * 0.25;
-        frame[g.i * 4] *= dim;
-        frame[g.i * 4 + 1] *= dim;
-        frame[g.i * 4 + 2] *= dim;
+  if (night) {
+    // Each glowing thing breathes on its own rhythm, from a faint glow up to
+    // a soft (not blazing) peak.
+    for (const g of s.glows) {
+      const wave = Math.sin(t * g.speed + g.phase); // -1..1
+      const k = 0.5 + 0.32 * wave;
+      for (let y = 0; y < g.h; y++)
+        for (let x = 0; x < g.w; x++) {
+          const l = (y * g.w + x) * 4;
+          const f = g.halo[l + 3];
+          if (f <= 0) continue;
+          const j = ((g.y0 + y) * W + g.x0 + x) * 4;
+          const a = frame[j + 3];
+          if (a < 40) {
+            // Over the transparent sky the glow is its own colour.
+            frame[j] = g.halo[l] / f;
+            frame[j + 1] = g.halo[l + 1] / f;
+            frame[j + 2] = g.halo[l + 2] / f;
+            frame[j + 3] = Math.max(a, Math.min(1, f * k) * 190);
+          } else {
+            frame[j] += g.halo[l] * k;
+            frame[j + 1] += g.halo[l + 1] * k;
+            frame[j + 2] += g.halo[l + 2] * k;
+          }
+        }
+      // Its own pixels brighten a little toward the peak and dim in the trough.
+      for (const i of g.pixels) {
+        if (wave > 0.3) lift(i, (wave - 0.3) * 0.35);
+        else {
+          const dim = 0.9 + (wave + 1) * 0.077;
+          frame[i * 4] *= dim;
+          frame[i * 4 + 1] *= dim;
+          frame[i * 4 + 2] *= dim;
+        }
       }
     }
     return;

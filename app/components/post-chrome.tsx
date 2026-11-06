@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type PointerEvent } from "react";
+import { useGlassLens } from "./glass-card";
 import Sidebar from "./sidebar";
 import { TablerIcon } from "./social-links";
 
@@ -70,10 +71,14 @@ export default function PostChrome() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [hidden, setHidden] = useState(false);
   const pathname = usePathname();
+  useGlassLens(dialog);
 
   // Close the drawer after following one of its links.
   useEffect(() => {
-    dialog.current?.close();
+    const d = dialog.current;
+    if (!d) return;
+    d.style.transform = "";
+    d.close();
   }, [pathname]);
 
   useEffect(() => {
@@ -98,29 +103,72 @@ export default function PostChrome() {
     d.focus();
   };
 
-  // Slide the drawer shut, then close the dialog once the animation ends.
+  // Slide the drawer shut, then close the dialog once the animation ends. If
+  // it's been dragged part way, it slides on from where it is.
   const close = () => {
     const d = dialog.current;
     if (!d?.open || d.dataset.closing !== undefined) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const finish = () => {
+      delete d.dataset.closing;
+      d.style.transform = "";
+      d.style.transition = "";
       d.close();
+    };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      finish();
       return;
     }
     d.dataset.closing = "";
     let done = false;
-    const finish = () => {
+    const once = () => {
       if (done) return;
       done = true;
-      delete d.dataset.closing;
-      d.close();
+      finish();
     };
-    d.addEventListener("animationend", finish, { once: true });
-    window.setTimeout(finish, 400); // in case the animation never runs
+    d.addEventListener("animationend", once, { once: true });
+    window.setTimeout(once, 400); // in case the animation never runs
   };
 
-  // A click on the dimmed page beside the drawer lands on the dialog itself,
-  // outside its box.
+  // Swipe it shut: on touch, the drawer follows your finger left; let go past
+  // a short distance (or with a quick flick) and it closes, otherwise it
+  // springs back.
+  const drag = useRef<{ id: number; x0: number; t0: number; dx: number } | null>(null);
+  const dragged = useRef(false);
+  const onPointerDown = (e: PointerEvent<HTMLDialogElement>) => {
+    if (e.pointerType === "mouse") return;
+    drag.current = { id: e.pointerId, x0: e.clientX, t0: performance.now(), dx: 0 };
+    dragged.current = false;
+  };
+  const onPointerMove = (e: PointerEvent<HTMLDialogElement>) => {
+    const g = drag.current;
+    if (!g || e.pointerId !== g.id) return;
+    g.dx = Math.min(0, e.clientX - g.x0);
+    if (g.dx < -6) dragged.current = true;
+    if (!dragged.current) return;
+    e.currentTarget.style.transition = "none";
+    e.currentTarget.style.transform = `translateX(${g.dx}px)`;
+  };
+  const onPointerEnd = (e: PointerEvent<HTMLDialogElement>) => {
+    const g = drag.current;
+    if (!g || e.pointerId !== g.id) return;
+    drag.current = null;
+    if (!dragged.current) return;
+    const el = e.currentTarget;
+    const speed = g.dx / Math.max(1, performance.now() - g.t0); // px per ms, negative is left
+    if (g.dx < -80 || speed < -0.5) close();
+    else {
+      el.style.transition = "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)";
+      el.style.transform = "";
+    }
+  };
+
+  // A tap on the page beside the drawer lands on the dialog itself, outside
+  // its box. (A swipe that ends there isn't a tap.)
   const onDialogClick = (e: MouseEvent<HTMLDialogElement>) => {
+    if (dragged.current) {
+      dragged.current = false;
+      return;
+    }
     const r = e.currentTarget.getBoundingClientRect();
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
   };
@@ -149,10 +197,14 @@ export default function PostChrome() {
       <dialog
         id="site-drawer"
         ref={dialog}
-        className="drawer glass"
+        className="drawer"
         aria-label="Menu"
         tabIndex={-1}
         onClick={onDialogClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
         // Escape slides it shut too, instead of the dialog's instant close.
         onCancel={(e) => {
           e.preventDefault();
