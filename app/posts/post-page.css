@@ -36,55 +36,35 @@
   display: none;
 }
 
-/* ---------- The scene at the bottom of the page ---------- */
+/* ---------- The pond scene at the bottom of the page ---------- */
 
+/* The paintings have transparent skies, so the page shows through above the
+   art; the fade softens the treetops into the page. */
 .post-ground {
   position: relative;
   margin-top: auto;
+  -webkit-mask-image: linear-gradient(transparent, black 40%);
+  mask-image: linear-gradient(transparent, black 40%);
 }
 
-/* Fireflies drift over whichever scene is showing. */
+.pond-scene {
+  display: block;
+  width: 100%;
+  aspect-ratio: 500 / 73;
+  /* On narrow screens it keeps some height and crops the sides (keeping the
+     pond and falls) rather than shrinking to a sliver. */
+  min-height: 150px;
+  object-fit: cover;
+  object-position: center bottom;
+  image-rendering: pixelated;
+}
+
+/* Fireflies drift over the scene's plants. */
 .post-ground .fireflies {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-}
-
-/* Night: the painted pond (public/assets/night-pond.webp). Its empty navy sky
-   fades in from the page, so there's no edge where the footer starts. On
-   narrow screens it keeps a minimum height and crops the sides instead of
-   shrinking. */
-.night-pond {
-  display: none;
-  width: 100%;
-  aspect-ratio: 2000 / 667;
-  min-height: 260px;
-  background: url("/assets/night-pond.webp") center bottom / cover no-repeat;
-  -webkit-mask-image: linear-gradient(transparent, black 48%);
-  mask-image: linear-gradient(transparent, black 48%);
-}
-
-[data-theme="night"] .night-pond {
-  display: block;
-}
-
-/* Day: the pixel scene with koi, wildflowers and a dragonfly
-   (pixel-garden.tsx). */
-.post-ground .pixel-garden {
-  display: block;
-  width: 100%;
-  height: 240px;
-}
-
-[data-theme="night"] .post-ground .pixel-garden {
-  display: none;
-}
-
-@media (max-width: 575px) {
-  .post-ground .pixel-garden {
-    height: 200px;
-  }
 }
 
 /* ---------- Top bar ---------- */
